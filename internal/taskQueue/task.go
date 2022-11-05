@@ -12,6 +12,7 @@ const LogSize = 4 * 1024 * 1024
 
 type Task struct {
 	Id         string `json:"id"`
+	Label      string `json:"label"`
 	Command    string `json:"command"`
 	process    *exec.Cmd
 	IsStarted  bool    `json:"-"`
