@@ -17,11 +17,14 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [template, setTemplate] = useState<Template | null>(null);
 
-  const handleAdd = useCallback(async (command: string) => {
+  const handleAdd = useCallback(async (command: string, run = true) => {
     try {
-      await api.add({
+      const {id} = await api.add({
         command,
       });
+      if (run) {
+        await api.taskRun({id});
+      }
       onUpdate();
     } catch (err) {
       console.error(err);
@@ -36,7 +39,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     const value = input.value;
     if (!value) return;
 
-    await handleAdd(value);
+    await handleAdd(value, false);
     input.value = '';
   }, []);
 

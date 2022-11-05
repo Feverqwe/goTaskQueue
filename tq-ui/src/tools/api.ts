@@ -32,7 +32,7 @@ export const api = {
   task: action<{id: string}, Task>({
     path: '/api/task'
   }),
-  add: action<{command: string}, string>({
+  add: action<{command: string}, Task>({
     method: 'POST',
     path: '/api/add'
   }),

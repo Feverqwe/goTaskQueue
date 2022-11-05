@@ -4,7 +4,7 @@ import {Template} from "../../RootStore/RootStoreProvider";
 
 interface TemplateDialogProps {
   onClose: () => void;
-  onSubmit: (command: string) => Promise<void>;
+  onSubmit: (command: string, run?: boolean) => Promise<void>;
   template: Template;
 }
 
