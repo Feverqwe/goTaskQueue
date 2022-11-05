@@ -14,8 +14,10 @@ const TaskList: FC<TaskListProps> = () => {
   const state = useLocalObservable(() => ({
     loading: true,
     taskList: [] as Task[],
-    async fetchTaskList() {
-      this.loading = true;
+    async fetchTaskList(silent = false) {
+      if (!silent) {
+        this.loading = true;
+      }
       try {
         this.taskList = await api.tasks();
       } finally {
@@ -25,12 +27,19 @@ const TaskList: FC<TaskListProps> = () => {
   }));
 
   const handleUpdate = useCallback(() => {
-    state.fetchTaskList();
-  }, []);
+    state.fetchTaskList(true);
+  }, [state]);
 
   useEffect(() => {
     state.fetchTaskList();
-  }, []);
+  }, [state]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      state.fetchTaskList(true);
+    }, 30 * 1000);
+    return () => clearInterval(intervalId);
+  }, [state]);
 
   return (
     <Container maxWidth={false} disableGutters={true}>
