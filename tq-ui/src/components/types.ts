@@ -9,6 +9,7 @@ export enum TaskState {
 export interface Task {
   id: string;
   command: string;
+  label: string;
   state: TaskState;
   error: string;
 }

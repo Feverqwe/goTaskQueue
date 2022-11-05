@@ -6,6 +6,7 @@ import {api} from "../../../tools/api";
 import {RootStoreCtx} from "../../RootStore/RootStoreCtx";
 import {Template} from "../../RootStore/RootStoreProvider";
 import TemplateDialog from "./TemplateDialog";
+import SettingsIcon from '@mui/icons-material/Settings';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -15,12 +16,14 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const refInput = useRef<HTMLInputElement>();
   const rootStore = useContext(RootStoreCtx);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
   const [template, setTemplate] = useState<Template | null>(null);
 
-  const handleAdd = useCallback(async (command: string, run = true) => {
+  const handleAdd = useCallback(async (command: string, label = '', run = true) => {
     try {
       const {id} = await api.add({
         command,
+        label,
       });
       if (run) {
         await api.taskRun({id});
@@ -39,7 +42,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     const value = input.value;
     if (!value) return;
 
-    await handleAdd(value, false);
+    await handleAdd(value, '', false);
     input.value = '';
   }, []);
 
@@ -47,12 +50,25 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     setAnchorEl(e.currentTarget);
   }, []);
 
-  const handleCloseMenu = useCallback(() => {
+  const handleCloseTemplates = useCallback(() => {
     setAnchorEl(null);
   }, []);
 
   const handleSelectTemplate = useCallback((template: Template) => {
     setTemplate(template);
+    handleCloseTemplates();
+  }, []);
+
+  const handleShowMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchorEl(e.currentTarget);
+  }, []);
+
+  const handleCloseMenu = useCallback(() => {
+    setMenuAnchorEl(null);
+  }, []);
+
+  const handleReloadConfig = useCallback(async () => {
+    await api.reloadConfig()
     handleCloseMenu();
   }, []);
 
@@ -75,18 +91,21 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <Paper>
           <form onSubmit={handleSubmit}>
             <Box display={'flex'} flexDirection={'row'} p={1} alignItems={'center'}>
-              <Input multiline placeholder="echo hi" inputProps={{ref: refInput}} fullWidth autoFocus endAdornment={
-                <InputAdornment position={"end"}>
-                  <IconButton onClick={handleShowTemplates}>
-                    <PlaylistPlayIcon/>
-                  </IconButton>
-                </InputAdornment>
-              }/>
+              <Input multiline placeholder="echo hi" inputProps={{ref: refInput}} fullWidth autoFocus/>
               <IconButton type="submit">
                 <AddIcon/>
               </IconButton>
-              <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
+              <IconButton onClick={handleShowTemplates}>
+                <PlaylistPlayIcon/>
+              </IconButton>
+              <Menu open={Boolean(anchorEl)} onClose={handleCloseTemplates} anchorEl={anchorEl}>
                 {templates}
+              </Menu>
+              <IconButton onClick={handleShowMenu}>
+                <SettingsIcon/>
+              </IconButton>
+              <Menu open={Boolean(menuAnchorEl)} onClose={handleCloseMenu} anchorEl={menuAnchorEl}>
+                <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
               </Menu>
             </Box>
           </form>

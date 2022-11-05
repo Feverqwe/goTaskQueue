@@ -12,7 +12,7 @@ interface TaskItemProps {
 }
 
 const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
-  const {id, command, state} = task;
+  const {id, command, label, state} = task;
 
   const handleDelete = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
@@ -33,7 +33,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
             </Box>
             <Box display={'flex'} pl={1} flexGrow={1}>
               <Box sx={{wordBreak: "break-all"}}>
-                {command}
+                {label || command}
               </Box>
             </Box>
             <Box display={'flex'} pl={1}>

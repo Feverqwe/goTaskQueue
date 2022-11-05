@@ -4,12 +4,12 @@ import {Template} from "../../RootStore/RootStoreProvider";
 
 interface TemplateDialogProps {
   onClose: () => void;
-  onSubmit: (command: string, run?: boolean) => Promise<void>;
+  onSubmit: (command: string, label?: string, run?: boolean) => Promise<void>;
   template: Template;
 }
 
 const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) => {
-  const {name, variables, command} = template;
+  const {name, variables, command, label} = template;
   const refInput = useRef();
   const refMap = useMemo(() => new Map(), [variables]);
   variables.forEach(({value}) => {
@@ -36,26 +36,28 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   }, [variables, refMap]);
 
   const getCommand = useCallback(() => {
-    let result = command;
+    let labelResult = label || '';
+    let commandResult = command;
 
     refMap.forEach(({current}, variable) => {
       if (!current) return;
-      result = result.replace(`{${variable}}`, current.value);
+      commandResult = commandResult.replace(`{${variable}}`, current.value);
+      labelResult = labelResult.replace(`{${variable}}`, current.value);
     });
 
-    return result;
-  }, [refMap, command]);
+    return {command: commandResult, label: label};
+  }, [refMap, command, label]);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
-    const command = getCommand();
-    await onSubmit(command);
+    const {command, label} = getCommand();
+    await onSubmit(command, label);
     onClose();
   }, [onSubmit, onClose, getCommand]);
 
   const handleAdd = useCallback(async () => {
-    const command = getCommand();
-    await onSubmit(command, false);
+    const {command, label} = getCommand();
+    await onSubmit(command, label, false);
   }, []);
 
   return (

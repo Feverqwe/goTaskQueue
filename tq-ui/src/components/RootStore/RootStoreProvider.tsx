@@ -2,6 +2,7 @@ import React, {FC, ReactNode} from "react";
 import {RootStoreCtx} from "./RootStoreCtx";
 
 export interface Template {
+  label?: string;
   name: string,
   variables: {
     name: string,

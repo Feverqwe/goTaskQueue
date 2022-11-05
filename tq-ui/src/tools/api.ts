@@ -55,5 +55,9 @@ export const api = {
   taskSend: action<{id: string, data: string}>({
     method: 'POST',
     path: '/api/task/send'
-  })
+  }),
+  reloadConfig: action<void>({
+    method: 'POST',
+    path: '/api/reloadConfig'
+  }),
 };
