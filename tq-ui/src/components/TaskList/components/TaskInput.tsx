@@ -91,7 +91,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <Paper>
           <form onSubmit={handleSubmit}>
             <Box display={'flex'} flexDirection={'row'} p={1} alignItems={'center'}>
-              <Input multiline placeholder="echo hi" inputProps={{ref: refInput}} fullWidth autoFocus/>
+              <Input placeholder="echo hi" inputProps={{ref: refInput}} fullWidth autoFocus/>
               <IconButton type="submit">
                 <AddIcon/>
               </IconButton>
