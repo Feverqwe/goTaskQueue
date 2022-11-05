@@ -153,6 +153,8 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 }
 
 func handleWww(router *internal.Router, config *internal.Config) {
+	const DEBUG = false
+
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
 		if binStat, err := os.Stat(binPath); err == nil {
@@ -164,8 +166,6 @@ func handleWww(router *internal.Router, config *internal.Config) {
 		Templates []interface{} `json:"templates"`
 	}
 
-	const DEBUG = false
-
 	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assetPath := r.URL.Path
 
@@ -175,10 +175,11 @@ func handleWww(router *internal.Router, config *internal.Config) {
 
 		var err error
 		var content []byte
-		if !DEBUG {
-			content, err = assets.Asset("www" + assetPath)
-		} else {
+		if DEBUG {
 			content, err = os.ReadFile("./tq-ui/dist" + assetPath)
+			binTime = time.Now()
+		} else {
+			content, err = assets.Asset("www" + assetPath)
 		}
 		if err != nil {
 			w.WriteHeader(404)
