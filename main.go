@@ -54,7 +54,7 @@ func main() {
 
 				powerLock(router, powerControl)
 				handleWebsocket(router, taskQueue)
-				internal.HandleApi(router, taskQueue, &config)
+				internal.HandleApi(router, taskQueue, &config, callChan)
 				handleWww(router, &config)
 
 				address := config.GetAddress()
