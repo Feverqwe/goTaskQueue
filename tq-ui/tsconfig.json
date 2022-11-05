@@ -1,0 +1,19 @@
+{
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "strict": true,
+    "noEmit": false,
+    "target": "ES6",
+    "module": "ES2020",
+    "jsx": "react",
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "outDir": "./dist/",
+    "allowSyntheticDefaultImports": true
+  }
+}
