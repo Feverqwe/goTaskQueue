@@ -35,8 +35,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
     });
   }, [variables, refMap]);
 
-  const handleSubmit = useCallback(async (e: SyntheticEvent) => {
-    e.preventDefault();
+  const getCommand = useCallback(() => {
     let result = command;
 
     refMap.forEach(({current}, variable) => {
@@ -44,9 +43,20 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
       result = result.replace(`{${variable}}`, current.value);
     });
 
-    await onSubmit(result);
+    return result;
+  }, [refMap, command]);
+
+  const handleSubmit = useCallback(async (e: SyntheticEvent) => {
+    e.preventDefault();
+    const command = getCommand();
+    await onSubmit(command);
     onClose();
-  }, [refMap, command, onSubmit, onClose]);
+  }, [onSubmit, onClose, getCommand]);
+
+  const handleAdd = useCallback(async () => {
+    const command = getCommand();
+    await onSubmit(command, false);
+  }, []);
 
   return (
       <Dialog open={true} onClose={onClose} fullWidth>
@@ -61,7 +71,8 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose}>Cancel</Button>
-            <Button type={"submit"}>Add</Button>
+            <Button onClick={handleAdd}>Add</Button>
+            <Button type={"submit"}>Add & Run</Button>
           </DialogActions>
       </form>
       </Dialog>
