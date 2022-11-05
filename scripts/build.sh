@@ -1,6 +1,9 @@
 #!/bin/sh
 
-NAME="${1:-goTaskQueue}"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR/..
 
-rm ./${NAME}
-go build -trimpath -o ${NAME}
+source ./scripts/_variables.sh
+
+rm ./${BINARY}
+go build -trimpath -o ${BINARY}

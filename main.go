@@ -1,11 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"goTaskQueue/assets"
 	"goTaskQueue/internal"
+	taskqueue "goTaskQueue/internal/taskQueue"
 	"log"
 	"net/http"
+	"os"
+	"path"
+	"time"
+
+	"github.com/NYTimes/gziphandler"
+	"golang.org/x/net/websocket"
 )
 
 func main() {
@@ -16,6 +25,7 @@ func main() {
 	var config internal.Config
 
 	var powerControl = internal.GetPowerControl()
+	var taskQueue = taskqueue.NewQueue()
 
 	callChan := make(chan string)
 
@@ -41,8 +51,9 @@ func main() {
 				router := internal.NewRouter()
 
 				powerLock(router, powerControl)
-				internal.HandleApi(router, &config)
-				fsServer(router, &config)
+				handleWebsocket(router, taskQueue)
+				internal.HandleApi(router, taskQueue, &config)
+				handleWww(router)
 
 				address := config.GetAddress()
 
@@ -83,29 +94,93 @@ func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
 	})
 }
 
-func fsServer(router *internal.Router, config *internal.Config) {
-	public := config.Public
+func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
+	const CHUNK_SIZE = 1 * 1024 * 1024
 
-	fileServer := http.FileServer(http.Dir(public))
+	ws := func(ws *websocket.Conn) {
+		defer ws.Close()
 
-	router.All("/index.html$", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		osFullPath, err := internal.GetFullPath(public, r.URL.Path)
+		id := ws.Request().URL.Query().Get("id")
+
+		task, err := taskQueue.Get(id)
 		if err != nil {
-			w.WriteHeader(403)
 			return
 		}
 
-		file, stat, err := internal.OpenFile(osFullPath)
+		pushPart := func(part []byte) error {
+			for len(part) > 0 {
+				chunkSize := CHUNK_SIZE
+				if len(part) < chunkSize {
+					chunkSize = len(part)
+				}
+				chunk := part[0:chunkSize]
+				part = part[chunkSize:]
+				err := websocket.Message.Send(ws, chunk)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		offset := 0
+		if task.Combined != nil && len(*task.Combined) > 100*1024 {
+			offset = len(*task.Combined) - 100*1024
+		}
+		lastValue := -1
+		for {
+			if task.Combined != nil {
+				fragment := (*task.Combined)[offset:]
+				offset += len(fragment)
+				err := pushPart(fragment)
+				if err != nil {
+					fmt.Println("ws send error", err)
+					return
+				}
+			}
+			if lastValue == 0 {
+				break
+			}
+			lastValue = task.Wait()
+		}
+	}
+
+	router.All("/ws", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+		websocket.Handler(ws).ServeHTTP(w, r)
+	})
+}
+
+func handleWww(router *internal.Router) {
+	binTime := time.Now()
+	if binPath, err := os.Executable(); err == nil {
+		if binStat, err := os.Stat(binPath); err == nil {
+			binTime = binStat.ModTime()
+		}
+	}
+
+	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assetPath := r.URL.Path
+
+		content, err := assets.Asset(assetPath)
 		if err != nil {
-			internal.HandleOpenFileError(err, w)
+			w.WriteHeader(404)
 			return
 		}
-		defer file.Close()
 
-		http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)
-	})
+		reader := bytes.NewReader(content)
+		name := path.Base(assetPath)
+		http.ServeContent(w, r, name, binTime, reader)
+	}))
 
-	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		fileServer.ServeHTTP(w, r)
-	})
+	if false {
+		router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/"}, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+			gzipHandler.ServeHTTP(w, r)
+		})
+	} else {
+		fileServer := http.FileServer(http.Dir("./tq-ui/dist"))
+
+		router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+			fileServer.ServeHTTP(w, r)
+		})
+	}
 }

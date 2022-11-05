@@ -1,10 +1,9 @@
 #!/bin/sh
 
-BINARY="goTaskQueue"
-NAME="goTaskQueue"
-AUTHOR="Anton V"
-APP_ID="com.rndnm.gotaskqueue"
-ICON_PATH="./assets/icon.icns"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR/..
+
+source ./scripts/_variables.sh
 
 sh ./scripts/build.sh ${BINARY}
 

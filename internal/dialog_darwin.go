@@ -33,7 +33,6 @@ func ShowFolderSelection(title string, root string) (string, error) {
 
 func ShowEntry(title string, text string, defaultValue string) (string, error) {
 	props := settings.Entry{}
-	props.DefaultCancel = true
 	props.DefaultEntry = defaultValue
 	props.Title = title
 	props.Text = text

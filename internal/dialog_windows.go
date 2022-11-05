@@ -25,7 +25,7 @@ func ShowFolderSelection(title string, root string) (string, error) {
 
 func ShowEntry(title string, text string, defaultValue string) (string, error) {
 	address, err := zenity.Entry(text,
-		zenity.Title(text),
+		zenity.Title(title),
 		zenity.EntryText(defaultValue),
 	)
 	if err != nil {

@@ -1,19 +1,11 @@
 package internal
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
-	"goTaskQueue/assets"
-	"io"
-	"mime/multipart"
+	taskqueue "goTaskQueue/internal/taskQueue"
 	"net/http"
-	"os"
-	"path"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
+	"syscall"
 
 	"github.com/NYTimes/gziphandler"
 )
@@ -26,17 +18,14 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, config *Config) {
+func HandleApi(router *Router, taskQueue *taskqueue.Queue, config *Config) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
-	handleUpload(apiRouter, config)
-	handleWww(apiRouter)
-	handleAction(apiRouter, config)
-	handleInterfaces(apiRouter, config)
+	handleAction(apiRouter, config, taskQueue)
 	handleFobidden(apiRouter)
 
-	router.All("^/~/", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.All("^/api/", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		gzipHandler.ServeHTTP(w, r)
 	})
 }
@@ -47,348 +36,170 @@ func handleFobidden(router *Router) {
 	})
 }
 
-func handleUpload(router *Router, config *Config) {
-	public := config.Public
-
-	salt := config.Salt
-	if len(salt) == 0 {
-		salt = strconv.FormatInt(time.Now().Unix(), 10)
+func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue) {
+	type GetTaskPayload struct {
+		Id string `json:"id"`
 	}
 
-	var chunkSize int64 = 16 * 1024 * 1024
-
-	type UploadInitPayload struct {
-		FileName string `json:"fileName"`
-		Size     int64  `json:"size"`
-		Place    string `json:"place"`
+	type SignalTaskPayload struct {
+		Id     string `json:"id"`
+		Signal string `json:"signal"`
 	}
 
-	type UploadInit struct {
-		Key       string `json:"key"`
-		ChunkSize int64  `json:"chunkSize"`
+	type SendTaskPayload struct {
+		Id   string `json:"id"`
+		Data string `json:"data"`
 	}
 
-	type Key struct {
-		FileName    string `json:"fileName"`
-		Size        int64  `json:"size"`
-		Place       string `json:"place"`
-		TmpFileName string `json:"tmpFileName"`
+	type AddTaskPayload struct {
+		Command string `json:"command"`
 	}
 
-	buildKey := func(rawFilename string, size int64, rawPlace string, tmpFile *os.File) (string, error) {
-		key := Key{
-			FileName:    rawFilename,
-			Size:        size,
-			Place:       rawPlace,
-			TmpFileName: filepath.Base(tmpFile.Name()),
-		}
-
-		keyJsonByte, err := json.Marshal(key)
-		if err != nil {
-			return "", err
-		}
-		keyJson := string(keyJsonByte)
-
-		return SigData(keyJson, salt), nil
-	}
-
-	readKey := func(sigKey string) (*Key, error) {
-		keyJson, err := UnSigData(sigKey, salt)
-		if err != nil {
-			return nil, err
-		}
-
-		decoder := json.NewDecoder(strings.NewReader(keyJson))
-
-		var payload Key
-		err = decoder.Decode(&payload)
-		return &payload, err
-	}
-
-	readAsString := func(part *multipart.Part) (string, error) {
-		buf := new(strings.Builder)
-		_, err := io.Copy(buf, part)
-		if err != nil {
-			return "", err
-		}
-		return buf.String(), nil
-	}
-
-	readAsInt64 := func(part *multipart.Part) (int64, error) {
-		var num int64
-		str, err := readAsString(part)
-		if err == nil {
-			num, err = strconv.ParseInt(str, 10, 64)
-		}
-		return num, err
-	}
-
-	saveChunk := func(key *Key, pos int64, size int64, part *multipart.Part) (bool, error) {
-		rawPlace := key.Place
-		rawTmpFileName := key.TmpFileName
-
-		osTmpFilePath, err := GetFullPath(public, path.Join(rawPlace, rawTmpFileName))
-		if err != nil {
-			return false, err
-		}
-
-		tmpFile, err := os.OpenFile(osTmpFilePath, os.O_WRONLY, 0600)
-		if err != nil {
-			return false, err
-		}
-		defer tmpFile.Close()
-
-		offset, err := tmpFile.Seek(pos, 0)
-		if err != nil {
-			return false, err
-		}
-
-		written, err := io.Copy(tmpFile, part)
-		if err != nil {
-			return false, err
-		}
-
-		if written != size {
-			return false, errors.New("written_size_missmatch")
-		}
-
-		if offset+written > key.Size {
-			return false, errors.New("file_size_missmatch")
-		}
-
-		isFinish := offset+written == key.Size
-
-		if isFinish {
-			tmpFile.Close()
-
-			rawFileName := key.FileName
-
-			osFilePath, err := GetFullPath(public, path.Join(rawPlace, rawFileName))
-			if err != nil {
-				return false, err
-			}
-
-			err = os.Rename(osTmpFilePath, osFilePath)
-			if err != nil {
-				return false, errors.New("Rename temp file error: " + err.Error())
-			}
-		}
-
-		return isFinish, nil
-	}
-
-	router.Post("/~/upload/init", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (*UploadInit, error) {
-			decoder := json.NewDecoder(r.Body)
-			var payload UploadInitPayload
-			err := decoder.Decode(&payload)
-			if err != nil {
-				return nil, err
-			}
-
-			rawPlace := payload.Place
-			rawFileName := payload.FileName
-			size := payload.Size
-
-			osUploadPath, err := GetFullPath(public, rawPlace)
-			if err != nil {
-				return nil, errors.New("incorrect place")
-			}
-
-			filePath := NormalizePath(path.Join(rawPlace, rawFileName))
-
-			isWritable := config.IsWritable(filePath)
-			if !isWritable {
-				return nil, errors.New("unable wite in this place")
-			}
-
-			osFilePath, err := GetFullPath(public, filePath)
-			if err != nil {
-				return nil, err
-			}
-
-			_, err = os.Stat(osFilePath)
-			if err == nil {
-				return nil, errors.New("File exists")
-			}
-
-			tmpFile, err := os.CreateTemp(osUploadPath, "tmp")
-			if err != nil {
-				return nil, errors.New("Create temp file error: " + err.Error())
-			}
-			defer tmpFile.Close()
-
-			keyJson, err := buildKey(rawFileName, size, rawPlace, tmpFile)
-
-			result := UploadInit{
-				Key:       keyJson,
-				ChunkSize: chunkSize,
-			}
-			return &result, err
+	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() ([]*taskqueue.Task, error) {
+			tasks := taskQueue.GetAll()
+			return tasks, nil
 		})
 	})
 
-	router.Post("/~/upload/chunk", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (bool, error) {
-			reader, err := r.MultipartReader()
-
-			var key *Key
-			var pos int64
-			var size int64
-			var result bool
-
-			for {
-				if err != nil {
-					break
-				}
-
-				var part *multipart.Part
-				part, err = reader.NextPart()
-				if err == io.EOF {
-					err = nil
-					break
-				}
-				if err != nil {
-					break
-				}
-
-				formName := part.FormName()
-				switch formName {
-				case "key":
-					var sigKey string
-					sigKey, err = readAsString(part)
-					if err == nil {
-						key, err = readKey(sigKey)
-					}
-				case "pos":
-					pos, err = readAsInt64(part)
-				case "size":
-					size, err = readAsInt64(part)
-				case "chunk":
-					result, err = saveChunk(key, pos, size, part)
-				}
-			}
-
-			return result, err
-		})
-	})
-}
-
-func handleInterfaces(router *Router, config *Config) {
-	router.Get("/~/addresses", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() ([]string, error) {
-			addresses := GetAddresses(config.Port)
-			return addresses, nil
-		})
-	})
-}
-
-func handleAction(router *Router, config *Config) {
-	public := config.Public
-
-	type RemovePayload struct {
-		Place string `json:"place"`
-		Name  string `json:"name"`
-		IsDir bool   `json:"isDir"`
-	}
-
-	type RenamePayload struct {
-		Place   string `json:"place"`
-		Name    string `json:"name"`
-		NewName string `json:"newName"`
-	}
-
-	router.Post("/~/rename", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/delete", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			decoder := json.NewDecoder(r.Body)
-			var payload RenamePayload
-			err := decoder.Decode(&payload)
+			payload, err := readPayload[GetTaskPayload](r)
 			if err != nil {
 				return "", err
 			}
 
-			rawPlace := payload.Place
-			rawName := payload.Name
-			rawNewName := payload.NewName
-			rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
-			rNewPath := NormalizePath(path.Join(rawPlace, rawNewName))
-
-			osTargetPath, err := GetFullPath(public, rTargetPath)
-			if err != nil {
-				return "", err
-			}
-
-			osNewPath, err := GetFullPath(public, rNewPath)
-			if err != nil {
-				return "", err
-			}
-
-			isWritableSource := config.IsWritable(rTargetPath)
-			isWritableTarget := config.IsWritable(rNewPath)
-			if !isWritableSource || !isWritableTarget {
-				return "", errors.New("place is not writable")
-			}
-
-			err = os.Rename(osTargetPath, osNewPath)
+			err = taskQueue.Del(payload.Id)
 
 			return "ok", err
 		})
 	})
 
-	router.Post("/~/remove", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/add", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			decoder := json.NewDecoder(r.Body)
-			var payload RemovePayload
-			err := decoder.Decode(&payload)
+			payload, err := readPayload[AddTaskPayload](r)
 			if err != nil {
 				return "", err
 			}
 
-			rawPlace := payload.Place
-			rawName := payload.Name
-			rTargetPath := NormalizePath(path.Join(rawPlace, rawName))
-			osTargetPath, err := GetFullPath(public, rTargetPath)
+			taskQueue.Add(payload.Command)
+
+			return "ok", err
+		})
+	})
+
+	router.Get("/api/task", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (*taskqueue.Task, error) {
+			id := r.URL.Query().Get("id")
+
+			task, err := taskQueue.Get(id)
+			return task, err
+		})
+	})
+
+	router.Post("/api/task/run", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := readPayload[GetTaskPayload](r)
 			if err != nil {
 				return "", err
 			}
 
-			isWritable := config.IsWritable(rTargetPath)
-			if !isWritable {
-				return "", errors.New("place is not writable")
+			task, err := taskQueue.Get(payload.Id)
+			if err != nil {
+				return "", err
 			}
 
-			isDir := payload.IsDir
-			if isDir {
-				err = os.RemoveAll(osTargetPath)
-			} else {
-				err = os.Remove(osTargetPath)
+			err = task.Run()
+
+			return "ok", err
+		})
+	})
+
+	router.Post("/api/task/kill", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := readPayload[GetTaskPayload](r)
+			if err != nil {
+				return "", err
+			}
+
+			task, err := taskQueue.Get(payload.Id)
+			if err != nil {
+				return "", err
+			}
+
+			err = task.Kill()
+
+			return "ok", err
+		})
+	})
+
+	router.Post("/api/task/signal", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := readPayload[SignalTaskPayload](r)
+			if err != nil {
+				return "", err
+			}
+
+			task, err := taskQueue.Get(payload.Id)
+			if err != nil {
+				return "", err
+			}
+
+			switch payload.Signal {
+			case "SIGINT":
+				err = task.Signal(syscall.SIGINT)
+			default:
+				err = errors.New("unsupported_signal")
 			}
 
 			return "ok", err
 		})
 	})
-}
 
-func handleWww(router *Router) {
-	binTime := time.Now()
-	if binPath, err := os.Executable(); err == nil {
-		if binStat, err := os.Stat(binPath); err == nil {
-			binTime = binStat.ModTime()
-		}
-	}
+	router.Post("/api/task/send", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := readPayload[SendTaskPayload](r)
+			if err != nil {
+				return "", err
+			}
 
-	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/~/www/"}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		assetPath := r.URL.Path[3:]
+			task, err := taskQueue.Get(payload.Id)
+			if err != nil {
+				return "", err
+			}
 
-		content, err := assets.Asset(assetPath)
+			err = task.Send(payload.Data)
+
+			return "ok", err
+		})
+	})
+
+	router.Custom([]string{"GET"}, []string{"/api/task/stdout", "/api/task/stderr", "/api/task/combined"}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		logType := r.URL.Path[10:]
+		id := r.URL.Query().Get("id")
+
+		task, err := taskQueue.Get(id)
 		if err != nil {
-			w.WriteHeader(404)
+			sendStatus(w, 403)
 			return
 		}
 
-		reader := bytes.NewReader(content)
-		name := path.Base(assetPath)
-		http.ServeContent(w, r, name, binTime, reader)
+		var data []byte
+		if logType == "stdout" && task.Stdout != nil {
+			data = *task.Stdout
+		} else if logType == "stderr" && task.Stderr != nil {
+			data = *task.Stderr
+		} else if logType == "combined" && task.Combined != nil {
+			data = *task.Combined
+		}
+		if data == nil {
+			sendStatus(w, 404)
+			return
+		}
+
+		w.Header().Add("Content-type", "text/plain")
+		w.WriteHeader(200)
+		w.Write(data)
 	})
 }
 
@@ -423,4 +234,22 @@ func writeApiResult(w http.ResponseWriter, result interface{}, err error) error 
 		_, err = w.Write(json)
 	}
 	return err
+}
+
+func readPayload[T any](r *http.Request) (*T, error) {
+	decoder := json.NewDecoder(r.Body)
+	var payload T
+	err := decoder.Decode(&payload)
+	if err != nil {
+		return nil, err
+	}
+	return &payload, nil
+}
+
+func sendStatus(w http.ResponseWriter, statusCode int) {
+	w.WriteHeader(statusCode)
+	_, err := w.Write(make([]byte, 0))
+	if err != nil {
+		panic(err)
+	}
 }
