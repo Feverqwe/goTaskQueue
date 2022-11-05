@@ -82,7 +82,7 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       terminal.write(data);
     }
 
-    const ws = new WebSocket(`ws://${location.hostname}/ws?id=${id}`);
+    const ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
     ws.onopen = () => {
       setOpen(true);
     };
