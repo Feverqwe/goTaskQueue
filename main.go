@@ -177,7 +177,6 @@ func handleWww(router *internal.Router, config *internal.Config) {
 		var content []byte
 		if DEBUG {
 			content, err = os.ReadFile("./tq-ui/dist" + assetPath)
-			binTime = time.Now()
 		} else {
 			content, err = assets.Asset("www" + assetPath)
 		}
@@ -187,6 +186,8 @@ func handleWww(router *internal.Router, config *internal.Config) {
 		}
 
 		if assetPath == "/index.html" || assetPath == "/task.html" {
+			binTime = time.Now()
+
 			store := RootStore{
 				Templates: config.Templates,
 			}
