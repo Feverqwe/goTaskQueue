@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"goTaskQueue/assets"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
@@ -53,7 +55,7 @@ func main() {
 				powerLock(router, powerControl)
 				handleWebsocket(router, taskQueue)
 				internal.HandleApi(router, taskQueue, &config)
-				handleWww(router)
+				handleWww(router, &config)
 
 				address := config.GetAddress()
 
@@ -150,13 +152,19 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 	})
 }
 
-func handleWww(router *internal.Router) {
+func handleWww(router *internal.Router, config *internal.Config) {
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
 		if binStat, err := os.Stat(binPath); err == nil {
 			binTime = binStat.ModTime()
 		}
 	}
+
+	type RootStore struct {
+		Templates []interface{} `json:"templates"`
+	}
+
+	const DEBUG = false
 
 	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assetPath := r.URL.Path
@@ -165,10 +173,30 @@ func handleWww(router *internal.Router) {
 			assetPath = "/index.html"
 		}
 
-		content, err := assets.Asset("www" + assetPath)
+		var err error
+		var content []byte
+		if !DEBUG {
+			content, err = assets.Asset("www" + assetPath)
+		} else {
+			content, err = os.ReadFile("./tq-ui/dist" + assetPath)
+		}
 		if err != nil {
 			w.WriteHeader(404)
 			return
+		}
+
+		if assetPath == "/index.html" || assetPath == "/task.html" {
+			store := RootStore{
+				Templates: config.Templates,
+			}
+			storeJson, err := json.Marshal(store)
+
+			body := string(content)
+			body = strings.Replace(body, "{{TITLE}}", internal.EscapeHtmlInJson(config.Name), 1)
+			if err == nil {
+				body = strings.Replace(body, "<script id=\"root_store\"></script>", "<script id=\"root_store\">window.ROOT_STORE="+internal.EscapeHtmlInJson(string(storeJson))+"</script>", 1)
+			}
+			content = []byte(body)
 		}
 
 		reader := bytes.NewReader(content)
@@ -176,15 +204,7 @@ func handleWww(router *internal.Router) {
 		http.ServeContent(w, r, name, binTime, reader)
 	}))
 
-	if true {
-		router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/"}, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-			gzipHandler.ServeHTTP(w, r)
-		})
-	} else {
-		fileServer := http.FileServer(http.Dir("./tq-ui/dist"))
-
-		router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-			fileServer.ServeHTTP(w, r)
-		})
-	}
+	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/"}, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+		gzipHandler.ServeHTTP(w, r)
+	})
 }

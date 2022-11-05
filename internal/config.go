@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -14,26 +13,12 @@ import (
 	"github.com/natefinch/atomic"
 )
 
-const (
-	IsSimplePtrn = 0
-	IsExtraPtrn  = 1
-)
-
-type PrepPattern struct {
-	patternType int
-	pattern     string
-	partCount   int
-}
-
 type Config struct {
-	Port                 int
-	Address              string
-	Public               string
-	Name                 string
-	ShowHiddenFiles      bool
-	WritablePatterns     []string
-	Salt                 string
-	prepWritablePatterns []PrepPattern
+	Port      int
+	Address   string
+	Public    string
+	Name      string
+	Templates []interface{}
 }
 
 var APP_ID = "com.rndnm.gotaskqueue"
@@ -50,57 +35,14 @@ func (s *Config) GetBrowserAddress() string {
 	return "http://" + addr + ":" + strconv.Itoa(s.Port)
 }
 
-func (s *Config) IsWritable(targetPath string) bool {
-	lowPath := strings.ToLower(targetPath)
-
-	for _, p := range s.prepWritablePatterns {
-		if p.patternType == IsExtraPtrn {
-			partCount := p.partCount
-			pathParts := strings.SplitN(lowPath, "/", partCount+1)
-			if len(pathParts) < partCount {
-				continue
-			}
-			lowPath = strings.Join(pathParts[0:partCount], "/")
-		}
-		m, _ := path.Match(p.pattern, lowPath)
-		if m {
-			return true
-		}
-	}
-	return false
-}
-
-func PrepPatterns(patterns []string) []PrepPattern {
-	result := []PrepPattern{}
-
-	for _, rawPattern := range patterns {
-		pattern := strings.ToLower(rawPattern)
-		partCount := strings.Count(pattern, "/") + 1
-		patternType := IsSimplePtrn
-		if strings.HasSuffix(pattern, "**") {
-			pattern = pattern[0 : len(pattern)-1]
-			patternType = IsExtraPtrn
-		}
-		np := PrepPattern{
-			patternType: patternType,
-			pattern:     pattern,
-			partCount:   partCount,
-		}
-		result = append(result, np)
-	}
-
-	return result
-}
-
 func getNewConfig() Config {
 	var config = Config{
-		WritablePatterns: make([]string, 0),
+		Templates: make([]interface{}, 0),
 	}
 	pwd := getProfilePath()
 	config.Port = 80
 	config.Public = pwd
 	config.Name = "TaskQueue"
-	config.ShowHiddenFiles = false
 	return config
 }
 
@@ -125,8 +67,6 @@ func LoadConfig() Config {
 			log.Println("Load config error", err)
 		}
 	}
-
-	config.prepWritablePatterns = PrepPatterns(config.WritablePatterns)
 
 	return config
 }
