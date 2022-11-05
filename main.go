@@ -161,7 +161,11 @@ func handleWww(router *internal.Router) {
 	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assetPath := r.URL.Path
 
-		content, err := assets.Asset(assetPath)
+		if assetPath == "/" {
+			assetPath = "/index.html"
+		}
+
+		content, err := assets.Asset("www" + assetPath)
 		if err != nil {
 			w.WriteHeader(404)
 			return
@@ -172,7 +176,7 @@ func handleWww(router *internal.Router) {
 		http.ServeContent(w, r, name, binTime, reader)
 	}))
 
-	if false {
+	if true {
 		router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/"}, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
 			gzipHandler.ServeHTTP(w, r)
 		})

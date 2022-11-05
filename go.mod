@@ -14,6 +14,8 @@ require (
 	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261
 )
 
+require github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
+
 require (
 	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/bmatcuk/doublestar/v3 v3.0.0 // indirect
