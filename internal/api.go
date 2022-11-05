@@ -18,11 +18,11 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, taskQueue *taskqueue.Queue, config *Config) {
+func HandleApi(router *Router, taskQueue *taskqueue.Queue, config *Config, callChan chan string) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
-	handleAction(apiRouter, config, taskQueue)
+	handleAction(apiRouter, config, taskQueue, callChan)
 	handleFobidden(apiRouter)
 
 	router.All("^/api/", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
@@ -36,7 +36,7 @@ func handleFobidden(router *Router) {
 	})
 }
 
-func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue) {
+func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, callChan chan string) {
 	type GetTaskPayload struct {
 		Id string `json:"id"`
 	}
@@ -172,6 +172,14 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue) {
 			err = task.Send(payload.Data)
 
 			return "ok", err
+		})
+	})
+
+	router.Post("/api/reloadConfig", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			callChan <- "reload"
+
+			return "ok", nil
 		})
 	})
 
