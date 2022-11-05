@@ -45,7 +45,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
       labelResult = labelResult.replace(`{${variable}}`, current.value);
     });
 
-    return {command: commandResult, label: label};
+    return {command: commandResult, label: labelResult};
   }, [refMap, command, label]);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
@@ -58,7 +58,8 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   const handleAdd = useCallback(async () => {
     const {command, label} = getCommand();
     await onSubmit(command, label, false);
-  }, []);
+    onClose();
+  }, [onSubmit, getCommand]);
 
   return (
       <Dialog open={true} onClose={onClose} fullWidth>
