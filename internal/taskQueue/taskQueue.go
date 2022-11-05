@@ -23,7 +23,7 @@ func (s *Queue) Get(id string) (*Task, error) {
 	return task, nil
 }
 
-func (s *Queue) Add(command string) {
+func (s *Queue) Add(command string) *Task {
 	task := &Task{
 		Id:      uuid.New().String()[:7],
 		Command: command,
@@ -31,6 +31,7 @@ func (s *Queue) Add(command string) {
 	task.syncStatus()
 	s.idTask[task.Id] = task
 	s.tasks = append(s.tasks, task)
+	return task
 }
 
 func (s *Queue) Del(id string) error {

@@ -76,15 +76,15 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue) {
 	})
 
 	router.Post("/api/add", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (string, error) {
+		apiCall(w, func() (*taskqueue.Task, error) {
 			payload, err := readPayload[AddTaskPayload](r)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 
-			taskQueue.Add(payload.Command)
+			task := taskQueue.Add(payload.Command)
 
-			return "ok", err
+			return task, err
 		})
 	})
 
