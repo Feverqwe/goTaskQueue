@@ -29,7 +29,7 @@ type Task struct {
 }
 
 func (s *Task) Run() error {
-	process := exec.Command("bash", "-c", s.Command)
+	process := exec.Command("sh", "-c", s.Command)
 
 	const Out = "out"
 	const Err = "err"
