@@ -1,5 +1,4 @@
 <div align="center">
-	<img src="assets/screenshot1.png" alt=""/>
 	<h1>GoTaskQueue</h1>
 	<p>
 		<b>Simple task runner</b>
