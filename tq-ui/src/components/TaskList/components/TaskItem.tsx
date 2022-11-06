@@ -49,7 +49,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   return (
     <Box px={1} pb={1}>
       <Card>
-        <CardActionArea href={"task.html?id=" + id}>
+        <CardActionArea href={"task?id=" + id}>
           <Box display={'flex'} flexDirection={'row'} alignItems={'center'}>
             <Box display={'flex'}>
               <IconButton disabled={state === TaskState.Started} onClick={handleDelete}>

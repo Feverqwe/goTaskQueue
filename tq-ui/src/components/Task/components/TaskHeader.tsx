@@ -52,7 +52,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
   const handleRestart = useCallback(async () => {
     const task = await api.clone({id});
     await api.taskRun({id: task.id});
-    location.href = '/task.html?id=' + task.id;
+    location.href = 'task?id=' + task.id;
   }, [id]);
 
   const handleTitleClick = useCallback(() => {
