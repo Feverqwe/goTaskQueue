@@ -1,12 +1,11 @@
 import React, {FC, FormEvent, Fragment, useCallback, useContext, useMemo, useRef, useState} from "react";
-import {Box, Divider, IconButton, Input, InputAdornment, Menu, MenuItem, Paper} from "@mui/material";
+import {Box, Divider, IconButton, Input, Menu, MenuItem, Paper} from "@mui/material";
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import AddIcon from '@mui/icons-material/Add';
 import {api} from "../../../tools/api";
 import {RootStoreCtx} from "../../RootStore/RootStoreCtx";
 import {Template} from "../../RootStore/RootStoreProvider";
 import TemplateDialog from "./TemplateDialog";
-import SettingsIcon from '@mui/icons-material/Settings';
 
 interface TaskInputProps {
   onUpdate: () => void;
