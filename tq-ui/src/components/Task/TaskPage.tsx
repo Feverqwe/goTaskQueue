@@ -22,6 +22,7 @@ const TaskPage: FC = () => {
       try {
         this.task = await api.task({id})
       } catch (err) {
+        this.task = null;
         console.error(err);
       } finally {
         this.loading = false;
@@ -67,6 +68,11 @@ const TaskPage: FC = () => {
           <TaskHeader task={state.task} remapNewLine={remapNewLine} onToggleFixNewLine={handleToggleFixNewLine} onUpdate={handleUpdate}/>
           <TaskLog task={state.task} remapNewLine={remapNewLine} onUpdate={handleUpdate}/>
         </>
+      )}
+      {!state.loading && !state.task && (
+        <Box p={1} display={'flex'} justifyContent={'center'}>
+          Task not found
+        </Box>
       )}
     </Container>
   );
