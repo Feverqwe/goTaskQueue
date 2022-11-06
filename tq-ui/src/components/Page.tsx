@@ -4,6 +4,7 @@ import {CssBaseline, GlobalStyles, ThemeProvider} from "@mui/material";
 import theme from "../tools/muiTheme";
 import * as React from "react";
 import {FC, ReactNode} from "react";
+import NotificationProvider from "./Notifications/NotificationProvider";
 
 const RootStyles = {
   html: {
@@ -27,9 +28,11 @@ const Page: FC<PageProps> = ({children}) => {
   return (
     <CacheProvider value={cache}>
       <ThemeProvider theme={theme}>
-        <CssBaseline/>
-        <GlobalStyles styles={RootStyles} />
-        {children}
+        <NotificationProvider>
+          <CssBaseline/>
+          <GlobalStyles styles={RootStyles}/>
+          {children}
+        </NotificationProvider>
       </ThemeProvider>
     </CacheProvider>
   );

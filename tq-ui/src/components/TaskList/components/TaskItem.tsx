@@ -1,4 +1,4 @@
-import {Box, Card, CardActionArea, IconButton, Typography} from "@mui/material";
+import {Box, Card, CardActionArea, IconButton} from "@mui/material";
 import React, {FC, SyntheticEvent, useCallback} from "react";
 import {Task, TaskState} from "../../types";
 import {api} from "../../../tools/api";
@@ -8,6 +8,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import StopIcon from "@mui/icons-material/Stop";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CopyAllIcon from '@mui/icons-material/CopyAll';
+import TaskName from "../../Task/components/TaskName";
 
 interface TaskItemProps {
   task: Task,
@@ -57,9 +58,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
             </Box>
             <Box display={'flex'} pl={1} flexGrow={1}>
               <Box sx={{wordBreak: "break-all"}}>
-                <Typography variant={'body1'}>
-                  {label || command}
-                </Typography>
+                <TaskName task={task}/>
               </Box>
             </Box>
             <Box display={'flex'} pl={1}>

@@ -7,6 +7,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import TaskName from "./TaskName";
 
 interface TaskInfoProps {
   task: Task;
@@ -67,9 +68,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, onUpdate}) => {
           <Box flexGrow={1}>
             <CardActionArea onClick={handleTitleClick} sx={{height: '100%'}}>
               <Box display={'flex'} px={1} flexDirection={'row'} sx={{wordBreak: "break-all"}}>
-                <Typography variant={'body1'}>
-                  {label || command}
-                </Typography>
+                <TaskName task={task}/>
               </Box>
               {error && (
                 <Box px={1}>
