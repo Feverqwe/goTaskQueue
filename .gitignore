@@ -6,3 +6,4 @@ storage.json
 open.lock
 goTaskQueue
 /ui/dist
+/assets/www
