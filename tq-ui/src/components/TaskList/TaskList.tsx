@@ -19,7 +19,9 @@ const TaskList: FC<TaskListProps> = () => {
         this.loading = true;
       }
       try {
-        this.taskList = await api.tasks();
+        const taskList = await api.tasks();
+        taskList.reverse();
+        this.taskList = taskList;
       } finally {
         this.loading = false;
       }
