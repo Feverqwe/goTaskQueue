@@ -25,26 +25,34 @@ function action<RequestParams = any, ResponseData = any>({method = 'GET', path}:
   };
 }
 
+interface TaskId {
+  id: string,
+}
+
 export const api = {
   tasks: action<void, Task[]>({
     path: '/api/tasks'
   }),
-  task: action<{id: string}, Task>({
+  task: action<TaskId, Task>({
     path: '/api/task'
   }),
   add: action<{command: string, label: string}, Task>({
     method: 'POST',
     path: '/api/add'
   }),
-  delete: action<{id: string}, string>({
+  clone: action<TaskId, Task>({
+    method: 'POST',
+    path: '/api/clone'
+  }),
+  delete: action<TaskId, string>({
     method: 'POST',
     path: '/api/delete'
   }),
-  taskRun: action<{id: string}, string>({
+  taskRun: action<TaskId, string>({
     method: 'POST',
     path: '/api/task/run'
   }),
-  taskKill: action<{id: string}, string>({
+  taskKill: action<TaskId, string>({
     method: 'POST',
     path: '/api/task/kill'
   }),
