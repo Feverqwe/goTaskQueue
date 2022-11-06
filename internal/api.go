@@ -89,6 +89,19 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 		})
 	})
 
+	router.Post("/api/clone", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (*taskqueue.Task, error) {
+			payload, err := readPayload[GetTaskPayload](r)
+			if err != nil {
+				return nil, err
+			}
+
+			task, err := taskQueue.Clone(payload.Id)
+
+			return task, err
+		})
+	})
+
 	router.Get("/api/task", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (*taskqueue.Task, error) {
 			id := r.URL.Query().Get("id")

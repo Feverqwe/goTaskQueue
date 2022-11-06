@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 )
 
 const LogSize = 4 * 1024 * 1024
@@ -15,15 +16,18 @@ type Task struct {
 	Label      string `json:"label"`
 	Command    string `json:"command"`
 	process    *exec.Cmd
-	IsStarted  bool    `json:"-"`
-	IsFinished bool    `json:"-"`
-	IsCanceled bool    `json:"-"`
-	IsError    bool    `json:"-"`
-	State      string  `json:"state"`
-	Stdout     *[]byte `json:"-"`
-	Stderr     *[]byte `json:"-"`
-	Combined   *[]byte `json:"-"`
-	Error      string  `json:"error"`
+	IsStarted  bool      `json:"-"`
+	IsFinished bool      `json:"-"`
+	IsCanceled bool      `json:"-"`
+	IsError    bool      `json:"-"`
+	State      string    `json:"state"`
+	Stdout     *[]byte   `json:"-"`
+	Stderr     *[]byte   `json:"-"`
+	Combined   *[]byte   `json:"-"`
+	Error      string    `json:"error"`
+	CreatedAt  time.Time `json:"createdAt"`
+	StartedAt  time.Time `json:"startedAt"`
+	FinishedAt time.Time `json:"finishedAt"`
 	mu         sync.Mutex
 	qCh        []chan int
 	stdin      io.WriteCloser
@@ -84,6 +88,8 @@ func (s *Task) Run() error {
 		return err
 	}
 
+	s.StartedAt = time.Now()
+
 	s.process = process
 	s.IsStarted = true
 	s.syncStatus()
@@ -92,6 +98,8 @@ func (s *Task) Run() error {
 		defer stdin.Close()
 
 		err = process.Wait()
+
+		s.FinishedAt = time.Now()
 
 		s.IsFinished = true
 		if err != nil {
@@ -162,4 +170,17 @@ func (s *Task) syncStatus() {
 	} else {
 		s.State = "IDLE"
 	}
+}
+
+func NewTask(id string, command string, label string) *Task {
+	task := Task{
+		Id:        id,
+		Label:     label,
+		Command:   command,
+		CreatedAt: time.Now(),
+	}
+
+	task.syncStatus()
+
+	return &task
 }

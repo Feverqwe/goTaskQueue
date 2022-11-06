@@ -24,15 +24,22 @@ func (s *Queue) Get(id string) (*Task, error) {
 }
 
 func (s *Queue) Add(command string, label string) *Task {
-	task := &Task{
-		Id:      uuid.New().String()[:7],
-		Label:   label,
-		Command: command,
-	}
-	task.syncStatus()
+	id := s.getId()
+	task := NewTask(id, command, label)
 	s.idTask[task.Id] = task
 	s.tasks = append(s.tasks, task)
 	return task
+}
+
+func (s *Queue) Clone(id string) (*Task, error) {
+	origTask, err := s.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	task := s.Add(origTask.Command, origTask.Label)
+
+	return task, nil
 }
 
 func (s *Queue) Del(id string) error {
@@ -56,6 +63,18 @@ func (s *Queue) Del(id string) error {
 	delete(s.idTask, task.Id)
 
 	return nil
+}
+
+func (s *Queue) getId() string {
+	var id string
+	for {
+		id = uuid.New().String()[:7]
+		_, ok := s.idTask[id]
+		if !ok {
+			break
+		}
+	}
+	return id
 }
 
 func NewQueue() *Queue {
