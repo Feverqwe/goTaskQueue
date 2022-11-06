@@ -1,6 +1,8 @@
-import React, {FC, SyntheticEvent, useCallback, useMemo, useRef} from "react";
+import React, {FC, Fragment, SyntheticEvent, useCallback, useMemo, useRef, useState} from "react";
 import {Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import {Template} from "../../RootStore/RootStoreProvider";
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 interface TemplateDialogProps {
   onClose: () => void;
@@ -13,6 +15,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refMap = useMemo(() => new Map(), [variables]);
+  const [isExtended, setExtended] = useState(() => !variables.length);
   variables.forEach(({value}) => {
     refMap.set(value, useRef());
   });
@@ -62,28 +65,49 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
     onClose();
   }, [onSubmit, getCommand]);
 
+  const handleAdvancedClick = useCallback(() => {
+    setExtended(v => !v);
+  }, []);
+
   return (
-      <Dialog open={true} onClose={onClose} fullWidth>
-        <form onSubmit={handleSubmit}>
-          <DialogTitle>{name}</DialogTitle>
-          <DialogContent>
-            {variableInputs}
-            <Box p={1}>
-              <TextField multiline label="Command" defaultValue={command} inputProps={{ref: refCommand}} fullWidth type="text"
-                       variant="standard"/>
+    <Dialog open={true} onClose={onClose} fullWidth>
+      <form onSubmit={handleSubmit}>
+        <DialogTitle>{name}</DialogTitle>
+        <DialogContent>
+          {variableInputs}
+          {isExtended && (
+            <Fragment>
+              <Box p={1}>
+                <TextField multiline label="Command" defaultValue={command} inputProps={{ref: refCommand}} fullWidth
+                           type="text"
+                           variant="standard"/>
+              </Box>
+              <Box p={1}>
+                <TextField label="Label" defaultValue={label || ''} inputProps={{ref: refLabel}} fullWidth type="text"
+                           variant="standard"/>
+              </Box>
+            </Fragment>
+          )}
+          {variableInputs.length > 0 && (
+            <Box py={1}>
+              <Button
+                onClick={handleAdvancedClick}
+                startIcon={
+                  isExtended ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>
+                }
+              >
+                Advanced
+              </Button>
             </Box>
-            <Box p={1}>
-              <TextField label="Label" defaultValue={label || ''} inputProps={{ref: refLabel}} fullWidth type="text"
-                         variant="standard"/>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={onClose}>Cancel</Button>
-            <Button onClick={handleAdd}>Add</Button>
-            <Button type={"submit"}>Add & Run</Button>
-          </DialogActions>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={handleAdd}>Add</Button>
+          <Button type={"submit"}>Add & Run</Button>
+        </DialogActions>
       </form>
-      </Dialog>
+    </Dialog>
   );
 };
 
