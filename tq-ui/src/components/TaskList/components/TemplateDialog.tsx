@@ -40,8 +40,8 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   }, [variables, refMap]);
 
   const getCommand = useCallback(() => {
-    let labelResult = refLabel.current?.value || '';
-    let commandResult = refCommand.current?.value || '';
+    let labelResult = refLabel.current?.value || label || ''
+    let commandResult = refCommand.current?.value || command || '';
 
     refMap.forEach(({current}, variable) => {
       if (!current) return;
