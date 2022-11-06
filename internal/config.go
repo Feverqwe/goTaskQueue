@@ -16,7 +16,6 @@ import (
 type Config struct {
 	Port      int
 	Address   string
-	Public    string
 	Name      string
 	Templates []interface{}
 }
@@ -39,9 +38,7 @@ func getNewConfig() Config {
 	var config = Config{
 		Templates: make([]interface{}, 0),
 	}
-	pwd := getProfilePath()
 	config.Port = 80
-	config.Public = pwd
 	config.Name = "TaskQueue"
 	return config
 }
