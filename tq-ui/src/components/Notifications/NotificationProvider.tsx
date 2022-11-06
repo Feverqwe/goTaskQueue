@@ -82,7 +82,7 @@ const NotificationProvider: FC<NotificationProviderProps> = ({children}) => {
       </NotificationCtx.Provider>
       {stack.map(({color, content, onClose}, index) => {
         return (
-          <Snackbar key={String(index)} open={true} autoHideDuration={6000} onClose={onClose}>
+          <Snackbar key={String(index)} anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true} autoHideDuration={6000} onClose={onClose}>
             <Alert onClose={onClose} severity={color} sx={{ width: '100%' }}>
               {content}
             </Alert>
