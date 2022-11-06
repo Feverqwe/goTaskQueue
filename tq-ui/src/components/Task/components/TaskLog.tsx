@@ -47,23 +47,32 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
 
     const {terminal, fitAddon} = scope;
 
-    let command = '';
+    let charsQueue: string[] = [];
+    let isSending = false;
+    async function sendCommands(): Promise<void> {
+      if (isSending || !charsQueue.length) return;
+      isSending = true;
+      const command = charsQueue.splice(0).join('');
+      try {
+        await api.taskSend({id, data: command});
+      } catch (err) {
+        console.error(`Send command error`, command, id);
+      } finally {
+        isSending = false;
+      }
+      if (charsQueue.length) {
+        return sendCommands();
+      }
+    }
+
     terminal.onData((char) => {
       if (scope.task.state !== TaskState.Started) return;
-      switch (char) {
-        case '\r': {
-          const eol ='\n';
-          command += eol;
-          terminal.write(eol);
-          api.taskSend({id, data: command});
-          command = ''
-          break;
-        }
-        default: {
-          command += char;
-          terminal.write(char);
-        }
+      if (char === '\r') {
+        char = '\n';
       }
+      terminal.write(char);
+      charsQueue.push(char);
+      sendCommands();
     });
 
     const onResize = () => {
