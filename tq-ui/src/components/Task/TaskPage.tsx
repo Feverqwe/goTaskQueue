@@ -42,7 +42,7 @@ const TaskPage: FC = () => {
   useEffect(() => {
     const complete = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
     const taskState = state.task?.state;
-    if (taskState && complete.includes(taskState)) return;
+    if (!taskState || complete.includes(taskState)) return;
     return () => {
       if (state.task && complete.includes(state.task.state)) {
         notification(state.task);
