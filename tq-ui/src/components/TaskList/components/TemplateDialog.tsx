@@ -10,7 +10,8 @@ interface TemplateDialogProps {
 
 const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) => {
   const {name, variables, command, label} = template;
-  const refInput = useRef();
+  const refCommand = useRef<HTMLInputElement>(null);
+  const refLabel = useRef<HTMLInputElement>(null);
   const refMap = useMemo(() => new Map(), [variables]);
   variables.forEach(({value}) => {
     refMap.set(value, useRef());
@@ -36,8 +37,8 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   }, [variables, refMap]);
 
   const getCommand = useCallback(() => {
-    let labelResult = label || '';
-    let commandResult = command;
+    let labelResult = refLabel.current?.value || '';
+    let commandResult = refCommand.current?.value || '';
 
     refMap.forEach(({current}, variable) => {
       if (!current) return;
@@ -68,8 +69,12 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
           <DialogContent>
             {variableInputs}
             <Box p={1}>
-              <TextField multiline label="Command" defaultValue={command} inputProps={{ref: refInput}} fullWidth type="text"
+              <TextField multiline label="Command" defaultValue={command} inputProps={{ref: refCommand}} fullWidth type="text"
                        variant="standard"/>
+            </Box>
+            <Box p={1}>
+              <TextField label="Label" defaultValue={label || ''} inputProps={{ref: refLabel}} fullWidth type="text"
+                         variant="standard"/>
             </Box>
           </DialogContent>
           <DialogActions>
