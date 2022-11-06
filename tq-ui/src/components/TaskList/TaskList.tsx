@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useEffect} from "react";
-import {Container} from "@mui/material";
+import {Box, CircularProgress, Container} from "@mui/material";
 import TaskItem from "./components/TaskItem";
 import TaskInput from "./components/TaskInput";
 import {observer, useLocalObservable} from "mobx-react-lite";
@@ -48,7 +48,9 @@ const TaskList: FC<TaskListProps> = () => {
       <TaskInput onUpdate={handleUpdate}/>
       <>
         {state.loading && (
-          'Loading...'
+          <Box display={'flex'} justifyContent={'center'}>
+            <CircularProgress />
+          </Box>
         )}
         {!state.loading && (
           state.taskList.map((task) =>

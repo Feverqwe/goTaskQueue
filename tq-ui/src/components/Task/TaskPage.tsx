@@ -1,4 +1,4 @@
-import {Container} from "@mui/material";
+import {Box, CircularProgress, Container} from "@mui/material";
 import React, {FC, useCallback, useContext, useEffect} from "react";
 import TaskHeader from "./components/TaskHeader";
 import TaskLog from "./components/TaskLog";
@@ -53,7 +53,9 @@ const TaskPage: FC = () => {
   return (
     <Container maxWidth={false} disableGutters={true} sx={{display: 'flex', flexDirection: 'column', height: '100%'}}>
       {state.loading && (
-        'Loading...'
+        <Box p={1} display={'flex'} justifyContent={'center'}>
+          <CircularProgress />
+        </Box>
       )}
       {state.task && (
         <>
