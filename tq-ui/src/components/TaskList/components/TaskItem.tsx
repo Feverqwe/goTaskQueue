@@ -1,4 +1,4 @@
-import {Box, Card, CardActionArea, IconButton} from "@mui/material";
+import {Box, Card, CardActionArea, IconButton, Typography} from "@mui/material";
 import React, {FC, SyntheticEvent, useCallback} from "react";
 import {Task, TaskState} from "../../types";
 import {api} from "../../../tools/api";
@@ -57,7 +57,9 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
             </Box>
             <Box display={'flex'} pl={1} flexGrow={1}>
               <Box sx={{wordBreak: "break-all"}}>
-                {label || command}
+                <Typography variant={'body1'}>
+                  {label || command}
+                </Typography>
               </Box>
             </Box>
             <Box display={'flex'} pl={1}>
