@@ -172,6 +172,8 @@ func handleWww(router *internal.Router, config *internal.Config) {
 
 		if assetPath == "/" {
 			assetPath = "/index.html"
+		} else if assetPath == "/task" {
+			assetPath = "/task.html"
 		}
 
 		var err error
