@@ -2,7 +2,7 @@ import React, {FC, useCallback, useMemo} from "react";
 import {Box, Divider, IconButton, Input, Menu, MenuItem, Paper, Typography} from "@mui/material";
 import {Task, TaskState} from "../../types";
 import {api} from "../../../tools/api";
-import TaskStatusIcon from "../../TaskList/components/TaskStatus";
+import TaskStatusIcon from "./TaskStatus";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';

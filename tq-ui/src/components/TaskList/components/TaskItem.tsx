@@ -2,7 +2,7 @@ import {Box, Card, CardActionArea, IconButton} from "@mui/material";
 import React, {FC, SyntheticEvent, useCallback} from "react";
 import {Task, TaskState} from "../../types";
 import {api} from "../../../tools/api";
-import TaskStatusIcon from "./TaskStatus";
+import TaskStatusIcon from "../../Task/components/TaskStatus";
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import ClearIcon from '@mui/icons-material/Clear';
 import StopIcon from "@mui/icons-material/Stop";
