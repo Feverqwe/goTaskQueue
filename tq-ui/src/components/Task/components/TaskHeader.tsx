@@ -8,14 +8,17 @@ import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import TaskName from "./TaskName";
+import {Check} from "@mui/icons-material";
 
 interface TaskInfoProps {
   task: Task;
+  remapNewLine: boolean;
+  onToggleFixNewLine: () => void;
   onUpdate: () => void;
 }
 
-const TaskHeader: FC<TaskInfoProps> = ({task, onUpdate}) => {
-  const {id, label, state, command, error} = task;
+const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, onUpdate}) => {
+  const {id, state, command, error} = task;
   const [isExpanded, setExpended] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -97,7 +100,17 @@ const TaskHeader: FC<TaskInfoProps> = ({task, onUpdate}) => {
               <TaskStatusIcon task={task}/>
             </IconButton>
             <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
-              <MenuItem onClick={handleSigint}>SIGINT</MenuItem>
+              <MenuItem onClick={onToggleFixNewLine}>
+                Remap new line
+                {remapNewLine && (
+                  <Box display={'flex'} alignItems={'center'} pl={1}>
+                    <Check fontSize={'small'}/>
+                  </Box>
+                )}
+              </MenuItem>
+              {state === TaskState.Started && (
+                <MenuItem onClick={handleSigint}>SIGINT</MenuItem>
+              )}
               <Divider/>
               <MenuItem component={'a'} href={`/api/task/stdout?id=${id}`} target={'_blank'}>stdout.log</MenuItem>
               <MenuItem component={'a'} href={`/api/task/stderr?id=${id}`} target={'_blank'}>stderr.log</MenuItem>

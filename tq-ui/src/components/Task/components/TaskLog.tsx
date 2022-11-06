@@ -12,15 +12,16 @@ import "./XTerm.css";
 
 interface TaskLogProps {
   task: Task,
+  remapNewLine: boolean;
   onUpdate: () => void;
 }
 
-const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
+const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   const {id, state} = task;
   const [isOpen, setOpen] = useState(false);
   const [isError, setError] = useState(false);
   const refWrapper = useRef<null | HTMLDivElement>(null);
-  const [scope] = useState<{task: Task, terminal: Terminal, fitAddon: FitAddon}>(() => {
+  const [scope] = useState<{task: Task, terminal: Terminal, fitAddon: FitAddon, remapNewLine: boolean}>(() => {
     const terminal = new Terminal({
       convertEol: true,
       fontSize: 14,
@@ -35,9 +36,11 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       terminal,
       task,
       fitAddon,
+      remapNewLine,
     };
   });
   scope.task = task;
+  scope.remapNewLine = remapNewLine;
 
   useEffect(() => {
     const wrapper = refWrapper.current;
@@ -67,11 +70,12 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
 
     terminal.onData((char) => {
       if (scope.task.state !== TaskState.Started) return;
-      if (char === '\r') {
-        char = '\n';
-      } else
-      if (char === '\n') {
-        char = '\r';
+      if (scope.remapNewLine) {
+        if (char === '\r') {
+          char = '\n';
+        } else if (char === '\n') {
+          char = '\r';
+        }
       }
       charsQueue.push(char);
       sendCommands();
@@ -113,13 +117,13 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       ws.close();
       terminal.dispose();
     };
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
     return () => {
       isOpen && [TaskState.Idle, TaskState.Started].includes(state) && onUpdate();
     }
-  }, [state, isOpen]);
+  }, [onUpdate, state, isOpen]);
 
   return (
     <Box px={1} pb={1} sx={{flexGrow: 1}}>

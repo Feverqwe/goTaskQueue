@@ -1,5 +1,5 @@
 import {Box, CircularProgress, Container} from "@mui/material";
-import React, {FC, useCallback, useContext, useEffect} from "react";
+import React, {FC, useCallback, useContext, useEffect, useState} from "react";
 import TaskHeader from "./components/TaskHeader";
 import TaskLog from "./components/TaskLog";
 import {observer, useLocalObservable} from "mobx-react-lite";
@@ -9,6 +9,7 @@ import {NotificationCtx} from "../Notifications/NotificationCtx";
 
 const TaskPage: FC = () => {
   const id = new URLSearchParams(location.search).get('id');
+  const [remapNewLine, setRemapNewLine] = useState(true);
   const notification = useContext(NotificationCtx);
 
   const state = useLocalObservable(() => ({
@@ -50,6 +51,10 @@ const TaskPage: FC = () => {
     };
   }, [state.task?.state]);
 
+  const handleToggleFixNewLine = useCallback(() => {
+    setRemapNewLine(v => !v);
+  }, []);
+
   return (
     <Container maxWidth={false} disableGutters={true} sx={{display: 'flex', flexDirection: 'column', height: '100%'}}>
       {state.loading && (
@@ -59,8 +64,8 @@ const TaskPage: FC = () => {
       )}
       {state.task && (
         <>
-          <TaskHeader task={state.task} onUpdate={handleUpdate}/>
-          <TaskLog task={state.task} onUpdate={handleUpdate}/>
+          <TaskHeader task={state.task} remapNewLine={remapNewLine} onToggleFixNewLine={handleToggleFixNewLine} onUpdate={handleUpdate}/>
+          <TaskLog task={state.task} remapNewLine={remapNewLine} onUpdate={handleUpdate}/>
         </>
       )}
     </Container>
