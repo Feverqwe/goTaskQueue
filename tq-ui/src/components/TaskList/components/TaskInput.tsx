@@ -16,7 +16,6 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const refInput = useRef<HTMLInputElement>();
   const rootStore = useContext(RootStoreCtx);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
   const [template, setTemplate] = useState<Template | null>(null);
 
   const handleAdd = useCallback(async (command: string, label = '', run = true) => {
@@ -59,17 +58,9 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseTemplates();
   }, []);
 
-  const handleShowMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchorEl(e.currentTarget);
-  }, []);
-
-  const handleCloseMenu = useCallback(() => {
-    setMenuAnchorEl(null);
-  }, []);
-
   const handleReloadConfig = useCallback(async () => {
-    await api.reloadConfig()
-    handleCloseMenu();
+    await api.reloadConfig();
+    handleCloseTemplates();
   }, []);
 
   const templates = useMemo(() => {
@@ -100,11 +91,6 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
               </IconButton>
               <Menu open={Boolean(anchorEl)} onClose={handleCloseTemplates} anchorEl={anchorEl}>
                 {templates}
-              </Menu>
-              <IconButton onClick={handleShowMenu}>
-                <SettingsIcon/>
-              </IconButton>
-              <Menu open={Boolean(menuAnchorEl)} onClose={handleCloseMenu} anchorEl={menuAnchorEl}>
                 <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
               </Menu>
             </Box>
