@@ -12,4 +12,7 @@ export interface Task {
   label: string;
   state: TaskState;
   error: string;
+  createdAt: string;
+  startedAt: string;
+  finishedAt: string;
 }

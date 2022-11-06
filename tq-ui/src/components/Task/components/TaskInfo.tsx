@@ -1,11 +1,12 @@
 import React, {FC, useCallback, useMemo} from "react";
-import {Box, IconButton, Input, Menu, MenuItem, Paper, Typography} from "@mui/material";
+import {Box, Divider, IconButton, Input, Menu, MenuItem, Paper, Typography} from "@mui/material";
 import {Task, TaskState} from "../../types";
 import {api} from "../../../tools/api";
 import TaskStatusIcon from "../../TaskList/components/TaskStatus";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 interface TaskInfoProps {
   task: Task;
@@ -43,6 +44,11 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
     handleCloseMenu();
   }, [id]);
 
+  const handleRestart = useCallback(async () => {
+    const task = await api.clone({id});
+    location.href = '/task.html?id=' + task.id;
+  }, [id]);
+
   return (
     <Box p={1}>
       <Paper component="form">
@@ -75,17 +81,22 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
               <IconButton onClick={handleStop}>
                 <StopIcon/>
               </IconButton>
-            )}
-            {state === TaskState.Idle && (
+            ) || state === TaskState.Idle && (
               <IconButton onClick={handleStart}>
                 <PlayArrowIcon/>
               </IconButton>
+            ) || (
+              <IconButton onClick={handleRestart}>
+                <RestartAltIcon/>
+              </IconButton>
             )}
+
             <IconButton onClick={handleOpenMenu}>
               <TaskStatusIcon task={task}/>
             </IconButton>
             <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
               <MenuItem onClick={handleSigint}>SIGINT</MenuItem>
+              <Divider />
               <MenuItem component={'a'} href={`/api/task/stdout?id=${id}`} target={'_blank'}>stdout.log</MenuItem>
               <MenuItem component={'a'} href={`/api/task/stderr?id=${id}`} target={'_blank'}>stderr.log</MenuItem>
               <MenuItem component={'a'} href={`/api/task/combined?id=${id}`} target={'_blank'}>combined.log</MenuItem>

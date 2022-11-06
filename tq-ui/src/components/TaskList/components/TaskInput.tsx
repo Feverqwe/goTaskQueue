@@ -1,5 +1,5 @@
 import React, {FC, FormEvent, Fragment, useCallback, useContext, useMemo, useRef, useState} from "react";
-import {Box, IconButton, Input, InputAdornment, Menu, MenuItem, Paper} from "@mui/material";
+import {Box, Divider, IconButton, Input, InputAdornment, Menu, MenuItem, Paper} from "@mui/material";
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import AddIcon from '@mui/icons-material/Add';
 import {api} from "../../../tools/api";
@@ -91,6 +91,9 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
               </IconButton>
               <Menu open={Boolean(anchorEl)} onClose={handleCloseTemplates} anchorEl={anchorEl}>
                 {templates}
+                {templates.length > 0 && (
+                  <Divider />
+                )}
                 <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
               </Menu>
             </Box>
