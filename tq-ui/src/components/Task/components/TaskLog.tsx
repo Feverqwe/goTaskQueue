@@ -70,7 +70,6 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       if (char === '\r') {
         char = '\n';
       }
-      terminal.write(char);
       charsQueue.push(char);
       sendCommands();
     });
