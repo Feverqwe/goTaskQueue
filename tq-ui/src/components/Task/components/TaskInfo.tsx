@@ -38,11 +38,6 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
     setAnchorEl(null);
   }, []);
 
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(command);
-    handleCloseMenu();
-  }, [command]);
-
   const handleSigint = useCallback(() => {
     api.taskSignal({id, signal: 'SIGINT'});
     handleCloseMenu();
@@ -90,7 +85,6 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
               <TaskStatusIcon task={task}/>
             </IconButton>
             <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
-              <MenuItem onClick={handleCopy}>Copy command</MenuItem>
               <MenuItem onClick={handleSigint}>SIGINT</MenuItem>
               <MenuItem component={'a'} href={`/api/task/stdout?id=${id}`} target={'_blank'}>stdout.log</MenuItem>
               <MenuItem component={'a'} href={`/api/task/stderr?id=${id}`} target={'_blank'}>stderr.log</MenuItem>
