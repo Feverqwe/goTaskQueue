@@ -69,6 +69,9 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       if (scope.task.state !== TaskState.Started) return;
       if (char === '\r') {
         char = '\n';
+      } else
+      if (char === '\n') {
+        char = '\r';
       }
       charsQueue.push(char);
       sendCommands();
