@@ -1,6 +1,6 @@
 import {Container} from "@mui/material";
 import React, {FC, useCallback, useEffect} from "react";
-import TaskInfo from "./components/TaskInfo";
+import TaskHeader from "./components/TaskHeader";
 import TaskLog from "./components/TaskLog";
 import {observer, useLocalObservable} from "mobx-react-lite";
 import {Task} from "../types";
@@ -44,7 +44,7 @@ const TaskPage: FC = () => {
       )}
       {state.task && (
         <>
-          <TaskInfo task={state.task} onUpdate={handleUpdate}/>
+          <TaskHeader task={state.task} onUpdate={handleUpdate}/>
           <TaskLog task={state.task} onUpdate={handleUpdate}/>
         </>
       )}

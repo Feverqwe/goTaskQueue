@@ -13,7 +13,7 @@ interface TaskInfoProps {
   onUpdate: () => void;
 }
 
-const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
+const TaskHeader: FC<TaskInfoProps> = ({task, onUpdate}) => {
   const {id, state, command, error} = task;
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -109,4 +109,4 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
   )
 };
 
-export default TaskInfo;
+export default TaskHeader;
