@@ -76,6 +76,10 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     setTemplate(null);
   }, []);
 
+  const handleCustomCommand = useCallback(() => {
+    handleSelectTemplate({name: 'Run', variables: [], command: '', label: ''});
+  }, []);
+
   return (
     <Fragment>
       <Box p={1}>
@@ -94,6 +98,9 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
                 {templates.length > 0 && (
                   <Divider />
                 )}
+                <MenuItem onClick={handleCustomCommand}>
+                  Run
+                </MenuItem>
                 <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
               </Menu>
             </Box>
