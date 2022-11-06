@@ -1,5 +1,5 @@
-import React, {FC, useCallback, useMemo} from "react";
-import {Box, Divider, IconButton, Input, Menu, MenuItem, Paper, Typography} from "@mui/material";
+import React, {FC, useCallback, useMemo, useState} from "react";
+import {Box, CardActionArea, Divider, IconButton, Input, Menu, MenuItem, Paper, Typography} from "@mui/material";
 import {Task, TaskState} from "../../types";
 import {api} from "../../../tools/api";
 import TaskStatusIcon from "./TaskStatus";
@@ -14,7 +14,8 @@ interface TaskInfoProps {
 }
 
 const TaskHeader: FC<TaskInfoProps> = ({task, onUpdate}) => {
-  const {id, state, command, error} = task;
+  const {id, label, state, command, error} = task;
+  const [isExpanded, setExpended] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   useMemo(() => {
@@ -50,34 +51,36 @@ const TaskHeader: FC<TaskInfoProps> = ({task, onUpdate}) => {
     location.href = '/task.html?id=' + task.id;
   }, [id]);
 
+  const handleTitleClick = useCallback(() => {
+    setExpended(v => !v);
+  }, []);
+
   return (
     <Box p={1}>
       <Paper component="form">
-        <Box display={'flex'} flexDirection={'row'} alignItems={'center'}>
-          <Box pr={1}>
+        <Box display={'flex'} flexDirection={'row'} alignItems={'stretch'}>
+          <Box display={'flex'} alignItems={'center'}>
             <IconButton href={'/'}>
               <ChevronLeftIcon/>
             </IconButton>
           </Box>
           <Box flexGrow={1}>
-            <Box display={'flex'} flexDirection={'row'}>
-              <Input
-                value={command}
-                readOnly
-                multiline
-                fullWidth
-                sx={{flex: 1}}
-              />
-            </Box>
-            {error && (
-              <Box>
-                <Typography variant={'subtitle2'} color={'#ff8a80'}>
-                  {error}
+            <CardActionArea onClick={handleTitleClick} sx={{height: '100%'}}>
+              <Box display={'flex'} px={1} flexDirection={'row'} sx={{wordBreak: "break-all"}}>
+                <Typography variant={'body1'}>
+                  {label || command}
                 </Typography>
               </Box>
-            )}
+              {error && (
+                <Box px={1}>
+                  <Typography variant={'subtitle2'} color={'#ff8a80'}>
+                    {error}
+                  </Typography>
+                </Box>
+              )}
+            </CardActionArea>
           </Box>
-          <Box pl={1} display={'flex'} alignItems={'center'}>
+          <Box display={'flex'} alignItems={'center'}>
             {state === TaskState.Started && (
               <IconButton onClick={handleStop}>
                 <StopIcon/>
@@ -91,19 +94,29 @@ const TaskHeader: FC<TaskInfoProps> = ({task, onUpdate}) => {
                 <RestartAltIcon/>
               </IconButton>
             )}
-
             <IconButton onClick={handleOpenMenu}>
               <TaskStatusIcon task={task}/>
             </IconButton>
             <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
               <MenuItem onClick={handleSigint}>SIGINT</MenuItem>
-              <Divider />
+              <Divider/>
               <MenuItem component={'a'} href={`/api/task/stdout?id=${id}`} target={'_blank'}>stdout.log</MenuItem>
               <MenuItem component={'a'} href={`/api/task/stderr?id=${id}`} target={'_blank'}>stderr.log</MenuItem>
               <MenuItem component={'a'} href={`/api/task/combined?id=${id}`} target={'_blank'}>combined.log</MenuItem>
             </Menu>
           </Box>
         </Box>
+        {isExpanded && (
+          <Box p={1}>
+            <Input
+              value={command}
+              readOnly
+              multiline
+              fullWidth
+              sx={{flex: 1}}
+            />
+          </Box>
+        )}
       </Paper>
     </Box>
   )
