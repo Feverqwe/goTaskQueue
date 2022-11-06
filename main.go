@@ -167,6 +167,7 @@ func handleWww(router *internal.Router, config *internal.Config) {
 	}
 
 	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mTime := binTime
 		assetPath := r.URL.Path
 
 		if assetPath == "/" {
@@ -177,7 +178,7 @@ func handleWww(router *internal.Router, config *internal.Config) {
 		var content []byte
 		if DEBUG {
 			content, err = os.ReadFile("./tq-ui/dist" + assetPath)
-			binTime = time.Now()
+			mTime = time.Now()
 		} else {
 			content, err = assets.Asset("www" + assetPath)
 		}
@@ -187,7 +188,7 @@ func handleWww(router *internal.Router, config *internal.Config) {
 		}
 
 		if assetPath == "/index.html" || assetPath == "/task.html" {
-			binTime = time.Now()
+			mTime = time.Now()
 
 			store := RootStore{
 				Templates: config.Templates,
@@ -204,7 +205,7 @@ func handleWww(router *internal.Router, config *internal.Config) {
 
 		reader := bytes.NewReader(content)
 		name := path.Base(assetPath)
-		http.ServeContent(w, r, name, binTime, reader)
+		http.ServeContent(w, r, name, mTime, reader)
 	}))
 
 	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/"}, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
