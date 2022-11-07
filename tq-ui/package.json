@@ -8,7 +8,7 @@
     "clean:www": "del-cli --force ../assets/www",
     "copy:dist": "ncp ./dist ../assets/www",
     "build": "webpack --mode production",
-    "watch": "webpack --mode development --watch",
+    "dev": "webpack --mode development --watch",
     "release": "npm run clean:dist && npm run build && npm run clean:www && npm run copy:dist",
     "tsc": "tsc --noEmit"
   },

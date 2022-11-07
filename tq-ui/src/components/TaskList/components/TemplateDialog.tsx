@@ -69,8 +69,13 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
     setExtended(v => !v);
   }, []);
 
+  const handleClose = useCallback((e: Event, reason: string) => {
+    if (reason === 'backdropClick') return;
+    onClose();
+  }, [onClose]);
+
   return (
-    <Dialog open={true} onClose={onClose} fullWidth>
+    <Dialog open={true} onClose={handleClose} fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>{name}</DialogTitle>
         <DialogContent>
