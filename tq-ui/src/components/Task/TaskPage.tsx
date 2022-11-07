@@ -6,13 +6,15 @@ import {observer, useLocalObservable} from "mobx-react-lite";
 import {Task, TaskState} from "../types";
 import {api} from "../../tools/api";
 import {NotificationCtx} from "../Notifications/NotificationCtx";
+import TaskInfo from "./components/TaskInfo";
 
 const TaskPage: FC = () => {
   const id = new URLSearchParams(location.search).get('id');
   const [remapNewLine, setRemapNewLine] = useState(true);
+  const [showInfo, setInfo] = useState(false);
   const notification = useContext(NotificationCtx);
 
-  const state = useLocalObservable(() => ({
+  const {task, loading, fetchTask} = useLocalObservable(() => ({
     task: null as null | Task,
     loading: true,
     async fetchTask(id: string, silent = false) {
@@ -31,48 +33,55 @@ const TaskPage: FC = () => {
   }));
 
   const handleUpdate = useCallback(() => {
-    if (!state.task) return;
-    state.fetchTask(state.task.id, true);
-  }, [state]);
+    if (!task) return;
+    fetchTask(task.id, true);
+  }, [task, fetchTask]);
 
   useEffect(() => {
     if (!id) return;
 
-    state.fetchTask(id);
-  }, [id]);
+    fetchTask(id);
+  }, [id, fetchTask]);
 
   useEffect(() => {
     const complete = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
-    const taskState = state.task?.state;
+    const taskState = task?.state;
     if (!taskState || complete.includes(taskState)) return;
     return () => {
-      if (state.task && complete.includes(state.task.state)) {
-        notification(state.task);
+      if (task && complete.includes(task.state)) {
+        notification(task);
       }
     };
-  }, [state.task?.state]);
+  }, [task?.state]);
 
   const handleToggleFixNewLine = useCallback(() => {
     setRemapNewLine(v => !v);
   }, []);
 
+  const handleToggleInfo = useCallback(() => {
+    setInfo(v => !v);
+  }, []);
+
   return (
     <Container maxWidth={false} disableGutters={true} sx={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-      {state.loading && (
+      {loading && (
         <Box p={1} display={'flex'} justifyContent={'center'}>
           <CircularProgress />
         </Box>
       )}
-      {state.task && (
-        <>
-          <TaskHeader task={state.task} remapNewLine={remapNewLine} onToggleFixNewLine={handleToggleFixNewLine} onUpdate={handleUpdate}/>
-          <TaskLog task={state.task} remapNewLine={remapNewLine} onUpdate={handleUpdate}/>
-        </>
-      )}
-      {!state.loading && !state.task && (
+      {!loading && !task && (
         <Box p={1} display={'flex'} justifyContent={'center'}>
           Task not found
         </Box>
+      )}
+      {task && (
+        <>
+          <TaskHeader task={task} remapNewLine={remapNewLine} onToggleInfo={handleToggleInfo} onToggleFixNewLine={handleToggleFixNewLine} onUpdate={handleUpdate}/>
+          {showInfo && (
+            <TaskInfo task={task} />
+          )}
+          <TaskLog task={task} remapNewLine={remapNewLine} onUpdate={handleUpdate}/>
+        </>
       )}
     </Container>
   );
