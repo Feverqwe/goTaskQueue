@@ -11,7 +11,7 @@ interface TaskListProps {
 }
 
 const TaskList: FC<TaskListProps> = () => {
-  const state = useLocalObservable(() => ({
+  const {loading, taskList, fetchTaskList} = useLocalObservable(() => ({
     loading: true,
     taskList: [] as Task[],
     async fetchTaskList(silent = false) {
@@ -29,31 +29,31 @@ const TaskList: FC<TaskListProps> = () => {
   }));
 
   const handleUpdate = useCallback(() => {
-    state.fetchTaskList(true);
-  }, [state]);
+    fetchTaskList(true);
+  }, [fetchTaskList]);
 
   useEffect(() => {
-    state.fetchTaskList();
-  }, [state]);
+    fetchTaskList();
+  }, [fetchTaskList]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      state.fetchTaskList(true);
+      fetchTaskList(true);
     }, 30 * 1000);
     return () => clearInterval(intervalId);
-  }, [state]);
+  }, [fetchTaskList]);
 
   return (
     <Container maxWidth={false} disableGutters={true}>
       <TaskInput onUpdate={handleUpdate}/>
       <>
-        {state.loading && (
+        {loading && (
           <Box display={'flex'} justifyContent={'center'}>
             <CircularProgress />
           </Box>
         )}
-        {!state.loading && (
-          state.taskList.map((task) =>
+        {!loading && (
+          taskList.map((task) =>
             <TaskItem key={task.id} task={task} onUpdate={handleUpdate}/>
           )
         )}
