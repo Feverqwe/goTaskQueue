@@ -100,9 +100,9 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button onClick={handleAdd}>Add</Button>
-          <Button type={"submit"}>Add & Run</Button>
+          <Button variant={"outlined"} onClick={onClose}>Cancel</Button>
+          <Button variant={"outlined"} onClick={handleAdd}>Add</Button>
+          <Button variant={"contained"} type={"submit"}>Add & Run</Button>
         </DialogActions>
       </form>
     </Dialog>

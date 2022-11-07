@@ -41,8 +41,8 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, 
         </DialogContent>
       )}
       <DialogActions>
-        <Button disabled={isLoading} onClick={onClose}>Cancel</Button>
-        <LoadingButton disabled={isLoading} loading={isLoading} onClick={handleSubmit} autoFocus>
+        <Button variant={"outlined"} disabled={isLoading} onClick={onClose}>Cancel</Button>
+        <LoadingButton variant={"contained"} disabled={isLoading} loading={isLoading} onClick={handleSubmit} autoFocus>
           Confirm
         </LoadingButton>
       </DialogActions>
