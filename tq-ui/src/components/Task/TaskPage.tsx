@@ -1,5 +1,5 @@
 import {Box, CircularProgress, Container} from "@mui/material";
-import React, {FC, useCallback, useContext, useEffect, useState} from "react";
+import React, {FC, useCallback, useContext, useEffect, useRef, useState} from "react";
 import TaskHeader from "./components/TaskHeader";
 import TaskLog from "./components/TaskLog";
 import {observer, useLocalObservable} from "mobx-react-lite";
@@ -8,7 +8,6 @@ import {api} from "../../tools/api";
 import {NotificationCtx} from "../Notifications/NotificationCtx";
 import TaskInfo from "./components/TaskInfo";
 
-
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
 const TaskPage: FC = () => {
@@ -16,6 +15,7 @@ const TaskPage: FC = () => {
   const [remapNewLine, setRemapNewLine] = useState(true);
   const [showInfo, setInfo] = useState(false);
   const notification = useContext(NotificationCtx);
+  const refTask = useRef<Task>();
 
   const {task, loading, fetchTask} = useLocalObservable(() => ({
     task: null as null | Task,
@@ -25,14 +25,7 @@ const TaskPage: FC = () => {
         this.loading = true;
       }
       try {
-        const prevTask = this.task;
-        const task = await api.task({id})
-        this.task = task;
-        if (
-          prevTask && prevTask.id === task.id && 
-          !completeStates.includes(prevTask.state) && completeStates.includes(task.state)) {
-            notification(task);
-        }
+        this.task = await api.task({id})
       } catch (err) {
         this.task = null;
         console.error(err);
@@ -41,6 +34,7 @@ const TaskPage: FC = () => {
       }
     }
   }));
+  refTask.current = task || undefined;
 
   const handleUpdate = useCallback(() => {
     if (!task) return;
@@ -52,6 +46,17 @@ const TaskPage: FC = () => {
 
     fetchTask(id);
   }, [id, fetchTask]);
+
+  useEffect(() => {
+    const taskState = task?.state;
+    if (!taskState || completeStates.includes(taskState)) return;
+    return () => {
+      const currentTask = refTask.current;
+      if (currentTask && completeStates.includes(currentTask.state)) {
+        notification(currentTask);
+      }
+    };
+  }, [task?.state]);
 
   const handleToggleFixNewLine = useCallback(() => {
     setRemapNewLine(v => !v);
