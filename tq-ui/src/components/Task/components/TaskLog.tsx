@@ -1,5 +1,5 @@
-import React, {FC, useEffect, useRef, useState} from "react";
-import {Box} from "@mui/material";
+import React, {FC, useCallback, useEffect, useRef, useState} from "react";
+import {Alert, Box, Button, Snackbar} from "@mui/material";
 import {Task, TaskState} from "../../types";
 import {Terminal} from "xterm";
 import {FitAddon} from 'xterm-addon-fit';
@@ -21,7 +21,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   const [isOpen, setOpen] = useState(false);
   const [isError, setError] = useState(false);
   const refWrapper = useRef<null | HTMLDivElement>(null);
-  const [scope] = useState<{task: Task, terminal: Terminal, fitAddon: FitAddon, remapNewLine: boolean}>(() => {
+  const [scope] = useState(() => {
     const terminal = new Terminal({
       convertEol: true,
       fontSize: 14,
@@ -31,24 +31,6 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     const fitAddon = new FitAddon();
 
     terminal.loadAddon(fitAddon);
-
-    return {
-      terminal,
-      task,
-      fitAddon,
-      remapNewLine,
-    };
-  });
-  scope.task = task;
-  scope.remapNewLine = remapNewLine;
-
-  useEffect(() => {
-    const wrapper = refWrapper.current;
-    if (!wrapper) {
-      throw new Error('Ctr is empty');
-    }
-
-    const {terminal, fitAddon} = scope;
 
     let charsQueue: string[] = [];
     let isSending = false;
@@ -81,6 +63,50 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       sendCommands();
     });
 
+    let ws: WebSocket;
+
+    return {
+      wsConnect: () => {
+        setError(false);
+        ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
+        ws.onopen = () => {
+          setOpen(true);
+        };
+        ws.onclose = () => {
+          setOpen(false);
+        };
+        ws.onmessage = async (e: MessageEvent<Blob>) => {
+          const buffer = await e.data.arrayBuffer();
+          terminal.write(new Uint8Array(buffer));
+        };
+        ws.onerror = () => {
+          setError(true);
+        };
+      },
+      wsClose: () => {
+        ws.close();
+      },
+      wsReconnect() {
+        this.wsClose();
+        this.wsConnect();
+      },
+      terminal,
+      task,
+      fitAddon,
+      remapNewLine,
+    };
+  });
+  scope.task = task;
+  scope.remapNewLine = remapNewLine;
+
+  useEffect(() => {
+    const wrapper = refWrapper.current;
+    if (!wrapper) {
+      throw new Error('Ctr is empty');
+    }
+
+    const {terminal, fitAddon} = scope;
+
     const onResize = () => {
       fitAddon.fit();
     };
@@ -93,28 +119,11 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     terminal.open(wrapper);
 
-    const onData = (data: Uint8Array) => {
-      terminal.write(data);
-    }
-
-    const ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
-    ws.onopen = () => {
-      setOpen(true);
-    };
-    ws.onclose = () => {
-      setOpen(false);
-    };
-    ws.onmessage = async (e: MessageEvent<Blob>) => {
-      const buffer = await e.data.arrayBuffer();
-      onData(new Uint8Array(buffer));
-    };
-    ws.onerror = () => {
-      setError(true);
-    };
+    scope.wsConnect();
 
     return () => {
       window.removeEventListener('resize', onResizeThrottled);
-      ws.close();
+      scope.wsClose();
       terminal.dispose();
     };
   }, [scope]);
@@ -125,9 +134,22 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     }
   }, [onUpdate, state, isOpen]);
 
+  const handleReconnect = useCallback(() => {
+    scope.wsReconnect();
+  }, [scope]);
+
   return (
     <Box px={1} pb={1} sx={{flexGrow: 1}}>
       <div style={{height: '100%', width: '100%'}} ref={refWrapper}/>
+      {isError && (
+        <Snackbar anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true}>
+          <Alert severity={'error'} sx={{ width: '100%' }} action={
+            <Button size={'small'} onClick={handleReconnect}>Reconnect</Button>
+          }>
+            WebSocket error
+          </Alert>
+        </Snackbar>
+      )}
     </Box>
   );
 };
