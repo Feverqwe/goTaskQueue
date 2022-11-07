@@ -39,7 +39,7 @@ const TaskPage: FC = () => {
   const handleUpdate = useCallback(() => {
     if (!task) return;
     fetchTask(task.id, true);
-  }, [task, fetchTask]);
+  }, [task?.id, fetchTask]);
 
   useEffect(() => {
     if (!id) return;
