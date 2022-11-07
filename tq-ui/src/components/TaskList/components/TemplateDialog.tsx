@@ -40,8 +40,8 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   }, [variables, refMap]);
 
   const getCommand = useCallback(() => {
-    let labelResult = refLabel.current?.value || label || ''
-    let commandResult = refCommand.current?.value || command || '';
+    let labelResult = refLabel.current?.value || ''
+    let commandResult = refCommand.current?.value || '';
 
     refMap.forEach(({current}, variable) => {
       if (!current) return;
@@ -75,19 +75,17 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
         <DialogTitle>{name}</DialogTitle>
         <DialogContent>
           {variableInputs}
-          {isExtended && (
-            <Fragment>
-              <Box p={1}>
-                <TextField multiline label="Command" defaultValue={command} inputProps={{ref: refCommand}} fullWidth
-                           type="text"
-                           variant="standard"/>
-              </Box>
-              <Box p={1}>
-                <TextField label="Label" defaultValue={label || ''} inputProps={{ref: refLabel}} fullWidth type="text"
-                           variant="standard"/>
-              </Box>
-            </Fragment>
-          )}
+          <Box display={isExtended ? 'block' : 'none'}>
+            <Box p={1}>
+              <TextField multiline label="Command" defaultValue={command} inputProps={{ref: refCommand}} fullWidth
+                         type="text"
+                         variant="standard"/>
+            </Box>
+            <Box p={1}>
+              <TextField label="Label" defaultValue={label || ''} inputProps={{ref: refLabel}} fullWidth type="text"
+                         variant="standard"/>
+            </Box>
+          </Box>
           {variableInputs.length > 0 && (
             <Box py={1}>
               <Button
