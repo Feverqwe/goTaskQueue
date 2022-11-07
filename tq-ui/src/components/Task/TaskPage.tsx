@@ -8,6 +8,9 @@ import {api} from "../../tools/api";
 import {NotificationCtx} from "../Notifications/NotificationCtx";
 import TaskInfo from "./components/TaskInfo";
 
+
+const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
+
 const TaskPage: FC = () => {
   const id = new URLSearchParams(location.search).get('id');
   const [remapNewLine, setRemapNewLine] = useState(true);
@@ -22,7 +25,14 @@ const TaskPage: FC = () => {
         this.loading = true;
       }
       try {
-        this.task = await api.task({id})
+        const prevTask = this.task;
+        const task = await api.task({id})
+        this.task = task;
+        if (
+          prevTask && prevTask.id === task.id && 
+          !completeStates.includes(prevTask.state) && completeStates.includes(task.state)) {
+            notification(task);
+        }
       } catch (err) {
         this.task = null;
         console.error(err);
@@ -42,17 +52,6 @@ const TaskPage: FC = () => {
 
     fetchTask(id);
   }, [id, fetchTask]);
-
-  useEffect(() => {
-    const complete = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
-    const taskState = task?.state;
-    if (!taskState || complete.includes(taskState)) return;
-    return () => {
-      if (task && complete.includes(task.state)) {
-        notification(task);
-      }
-    };
-  }, [task?.state]);
 
   const handleToggleFixNewLine = useCallback(() => {
     setRemapNewLine(v => !v);
