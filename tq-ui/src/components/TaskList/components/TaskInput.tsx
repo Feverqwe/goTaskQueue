@@ -1,5 +1,5 @@
 import React, {FC, FormEvent, Fragment, useCallback, useContext, useMemo, useRef, useState} from "react";
-import {Box, Divider, IconButton, Input, Menu, MenuItem, Paper} from "@mui/material";
+import {Box, Divider, IconButton, Input, Menu, MenuItem, Paper, TextField} from "@mui/material";
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import AddIcon from '@mui/icons-material/Add';
 import {api} from "../../../tools/api";
@@ -85,7 +85,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <Paper>
           <form onSubmit={handleSubmit}>
             <Box display={'flex'} flexDirection={'row'} p={1} alignItems={'center'}>
-              <Input placeholder="echo hi" inputProps={{ref: refInput}} fullWidth autoFocus/>
+              <TextField hiddenLabel variant={'standard'} placeholder="echo hi" inputProps={{ref: refInput}} fullWidth autoFocus/>
               <IconButton type="submit">
                 <AddIcon/>
               </IconButton>
