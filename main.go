@@ -179,8 +179,11 @@ func handleWww(router *internal.Router, config *internal.Config) {
 		var err error
 		var content []byte
 		if DEBUG {
-			content, err = os.ReadFile("./tq-ui/dist" + assetPath)
-			mTime = time.Now()
+			path := "./tq-ui/dist" + assetPath
+			content, err = os.ReadFile(path)
+			if info, err := os.Stat(path); err == nil {
+				mTime = info.ModTime()
+			}
 		} else {
 			content, err = assets.Asset("www" + assetPath)
 		}
