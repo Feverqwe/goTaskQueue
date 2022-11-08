@@ -29,6 +29,7 @@ type Task struct {
 	StartedAt  time.Time `json:"startedAt"`
 	FinishedAt time.Time `json:"finishedAt"`
 	mu         sync.Mutex
+	combinedMu sync.Mutex
 	qCh        []chan int
 	stdin      io.WriteCloser
 }
@@ -73,7 +74,9 @@ func (s *Task) Run(runAs []string) error {
 					break
 				}
 				buffer = append(buffer, chunk[0:len]...)
+				s.combinedMu.Lock()
 				output = append(output, chunk[0:len]...)
+				s.combinedMu.Unlock()
 
 				// n := len(buffer)
 				// if n > LogSize {
