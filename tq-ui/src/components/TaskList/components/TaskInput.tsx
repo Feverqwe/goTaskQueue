@@ -1,11 +1,12 @@
 import React, {FC, FormEvent, Fragment, useCallback, useContext, useMemo, useRef, useState} from "react";
-import {Box, Divider, IconButton, Input, Menu, MenuItem, Paper, TextField} from "@mui/material";
+import {Box, Divider, IconButton, Menu, MenuItem, Paper, TextField} from "@mui/material";
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import AddIcon from '@mui/icons-material/Add';
 import {api} from "../../../tools/api";
 import {RootStoreCtx} from "../../RootStore/RootStoreCtx";
 import {Template} from "../../RootStore/RootStoreProvider";
 import TemplateDialog from "./TemplateDialog";
+import TemplateList from "./TemplateList";
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -57,6 +58,10 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseTemplates();
   }, []);
 
+  const handleChooseTemplate = useCallback((template: Template) => {
+    setTemplate(template);
+  }, []);
+
   const handleReloadConfig = useCallback(async () => {
     await api.reloadConfig();
     handleCloseTemplates();
@@ -106,6 +111,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           </form>
         </Paper>
       </Box>
+      <TemplateList onSelect={handleChooseTemplate}/>
       {template && (
         <TemplateDialog template={template} onSubmit={handleAdd} onClose={handleDialogClose}/>
       )}
