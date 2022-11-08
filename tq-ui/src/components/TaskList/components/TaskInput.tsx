@@ -1,12 +1,12 @@
 import React, {FC, FormEvent, Fragment, useCallback, useContext, useMemo, useRef, useState} from "react";
-import {Box, Divider, IconButton, Menu, MenuItem, Paper, TextField} from "@mui/material";
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import {Box, IconButton, Menu, MenuItem, Paper, TextField} from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import {api} from "../../../tools/api";
 import {RootStoreCtx} from "../../RootStore/RootStoreCtx";
 import {Template} from "../../RootStore/RootStoreProvider";
 import TemplateDialog from "./TemplateDialog";
 import TemplateList from "./TemplateList";
+import MenuIcon from '@mui/icons-material/Menu';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -81,7 +81,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   }, []);
 
   const handleCustomCommand = useCallback(() => {
-    handleSelectTemplate({name: 'Run', variables: [], command: '', label: ''});
+    handleSelectTemplate({name: 'Run as', variables: [], command: '', label: ''});
   }, []);
 
   return (
@@ -95,15 +95,11 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
                 <AddIcon/>
               </IconButton>
               <IconButton onClick={handleShowTemplates}>
-                <PlaylistPlayIcon/>
+                <MenuIcon/>
               </IconButton>
               <Menu open={Boolean(anchorEl)} onClose={handleCloseTemplates} anchorEl={anchorEl}>
-                {templates}
-                {templates.length > 0 && (
-                  <Divider />
-                )}
                 <MenuItem onClick={handleCustomCommand}>
-                  Run
+                  Run as
                 </MenuItem>
                 <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
               </Menu>

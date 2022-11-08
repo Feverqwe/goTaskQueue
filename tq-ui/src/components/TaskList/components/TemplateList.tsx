@@ -11,11 +11,11 @@ const TemplateList: FC<TemplateListProps> = ({onSelect}) => {
   const {templates} = useContext(RootStoreCtx);
 
   return (
-    <Box display={'flex'} flexWrap={'wrap'} p={1} pt={0}>
+    <Box>
       {templates.map((template, index) => {
         const {name} = template;
         return (
-          <Button sx={{flexGrow: 1}} key={index} onClick={onSelect.bind(null, template)}>{name}</Button>
+          <Button sx={{m: 1, mt: 0}} variant={'outlined'} key={index} onClick={onSelect.bind(null, template)}>{name}</Button>
         )
       })}
     </Box>
