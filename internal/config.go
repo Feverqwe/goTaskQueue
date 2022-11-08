@@ -17,6 +17,7 @@ type Config struct {
 	Port      int
 	Address   string
 	Name      string
+	RunAs     []string
 	Templates []interface{}
 }
 
@@ -37,9 +38,14 @@ func (s *Config) GetBrowserAddress() string {
 func getNewConfig() Config {
 	var config = Config{
 		Templates: make([]interface{}, 0),
+		Port:      80,
+		Name:      "TaskQueue",
 	}
-	config.Port = 80
-	config.Name = "TaskQueue"
+	if runtime.GOOS == "windows" {
+		config.RunAs = []string{"cmd", "/C"}
+	} else {
+		config.RunAs = []string{"sh", "-c"}
+	}
 	return config
 }
 
@@ -63,6 +69,10 @@ func LoadConfig() Config {
 		if err := json.Unmarshal(data, &config); err != nil {
 			log.Println("Load config error", err)
 		}
+	}
+
+	if config.RunAs == nil {
+		config.RunAs = getNewConfig().RunAs
 	}
 
 	return config

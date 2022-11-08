@@ -33,8 +33,15 @@ type Task struct {
 	stdin      io.WriteCloser
 }
 
-func (s *Task) Run() error {
-	process := exec.Command("sh", "-c", s.Command)
+func (s *Task) Run(runAs []string) error {
+	runCommand := runAs[0]
+	runArgs := make([]string, 0)
+	if len(runAs) > 1 {
+		runArgs = append(runArgs, runAs[1:]...)
+	}
+	runArgs = append(runArgs, s.Command)
+
+	process := exec.Command(runCommand, runArgs...)
 
 	const Out = "out"
 	const Err = "err"

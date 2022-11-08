@@ -123,7 +123,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 				return "", err
 			}
 
-			err = task.Run()
+			err = task.Run(config.RunAs)
 
 			return "ok", err
 		})
