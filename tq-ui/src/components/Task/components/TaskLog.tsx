@@ -86,6 +86,9 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       wsClose: () => {
         ws.close();
       },
+      wsPing: () => {
+        ws.send('ping');
+      },
       wsReconnect() {
         this.wsClose();
         this.wsConnect();
@@ -135,6 +138,13 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       }
     };
   }, [onUpdate, state, isOpen]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      scope.wsPing();
+    }, 5 * 1000);
+    return () => clearInterval(intervalId);
+  }, [isOpen]);
 
   const handleReconnect = useCallback(() => {
     scope.wsReconnect();

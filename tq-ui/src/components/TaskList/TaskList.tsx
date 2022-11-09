@@ -39,7 +39,7 @@ const TaskList: FC<TaskListProps> = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       fetchTaskList(true);
-    }, 30 * 1000);
+    }, 10 * 1000);
     return () => clearInterval(intervalId);
   }, [fetchTaskList]);
 
