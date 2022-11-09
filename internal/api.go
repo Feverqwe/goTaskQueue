@@ -46,11 +46,6 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 		Signal string `json:"signal"`
 	}
 
-	type SendTaskPayload struct {
-		Id   string `json:"id"`
-		Data string `json:"data"`
-	}
-
 	type AddTaskPayload struct {
 		Command string `json:"command"`
 		Label   string `json:"label"`
