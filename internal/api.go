@@ -170,24 +170,6 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/send", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (string, error) {
-			payload, err := readPayload[SendTaskPayload](r)
-			if err != nil {
-				return "", err
-			}
-
-			task, err := taskQueue.Get(payload.Id)
-			if err != nil {
-				return "", err
-			}
-
-			err = task.Send(payload.Data)
-
-			return "ok", err
-		})
-	})
-
 	router.Post("/api/reloadConfig", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
 			callChan <- "reload"

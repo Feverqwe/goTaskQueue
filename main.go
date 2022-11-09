@@ -100,6 +100,11 @@ func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
 func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 	const CHUNK_SIZE = 1 * 1024 * 1024
 
+	type WsPayload struct {
+		Type string `json:"type"`
+		Data string `json:"data"`
+	}
+
 	ws := func(ws *websocket.Conn) {
 		defer ws.Close()
 
@@ -112,10 +117,21 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 
 		go func() {
 			for {
-				var data []byte
+				var data string
 				err := websocket.Message.Receive(ws, &data)
 				if err == io.EOF || err != nil {
 					break
+				}
+
+				var payload WsPayload
+				decoder := json.NewDecoder(strings.NewReader(data))
+				if err = decoder.Decode(&payload); err == nil {
+					if payload.Type == "in" {
+						err := task.Send(payload.Data)
+						if err != nil {
+							break
+						}
+					}
 				}
 			}
 		}()
