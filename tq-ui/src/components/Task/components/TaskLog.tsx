@@ -32,23 +32,9 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     terminal.loadAddon(fitAddon);
 
-    const charsQueue: string[] = [];
-    let isSending = false;
-    async function sendCommands(): Promise<void> {
-      if (isSending || !charsQueue.length) return;
-      isSending = true;
-      const command = charsQueue.splice(0).join('');
-      try {
-        await api.taskSend({id, data: command});
-      } catch (err) {
-        console.error('Send command error', command, id);
-      } finally {
-        isSending = false;
-      }
-      if (charsQueue.length) {
-        return sendCommands();
-      }
-    }
+    const sendCommand = (type: string, data?: string) => {
+      ws.send(JSON.stringify({type, data}));
+    };
 
     terminal.onData((char) => {
       if (scope.task.state !== TaskState.Started) return;
@@ -59,8 +45,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
           char = '\r';
         }
       }
-      charsQueue.push(char);
-      sendCommands();
+      sendCommand('in', char);
     });
 
     let ws: WebSocket;
@@ -86,9 +71,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       wsClose: () => {
         ws.close();
       },
-      wsPing: () => {
-        ws.send('ping');
-      },
+      wsSend: sendCommand,
       wsReconnect() {
         this.wsClose();
         this.wsConnect();
@@ -141,7 +124,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      scope.wsPing();
+      scope.wsSend('ping');
     }, 5 * 1000);
     return () => clearInterval(intervalId);
   }, [isOpen]);
