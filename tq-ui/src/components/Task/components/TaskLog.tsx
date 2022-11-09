@@ -5,7 +5,6 @@ import {FitAddon} from 'xterm-addon-fit';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
 import {Task, TaskState} from '../../types';
-import {api} from '../../../tools/api';
 
 import 'xterm/css/xterm.css';
 import './XTerm.css';
