@@ -60,10 +60,6 @@ export const api = {
     method: 'POST',
     path: '/api/task/signal',
   }),
-  taskSend: action<{id: string, data: string}>({
-    method: 'POST',
-    path: '/api/task/send',
-  }),
   reloadConfig: action<void>({
     method: 'POST',
     path: '/api/reloadConfig',

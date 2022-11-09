@@ -127,7 +127,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       scope.wsSend('ping');
     }, 5 * 1000);
     return () => clearInterval(intervalId);
-  }, [isOpen]);
+  }, [scope, isOpen]);
 
   const handleReconnect = useCallback(() => {
     scope.wsReconnect();
