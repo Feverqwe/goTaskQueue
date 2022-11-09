@@ -8,6 +8,7 @@ import (
 	"goTaskQueue/assets"
 	"goTaskQueue/internal"
 	taskqueue "goTaskQueue/internal/taskQueue"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -108,6 +109,16 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 		if err != nil {
 			return
 		}
+
+		go func() {
+			for {
+				var data []byte
+				err := websocket.Message.Receive(ws, &data)
+				if err == io.EOF || err != nil {
+					break
+				}
+			}
+		}()
 
 		pushPart := func(part []byte) error {
 			for len(part) > 0 {
