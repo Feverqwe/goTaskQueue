@@ -1,15 +1,15 @@
-import React, {FC, Fragment, useCallback, useMemo, useState} from "react";
-import {Box, CardActionArea, Divider, IconButton, Menu, MenuItem, Paper, Typography} from "@mui/material";
-import {Task, TaskState} from "../../types";
-import {api} from "../../../tools/api";
-import TaskStatusIcon from "./TaskStatus";
+import React, {FC, Fragment, useCallback, useMemo, useState} from 'react';
+import {Box, CardActionArea, Divider, IconButton, Menu, MenuItem, Paper, Typography} from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import TaskName from "./TaskName";
-import {Check} from "@mui/icons-material";
-import ConfirmDialog from "./ConfirmDialog";
+import {Check} from '@mui/icons-material';
+import TaskName from './TaskName';
+import TaskStatusIcon from './TaskStatus';
+import {api} from '../../../tools/api';
+import {Task, TaskState} from '../../types';
+import ConfirmDialog from './ConfirmDialog';
 
 interface TaskInfoProps {
   task: Task;
@@ -57,12 +57,12 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
 
   const handleTitleClick = useCallback(() => {
     onToggleInfo();
-  }, []);
+  }, [onToggleInfo]);
 
   const handleConfirmRestart = useCallback(async () => {
     const task = await api.clone({id});
     await api.taskRun({id: task.id});
-    location.href = 'task?id=' + task.id;
+    location.href = `task?id=${task.id}`;
   }, [id]);
 
   const handleCloseConfirm = useCallback(() => {
@@ -70,62 +70,62 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
   }, []);
 
   return (
-    <Fragment>
+    <>
       <Box p={1}>
         <Paper component="form">
-          <Box display={'flex'} flexDirection={'row'} alignItems={'stretch'}>
-            <Box display={'flex'} alignItems={'center'}>
-              <IconButton href={'/'}>
-                <ChevronLeftIcon/>
+          <Box display="flex" flexDirection="row" alignItems="stretch">
+            <Box display="flex" alignItems="center">
+              <IconButton href="/">
+                <ChevronLeftIcon />
               </IconButton>
             </Box>
             <Box flexGrow={1}>
               <CardActionArea onClick={handleTitleClick} sx={{height: '100%'}}>
-                <Box display={'flex'} px={1} flexDirection={'row'} sx={{wordBreak: "break-all"}}>
-                  <TaskName task={task}/>
+                <Box display="flex" px={1} flexDirection="row" sx={{wordBreak: 'break-all'}}>
+                  <TaskName task={task} />
                 </Box>
                 {error && (
                   <Box px={1}>
-                    <Typography variant={'subtitle2'} color={'#ff8a80'}>
+                    <Typography variant="subtitle2" color="#ff8a80">
                       {error}
                     </Typography>
                   </Box>
                 )}
               </CardActionArea>
             </Box>
-            <Box display={'flex'} alignItems={'center'}>
+            <Box display="flex" alignItems="center">
               {state === TaskState.Started && (
                 <IconButton onClick={handleStop}>
-                  <StopIcon/>
+                  <StopIcon />
                 </IconButton>
               ) || state === TaskState.Idle && (
                 <IconButton onClick={handleStart}>
-                  <PlayArrowIcon/>
+                  <PlayArrowIcon />
                 </IconButton>
               ) || (
                 <IconButton onClick={handleRestart}>
-                  <RestartAltIcon/>
+                  <RestartAltIcon />
                 </IconButton>
               )}
               <IconButton onClick={handleOpenMenu}>
-                <TaskStatusIcon task={task}/>
+                <TaskStatusIcon task={task} />
               </IconButton>
               <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
                 <MenuItem onClick={onToggleFixNewLine}>
                   Remap new line
                   {remapNewLine && (
-                    <Box display={'flex'} alignItems={'center'} pl={1}>
-                      <Check fontSize={'small'}/>
+                    <Box display="flex" alignItems="center" pl={1}>
+                      <Check fontSize="small" />
                     </Box>
                   )}
                 </MenuItem>
                 {state === TaskState.Started && (
                   <MenuItem onClick={handleSigint}>SIGINT</MenuItem>
                 )}
-                <Divider/>
-                <MenuItem component={'a'} href={`/api/task/stdout?id=${id}`} target={'_blank'}>stdout.log</MenuItem>
-                <MenuItem component={'a'} href={`/api/task/stderr?id=${id}`} target={'_blank'}>stderr.log</MenuItem>
-                <MenuItem component={'a'} href={`/api/task/combined?id=${id}`} target={'_blank'}>combined.log</MenuItem>
+                <Divider />
+                <MenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank">stdout.log</MenuItem>
+                <MenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank">stderr.log</MenuItem>
+                <MenuItem component="a" href={`/api/task/combined?id=${id}`} target="_blank">combined.log</MenuItem>
               </Menu>
             </Box>
           </Box>
@@ -134,14 +134,14 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
       {confirmDialog && (
         <ConfirmDialog
           open={true}
-          title={"Restart task?"}
-          message={<TaskName task={task}/>}
+          title="Restart task?"
+          message={<TaskName task={task} />}
           onClose={handleCloseConfirm}
           onSubmit={handleConfirmRestart}
         />
       )}
-    </Fragment>
-  )
+    </>
+  );
 };
 
 export default TaskHeader;

@@ -1,6 +1,6 @@
-import React, {FC, useCallback, useRef} from "react";
-import {Task} from "../../types";
-import {Box, Paper, TextField} from "@mui/material";
+import React, {FC, useCallback, useRef} from 'react';
+import {Box, Paper, TextField} from '@mui/material';
+import {Task} from '../../types';
 
 interface TaskInfoProps {
   task: Task;
@@ -19,9 +19,9 @@ const TaskInfo:FC<TaskInfoProps> = ({task}) => {
       <Paper component="form">
         <Box p={1}>
           <TextField
-            variant={'standard'}
+            variant="standard"
             value={command}
-            label={'Command'}
+            label="Command"
             multiline
             fullWidth
             InputProps={{readOnly: true}}
@@ -32,6 +32,6 @@ const TaskInfo:FC<TaskInfoProps> = ({task}) => {
       </Paper>
     </Box>
   );
-}
+};
 
 export default TaskInfo;

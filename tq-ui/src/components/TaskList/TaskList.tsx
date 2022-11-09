@@ -1,10 +1,10 @@
-import React, {FC, useCallback, useEffect} from "react";
-import {Box, CircularProgress, Container} from "@mui/material";
-import TaskItem from "./components/TaskItem";
-import TaskInput from "./components/TaskInput";
-import {observer, useLocalObservable} from "mobx-react-lite";
-import {Task} from "../types";
-import {api} from "../../tools/api";
+import React, {FC, useCallback, useEffect} from 'react';
+import {Box, CircularProgress, Container} from '@mui/material';
+import {observer, useLocalObservable} from 'mobx-react-lite';
+import TaskItem from './components/TaskItem';
+import TaskInput from './components/TaskInput';
+import {Task} from '../types';
+import {api} from '../../tools/api';
 
 interface TaskListProps {
 
@@ -45,21 +45,19 @@ const TaskList: FC<TaskListProps> = () => {
 
   return (
     <Container maxWidth={false} disableGutters={true}>
-      <TaskInput onUpdate={handleUpdate}/>
+      <TaskInput onUpdate={handleUpdate} />
       <>
         {loading && (
-          <Box display={'flex'} justifyContent={'center'}>
+          <Box display="flex" justifyContent="center">
             <CircularProgress />
           </Box>
         )}
         {!loading && (
-          taskList.map((task) =>
-            <TaskItem key={task.id} task={task} onUpdate={handleUpdate}/>
-          )
+          taskList.map((task) => <TaskItem key={task.id} task={task} onUpdate={handleUpdate} />)
         )}
       </>
     </Container>
   );
-}
+};
 
 export default observer(TaskList);

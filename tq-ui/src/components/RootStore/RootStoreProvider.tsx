@@ -1,5 +1,5 @@
-import React, {FC, ReactNode} from "react";
-import {RootStoreCtx} from "./RootStoreCtx";
+import React, {FC, ReactNode} from 'react';
+import {RootStoreCtx} from './RootStoreCtx';
 
 export interface Template {
   label?: string;
@@ -28,7 +28,7 @@ const RootStoreProvider: FC<RootStoreProviderProps> = ({children}) => {
     <RootStoreCtx.Provider value={rootStore}>
       {children}
     </RootStoreCtx.Provider>
-  )
-}
+  );
+};
 
 export default RootStoreProvider;

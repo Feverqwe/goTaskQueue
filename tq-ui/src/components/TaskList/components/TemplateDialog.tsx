@@ -1,8 +1,8 @@
-import React, {FC, Fragment, SyntheticEvent, useCallback, useMemo, useRef, useState} from "react";
-import {Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
-import {Template} from "../../RootStore/RootStoreProvider";
+import React, {FC, SyntheticEvent, useCallback, useMemo, useRef, useState} from 'react';
+import {Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import {Template} from '../../RootStore/RootStoreProvider';
 
 interface TemplateDialogProps {
   onClose: () => void;
@@ -14,7 +14,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   const {name, variables, command, label} = template;
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
-  const refMap = useMemo(() => new Map(), [variables]);
+  const refMap = useMemo(() => new Map(), []);
   const [isExtended, setExtended] = useState(() => !variables.length);
   variables.forEach(({value}) => {
     refMap.set(value, useRef());
@@ -40,7 +40,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   }, [variables, refMap]);
 
   const getCommand = useCallback(() => {
-    let labelResult = refLabel.current?.value || ''
+    let labelResult = refLabel.current?.value || '';
     let commandResult = refCommand.current?.value || '';
 
     refMap.forEach(({current}, variable) => {
@@ -50,7 +50,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
     });
 
     return {command: commandResult, label: labelResult};
-  }, [refMap, command, label]);
+  }, [refMap]);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
@@ -63,10 +63,10 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
     const {command, label} = getCommand();
     await onSubmit(command, label, false);
     onClose();
-  }, [onSubmit, getCommand]);
+  }, [onClose, onSubmit, getCommand]);
 
   const handleAdvancedClick = useCallback(() => {
-    setExtended(v => !v);
+    setExtended((v) => !v);
   }, []);
 
   const handleClose = useCallback((e: Event, reason: string) => {
@@ -82,13 +82,25 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
           {variableInputs}
           <Box display={isExtended ? 'block' : 'none'}>
             <Box p={1}>
-              <TextField multiline label="Command" defaultValue={command} inputProps={{ref: refCommand}} fullWidth
-                         type="text"
-                         variant="standard"/>
+              <TextField
+                multiline
+                label="Command"
+                defaultValue={command}
+                inputProps={{ref: refCommand}}
+                fullWidth
+                type="text"
+                variant="standard"
+              />
             </Box>
             <Box p={1}>
-              <TextField label="Label" defaultValue={label || ''} inputProps={{ref: refLabel}} fullWidth type="text"
-                         variant="standard"/>
+              <TextField
+                label="Label"
+                defaultValue={label || ''}
+                inputProps={{ref: refLabel}}
+                fullWidth
+                type="text"
+                variant="standard"
+              />
             </Box>
           </Box>
           {variableInputs.length > 0 && (
@@ -96,7 +108,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
               <Button
                 onClick={handleAdvancedClick}
                 startIcon={
-                  isExtended ? <KeyboardArrowUpIcon/> : <KeyboardArrowDownIcon/>
+                  isExtended ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
                 }
               >
                 Advanced
@@ -105,9 +117,9 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
           )}
         </DialogContent>
         <DialogActions>
-          <Button variant={"outlined"} onClick={onClose}>Cancel</Button>
-          <Button variant={"outlined"} onClick={handleAdd}>Add</Button>
-          <Button variant={"contained"} type={"submit"}>Add & Run</Button>
+          <Button variant="outlined" onClick={onClose}>Cancel</Button>
+          <Button variant="outlined" onClick={handleAdd}>Add</Button>
+          <Button variant="contained" type="submit">Add & Run</Button>
         </DialogActions>
       </form>
     </Dialog>

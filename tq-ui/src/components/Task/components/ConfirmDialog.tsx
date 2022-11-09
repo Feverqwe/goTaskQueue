@@ -1,5 +1,5 @@
-import React, {FC, ReactNode, useCallback, useState} from "react";
-import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
+import React, {FC, ReactNode, useCallback, useState} from 'react';
+import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 interface ConfirmDialogProps {
@@ -28,7 +28,7 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, 
       open={open}
       onClose={onClose}
       fullWidth
-      maxWidth={"xs"}
+      maxWidth="xs"
     >
       <DialogTitle>
         {title}
@@ -41,13 +41,13 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, 
         </DialogContent>
       )}
       <DialogActions>
-        <Button variant={"outlined"} disabled={isLoading} onClick={onClose}>Cancel</Button>
-        <LoadingButton variant={"contained"} disabled={isLoading} loading={isLoading} onClick={handleSubmit} autoFocus>
+        <Button variant="outlined" disabled={isLoading} onClick={onClose}>Cancel</Button>
+        <LoadingButton variant="contained" disabled={isLoading} loading={isLoading} onClick={handleSubmit} autoFocus>
           Confirm
         </LoadingButton>
       </DialogActions>
     </Dialog>
   );
-}
+};
 
 export default ConfirmDialog;

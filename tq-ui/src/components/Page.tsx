@@ -1,10 +1,10 @@
-import {CacheProvider} from "@emotion/react";
-import cache from "../tools/muiCache";
-import {CssBaseline, GlobalStyles, ThemeProvider} from "@mui/material";
-import theme from "../tools/muiTheme";
-import * as React from "react";
-import {FC, ReactNode} from "react";
-import NotificationProvider from "./Notifications/NotificationProvider";
+import {CacheProvider} from '@emotion/react';
+import {CssBaseline, GlobalStyles, ThemeProvider} from '@mui/material';
+import * as React from 'react';
+import {FC, ReactNode} from 'react';
+import theme from '../tools/muiTheme';
+import cache from '../tools/muiCache';
+import NotificationProvider from './Notifications/NotificationProvider';
 
 const RootStyles = {
   html: {
@@ -17,7 +17,7 @@ const RootStyles = {
 
   '#root': {
     height: '100%',
-  }
+  },
 };
 
 interface PageProps {
@@ -29,8 +29,8 @@ const Page: FC<PageProps> = ({children}) => {
     <CacheProvider value={cache}>
       <ThemeProvider theme={theme}>
         <NotificationProvider>
-          <CssBaseline/>
-          <GlobalStyles styles={RootStyles}/>
+          <CssBaseline />
+          <GlobalStyles styles={RootStyles} />
           {children}
         </NotificationProvider>
       </ThemeProvider>

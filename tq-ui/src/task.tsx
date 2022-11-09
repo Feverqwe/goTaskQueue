@@ -1,15 +1,15 @@
-import * as React from "react";
+import * as React from 'react';
 import {createRoot} from 'react-dom/client';
-import Page from "./components/Page";
-import Task from "./components/Task/TaskPage";
-import RootStoreProvider from "./components/RootStore/RootStoreProvider";
+import Page from './components/Page';
+import Task from './components/Task/TaskPage';
+import RootStoreProvider from './components/RootStore/RootStoreProvider';
 
 const root = createRoot(document.getElementById('root')!);
 
 root.render(
   <Page>
     <RootStoreProvider>
-      <Task/>
+      <Task />
     </RootStoreProvider>
-  </Page>
+  </Page>,
 );

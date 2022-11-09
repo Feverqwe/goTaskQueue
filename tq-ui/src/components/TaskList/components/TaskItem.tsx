@@ -1,14 +1,14 @@
-import {Box, Card, CardActionArea, IconButton} from "@mui/material";
-import React, {FC, SyntheticEvent, useCallback} from "react";
-import {Task, TaskState} from "../../types";
-import {api} from "../../../tools/api";
-import TaskStatusIcon from "../../Task/components/TaskStatus";
+import {Box, Card, CardActionArea, IconButton} from '@mui/material';
+import React, {FC, SyntheticEvent, useCallback} from 'react';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import ClearIcon from '@mui/icons-material/Clear';
-import StopIcon from "@mui/icons-material/Stop";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import StopIcon from '@mui/icons-material/Stop';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CopyAllIcon from '@mui/icons-material/CopyAll';
-import TaskName from "../../Task/components/TaskName";
+import TaskStatusIcon from '../../Task/components/TaskStatus';
+import {api} from '../../../tools/api';
+import {Task, TaskState} from '../../types';
+import TaskName from '../../Task/components/TaskName';
 
 interface TaskItemProps {
   task: Task,
@@ -16,70 +16,70 @@ interface TaskItemProps {
 }
 
 const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
-  const {id, command, label, state} = task;
+  const {id, state} = task;
 
   const handleDelete = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
     await api.delete({id});
     onUpdate();
-  }, [id]);
+  }, [id, onUpdate]);
 
   const handleStart = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
     await api.taskRun({id});
     onUpdate();
-  }, [id]);
+  }, [id, onUpdate]);
 
   const handleStop = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
     await api.taskKill({id});
     onUpdate();
-  }, [id]);
+  }, [id, onUpdate]);
 
   const handleClone = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
     await api.clone({id});
     onUpdate();
-  }, [id]);
+  }, [id, onUpdate]);
 
   return (
     <Box px={1} pb={1}>
       <Card>
-        <CardActionArea href={"task?id=" + id}>
-          <Box display={'flex'} flexDirection={'row'} alignItems={'center'}>
-            <Box display={'flex'}>
+        <CardActionArea href={`task?id=${id}`}>
+          <Box display="flex" flexDirection="row" alignItems="center">
+            <Box display="flex">
               <IconButton disabled={state === TaskState.Started} onClick={handleDelete}>
-                <ClearIcon/>
+                <ClearIcon />
               </IconButton>
             </Box>
-            <Box display={'flex'} pl={1} flexGrow={1}>
-              <Box sx={{wordBreak: "break-all"}}>
-                <TaskName task={task}/>
+            <Box display="flex" pl={1} flexGrow={1}>
+              <Box sx={{wordBreak: 'break-all'}}>
+                <TaskName task={task} />
               </Box>
             </Box>
-            <Box display={'flex'} pl={1}>
+            <Box display="flex" pl={1}>
               {state === TaskState.Started && (
                 <IconButton onClick={handleStop}>
-                  <StopIcon/>
+                  <StopIcon />
                 </IconButton>
               ) || state === TaskState.Idle && (
                 <IconButton onClick={handleStart}>
-                  <PlayArrowIcon/>
+                  <PlayArrowIcon />
                 </IconButton>
               ) || (
                 <IconButton onClick={handleClone}>
-                  <CopyAllIcon/>
+                  <CopyAllIcon />
                 </IconButton>
               )}
             </Box>
-            <Box display={'flex'} pl={1}>
-              <TaskStatusIcon task={task}/>
+            <Box display="flex" pl={1}>
+              <TaskStatusIcon task={task} />
             </Box>
-            <Box display={'flex'} pl={1}>
+            <Box display="flex" pl={1}>
               <KeyboardArrowRightIcon />
             </Box>
           </Box>
@@ -87,6 +87,6 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       </Card>
     </Box>
   );
-}
+};
 
 export default TaskItem;

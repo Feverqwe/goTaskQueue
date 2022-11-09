@@ -25,5 +25,5 @@ export const theme = {
   brightCyan: '#cdab53',
 
   white: '#a5a2a2',
-  brightWhite: '#f7f7f7'
+  brightWhite: '#f7f7f7',
 };

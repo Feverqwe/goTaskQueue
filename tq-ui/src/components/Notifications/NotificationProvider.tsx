@@ -1,8 +1,8 @@
-import React, {FC, Fragment, ReactNode, useCallback, useState} from "react";
-import {NotificationCtx} from "./NotificationCtx";
-import {Task, TaskState} from "../types";
-import {Alert, Snackbar} from "@mui/material";
-import {AlertColor} from "@mui/material/Alert/Alert";
+import React, {FC, Fragment, ReactNode, useCallback, useState} from 'react';
+import {Alert, Snackbar} from '@mui/material';
+import {AlertColor} from '@mui/material/Alert/Alert';
+import {NotificationCtx} from './NotificationCtx';
+import {Task, TaskState} from '../types';
 
 interface NotificationProviderProps {
   children: ReactNode;
@@ -24,24 +24,24 @@ const NotificationProvider: FC<NotificationProviderProps> = ({children}) => {
     switch (state) {
       case TaskState.Finished: {
         color = 'success';
-        message = 'Success'
+        message = 'Success';
         break;
       }
       case TaskState.Canceled: {
-        color = 'warning'
-        message = 'Canceled'
+        color = 'warning';
+        message = 'Canceled';
         break;
       }
       case TaskState.Error: {
-        color = 'error'
-        message = `Error: ${error}`
+        color = 'error';
+        message = `Error: ${error}`;
         break;
       }
     }
     const content = (
-      <Fragment>
+      <>
         {name}: {message}
-      </Fragment>
+      </>
     );
 
     const onClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
@@ -76,7 +76,7 @@ const NotificationProvider: FC<NotificationProviderProps> = ({children}) => {
   }, []);
 
   return (
-    <Fragment>
+    <>
       <NotificationCtx.Provider value={emit}>
         {children}
       </NotificationCtx.Provider>
@@ -89,8 +89,8 @@ const NotificationProvider: FC<NotificationProviderProps> = ({children}) => {
           </Snackbar>
         );
       })}
-    </Fragment>
-  )
-}
+    </>
+  );
+};
 
 export default NotificationProvider;

@@ -1,14 +1,14 @@
-import React, {FC, useCallback, useEffect, useRef, useState} from "react";
-import {Alert, Box, Button, Snackbar} from "@mui/material";
-import {Task, TaskState} from "../../types";
-import {Terminal} from "xterm";
+import React, {FC, useCallback, useEffect, useRef, useState} from 'react';
+import {Alert, Box, Button, Snackbar} from '@mui/material';
+import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
-import {theme} from "./theme";
-import throttle from "lodash.throttle";
-import {api} from "../../../tools/api";
+import throttle from 'lodash.throttle';
+import {theme} from './theme';
+import {Task, TaskState} from '../../types';
+import {api} from '../../../tools/api';
 
-import "xterm/css/xterm.css";
-import "./XTerm.css";
+import 'xterm/css/xterm.css';
+import './XTerm.css';
 
 interface TaskLogProps {
   task: Task,
@@ -32,7 +32,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     terminal.loadAddon(fitAddon);
 
-    let charsQueue: string[] = [];
+    const charsQueue: string[] = [];
     let isSending = false;
     async function sendCommands(): Promise<void> {
       if (isSending || !charsQueue.length) return;
@@ -41,7 +41,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       try {
         await api.taskSend({id, data: command});
       } catch (err) {
-        console.error(`Send command error`, command, id);
+        console.error('Send command error', command, id);
       } finally {
         isSending = false;
       }
@@ -130,8 +130,10 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
   useEffect(() => {
     return () => {
-      isOpen && [TaskState.Idle, TaskState.Started].includes(state) && onUpdate();
-    }
+      if (isOpen && [TaskState.Idle, TaskState.Started].includes(state)) {
+        onUpdate();
+      }
+    };
   }, [onUpdate, state, isOpen]);
 
   const handleReconnect = useCallback(() => {
@@ -140,12 +142,16 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
   return (
     <Box px={1} pb={1} sx={{flexGrow: 1}}>
-      <div style={{height: '100%', width: '100%'}} ref={refWrapper}/>
+      <div style={{height: '100%', width: '100%'}} ref={refWrapper} />
       {isError && (
         <Snackbar anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true}>
-          <Alert severity={'error'} sx={{ width: '100%' }} action={
-            <Button size={'small'} onClick={handleReconnect}>Reconnect</Button>
-          }>
+          <Alert
+            severity="error"
+            sx={{ width: '100%' }}
+            action={
+              <Button size="small" onClick={handleReconnect}>Reconnect</Button>
+          }
+          >
             WebSocket error
           </Alert>
         </Snackbar>

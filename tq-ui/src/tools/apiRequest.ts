@@ -1,13 +1,13 @@
 export class ApiError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ApiError'
+    this.name = 'ApiError';
   }
 }
 
 export class HTTPError extends Error {
   constructor(private statusCode: number, private statusMessage: string) {
-    super(`Response code ${statusCode} (${statusMessage!})`);
+    super(`Response code ${statusCode} (${statusMessage})`);
     this.name = 'HTTPError';
   }
 }

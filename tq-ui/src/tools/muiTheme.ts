@@ -1,4 +1,4 @@
-import {createTheme} from "@mui/material";
+import {createTheme} from '@mui/material';
 
 const theme = createTheme({
   palette: {
@@ -22,7 +22,7 @@ const theme = createTheme({
       },
       divider: 'rgba(255, 255, 255, 0.12)',
     },
-  }
+  },
 });
 
 export default theme;
