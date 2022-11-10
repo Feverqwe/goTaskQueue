@@ -122,10 +122,16 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   }, [onUpdate, state, isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
     const intervalId = setInterval(() => {
       scope.wsSend('ping');
     }, 5 * 1000);
     return () => clearInterval(intervalId);
+  }, [scope, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    scope.terminal.focus();
   }, [scope, isOpen]);
 
   const handleReconnect = useCallback(() => {
