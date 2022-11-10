@@ -5,23 +5,30 @@ import TaskItem from './components/TaskItem';
 import TaskInput from './components/TaskInput';
 import {Task} from '../types';
 import {api} from '../../tools/api';
+import {ApiError, HTTPError} from "../../tools/apiRequest";
+import DisplayError from "../DisplayError";
 
 interface TaskListProps {
 
 }
 
 const TaskList: FC<TaskListProps> = () => {
-  const {loading, taskList, fetchTaskList} = useLocalObservable(() => ({
+  const {loading, error, taskList, fetchTaskList} = useLocalObservable(() => ({
     loading: true,
-    taskList: [] as Task[],
+    error: null as null | HTTPError | ApiError | TypeError,
+    taskList: null as null | Task[],
     async fetchTaskList(silent = false) {
       if (!silent) {
         this.loading = true;
       }
+      this.error = null;
       try {
         const taskList = await api.tasks();
         taskList.reverse();
         this.taskList = taskList;
+      } catch (err) {
+        console.error('fetchTaskList error: %O', err);
+        this.error = err as ApiError;
       } finally {
         this.loading = false;
       }
@@ -43,6 +50,10 @@ const TaskList: FC<TaskListProps> = () => {
     return () => clearInterval(intervalId);
   }, [fetchTaskList]);
 
+  const handleRetry = useCallback(() => {
+    fetchTaskList();
+  }, []);
+
   return (
     <Container maxWidth={false} disableGutters={true}>
       <TaskInput onUpdate={handleUpdate} />
@@ -52,7 +63,12 @@ const TaskList: FC<TaskListProps> = () => {
             <CircularProgress />
           </Box>
         )}
-        {!loading && (
+        {error && (
+          <Box display="flex" justifyContent="center">
+            <DisplayError error={error || new Error('asd')} onRetry={handleRetry} />
+          </Box>
+        )}
+        {taskList && !error && (
           taskList.map((task) => <TaskItem key={task.id} task={task} onUpdate={handleUpdate} />)
         )}
       </>

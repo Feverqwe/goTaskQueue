@@ -1,4 +1,4 @@
-import {Box, CircularProgress, Container} from '@mui/material';
+import {Box, Button, CircularProgress, Container} from '@mui/material';
 import React, {FC, useCallback, useContext, useEffect, useRef, useState} from 'react';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import TaskHeader from './components/TaskHeader';
@@ -8,6 +8,7 @@ import {api} from '../../tools/api';
 import {NotificationCtx} from '../Notifications/NotificationCtx';
 import TaskInfo from './components/TaskInfo';
 import {ApiError, HTTPError} from "../../tools/apiRequest";
+import DisplayError from "../DisplayError";
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
@@ -18,20 +19,20 @@ const TaskPage: FC = () => {
   const notification = useContext(NotificationCtx);
   const refTask = useRef<Task>();
 
-  const {task, loading, fetchTask} = useLocalObservable(() => ({
+  const {task, loading, error, fetchTask} = useLocalObservable(() => ({
     task: null as null | Task,
     loading: true,
+    error: null as null | HTTPError | ApiError | TypeError,
     async fetchTask(id: string, silent = false) {
       if (!silent) {
         this.loading = true;
       }
+      this.error = null;
       try {
         this.task = await api.task({id});
       } catch (err) {
-        if ((err as ApiError).name === 'ApiError') {
-          this.task = null;
-        }
-        console.error(err);
+        console.error('fetchTask error: %O', err);
+        this.error = err as ApiError;
       } finally {
         this.loading = false;
       }
@@ -47,7 +48,6 @@ const TaskPage: FC = () => {
 
   useEffect(() => {
     if (!id) return;
-
     fetchTask(id);
   }, [id, fetchTask]);
 
@@ -70,6 +70,10 @@ const TaskPage: FC = () => {
     setInfo((v) => !v);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    id && fetchTask(id);
+  }, [id]);
+
   return (
     <Container maxWidth={false} disableGutters={true} sx={{display: 'flex', flexDirection: 'column', height: '100%'}}>
       {loading && (
@@ -77,12 +81,12 @@ const TaskPage: FC = () => {
           <CircularProgress />
         </Box>
       )}
-      {!loading && !task && (
+      {error && (
         <Box p={1} display="flex" justifyContent="center">
-          Task not found
+          <DisplayError error={error} onRetry={handleRetry}/>
         </Box>
       )}
-      {task && (
+      {!error && task && (
         <>
           <TaskHeader task={task} remapNewLine={remapNewLine} onToggleInfo={handleToggleInfo} onToggleFixNewLine={handleToggleFixNewLine} onUpdate={handleUpdate} />
           {showInfo && (
