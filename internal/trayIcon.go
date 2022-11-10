@@ -33,6 +33,7 @@ func TrayIcon(config *Config, callChan chan string) {
 		subConfig := systray.AddMenuItem("Config", "Config")
 		mSetPort := subConfig.AddSubMenuItem("Set port", "Set port")
 		mSetAddress := subConfig.AddSubMenuItem("Set address", "Set address")
+		mOpenProfilePath := subConfig.AddSubMenuItem("Open profile path", "Open profile path")
 		mReloadConfig := subConfig.AddSubMenuItem("Reload config", "Reload config")
 
 		mQuit := systray.AddMenuItem("Quit", "Quit")
@@ -74,6 +75,8 @@ func TrayIcon(config *Config, callChan chan string) {
 							callChan <- "reload"
 						}
 					}
+				case <-mOpenProfilePath.ClickedCh:
+					open.Start(getProfilePath())
 				case <-mReloadConfig.ClickedCh:
 					callChan <- "reload"
 				}
