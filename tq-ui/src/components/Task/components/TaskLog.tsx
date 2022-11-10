@@ -17,7 +17,7 @@ interface TaskLogProps {
 
 const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) => {
   const [isOpen, setOpen] = useState(false);
-  const [isError, setError] = useState(false);
+  // const [isError, setError] = useState(false);
   const refWrapper = useRef<HTMLDivElement>(null);
   const [scope] = useState(() => {
     const terminal = new Terminal({
@@ -62,7 +62,7 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
 
     return {
       wsConnect: () => {
-        setError(false);
+        // setError(false);
         ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
         ws.onopen = () => {
           setOpen(isOpen = true);
@@ -75,17 +75,13 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
           terminal.write(new Uint8Array(buffer));
         };
         ws.onerror = () => {
-          setError(true);
+          // setError(true);
         };
       },
       wsClose: () => {
         ws.close();
       },
       wsSend: sendCommand,
-      wsReconnect() {
-        this.wsClose();
-        this.wsConnect();
-      },
       terminal,
       fitAddon,
       remapNewLine,
@@ -140,22 +136,23 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
   }, [scope, state]);
 
   const handleReconnect = useCallback(() => {
-    scope.wsReconnect();
+    scope.terminal.clear();
+    scope.wsConnect();
   }, [scope]);
 
   return (
     <Box px={1} pb={1} sx={{flexGrow: 1}}>
       <div style={{height: '100%', width: '100%'}} ref={refWrapper} />
-      {isError && (
+      {!isOpen && state === TaskState.Started && (
         <Snackbar anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true}>
           <Alert
             severity="error"
             sx={{ width: '100%' }}
             action={
               <Button size="small" onClick={handleReconnect}>Reconnect</Button>
-          }
+            }
           >
-            WebSocket error
+            Connection lost
           </Alert>
         </Snackbar>
       )}
