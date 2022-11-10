@@ -11,7 +11,7 @@
 Build exe
 ---
 ````
-go build -ldflags -H=windowsgui -trimpath -o goHFS.exe
+go build -ldflags -H=windowsgui -trimpath -o goTaskQueue.exe
 ````
 
 Build mac app
