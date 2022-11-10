@@ -100,11 +100,6 @@ func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
 func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 	const CHUNK_SIZE = 1 * 1024 * 1024
 
-	type WsPayload struct {
-		Type string `json:"type"`
-		Data string `json:"data"`
-	}
-
 	ws := func(ws *websocket.Conn) {
 		defer ws.Close()
 
