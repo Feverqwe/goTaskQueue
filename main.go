@@ -123,14 +123,9 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 					break
 				}
 
-				var payload WsPayload
-				decoder := json.NewDecoder(strings.NewReader(data))
-				if err = decoder.Decode(&payload); err == nil {
-					if payload.Type == "in" {
-						err := task.Send(payload.Data)
-						if err != nil {
-							break
-						}
+				if len(data) > 0 {
+					if data[0:1] == "i" {
+						task.Send(data[1:])
 					}
 				}
 			}

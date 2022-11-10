@@ -1,7 +1,6 @@
 package taskqueue
 
 import (
-	"errors"
 	"io"
 	"os"
 	"os/exec"
@@ -126,9 +125,10 @@ func (s *Task) Run(runAs []string) error {
 }
 
 func (s *Task) Send(data string) error {
-	if s.stdin == nil {
-		return errors.New("stdin_is_empty")
+	if !s.IsStarted || s.IsFinished {
+		return nil
 	}
+
 	_, err := io.WriteString(s.stdin, data)
 	return err
 }
