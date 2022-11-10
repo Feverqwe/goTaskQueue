@@ -6,7 +6,7 @@ interface ActionParams {
   path: string,
 }
 
-function action<RequestParams = any, ResponseData = any>({method = 'GET', path}: ActionParams) {
+function action<RequestParams = unknown, ResponseData = unknown>({method = 'GET', path}: ActionParams) {
   return async (params: RequestParams): Promise<ResponseData> => {
     let query = '';
     let body;

@@ -31,8 +31,19 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     terminal.loadAddon(fitAddon);
 
-    const sendCommand = (type: string, data?: string) => {
-      ws.send(JSON.stringify({type, data}));
+    const sendCommand = (type: 'ping' | 'in', data = '') => {
+      let payload = '';
+      switch (type) {
+        case 'ping': {
+          payload = 'p';
+          break;
+        }
+        case 'in': {
+          payload = `i${data}`;
+          break;
+        }
+      }
+      ws.send(payload);
     };
 
     terminal.onData((char) => {
@@ -98,13 +109,11 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     const onResizeThrottled = throttle(onResize, 100);
 
-    requestAnimationFrame(onResize);
-
+    terminal.open(wrapper);
+    scope.wsConnect();
     window.addEventListener('resize', onResizeThrottled);
 
-    terminal.open(wrapper);
-
-    scope.wsConnect();
+    requestAnimationFrame(onResize);
 
     return () => {
       window.removeEventListener('resize', onResizeThrottled);
@@ -114,14 +123,15 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   }, [scope]);
 
   useEffect(() => {
+    // when ws closed do update task
+    if (!isOpen) return;
     return () => {
-      if (isOpen && [TaskState.Idle, TaskState.Started].includes(state)) {
-        onUpdate();
-      }
+      onUpdate();
     };
-  }, [onUpdate, state, isOpen]);
+  }, [onUpdate, isOpen]);
 
   useEffect(() => {
+    // when ws closed do stop interval
     if (!isOpen) return;
     const intervalId = setInterval(() => {
       scope.wsSend('ping');

@@ -17,6 +17,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   const refMap = useMemo(() => new Map(), []);
   const [isExtended, setExtended] = useState(() => !variables.length);
   variables.forEach(({value}) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     refMap.set(value, useRef());
   });
 
