@@ -15,11 +15,10 @@ interface TaskLogProps {
   onUpdate: () => void;
 }
 
-const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
-  const {id, state} = task;
+const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) => {
   const [isOpen, setOpen] = useState(false);
   const [isError, setError] = useState(false);
-  const refWrapper = useRef<null | HTMLDivElement>(null);
+  const refWrapper = useRef<HTMLDivElement>(null);
   const [scope] = useState(() => {
     const terminal = new Terminal({
       convertEol: true,
@@ -31,7 +30,11 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     terminal.loadAddon(fitAddon);
 
+    let ws: WebSocket;
+    let isOpen = false;
+
     const sendCommand = (type: 'ping' | 'in', data = '') => {
+      if (!isOpen) return;
       let payload = '';
       switch (type) {
         case 'ping': {
@@ -47,7 +50,6 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     };
 
     terminal.onData((char) => {
-      if (scope.task.state !== TaskState.Started) return;
       if (scope.remapNewLine) {
         if (char === '\r') {
           char = '\n';
@@ -58,17 +60,15 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       sendCommand('in', char);
     });
 
-    let ws: WebSocket;
-
     return {
       wsConnect: () => {
         setError(false);
         ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
         ws.onopen = () => {
-          setOpen(true);
+          setOpen(isOpen = true);
         };
         ws.onclose = () => {
-          setOpen(false);
+          setOpen(isOpen = false);
         };
         ws.onmessage = async (e: MessageEvent<Blob>) => {
           const buffer = await e.data.arrayBuffer();
@@ -87,21 +87,16 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
         this.wsConnect();
       },
       terminal,
-      task,
       fitAddon,
       remapNewLine,
     };
   });
-  scope.task = task;
   scope.remapNewLine = remapNewLine;
 
   useEffect(() => {
-    const wrapper = refWrapper.current;
-    if (!wrapper) {
-      throw new Error('Ctr is empty');
-    }
-
     const {terminal, fitAddon} = scope;
+    const wrapper = refWrapper.current;
+    if (!wrapper) return;
 
     const onResize = () => {
       fitAddon.fit();
@@ -140,9 +135,9 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   }, [scope, isOpen]);
 
   useEffect(() => {
-    if (task.state !== TaskState.Started) return;
+    if (state !== TaskState.Started) return;
     scope.terminal.focus();
-  }, [scope, task.state]);
+  }, [scope, state]);
 
   const handleReconnect = useCallback(() => {
     scope.wsReconnect();
