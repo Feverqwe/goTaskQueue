@@ -7,6 +7,7 @@ import {Task, TaskState} from '../types';
 import {api} from '../../tools/api';
 import {NotificationCtx} from '../Notifications/NotificationCtx';
 import TaskInfo from './components/TaskInfo';
+import {ApiError, HTTPError} from "../../tools/apiRequest";
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
@@ -27,7 +28,9 @@ const TaskPage: FC = () => {
       try {
         this.task = await api.task({id});
       } catch (err) {
-        this.task = null;
+        if ((err as ApiError).name === 'ApiError') {
+          this.task = null;
+        }
         console.error(err);
       } finally {
         this.loading = false;
