@@ -130,9 +130,9 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   }, [scope, isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (task.state !== TaskState.Started) return;
     scope.terminal.focus();
-  }, [scope, isOpen]);
+  }, [scope, task.state]);
 
   const handleReconnect = useCallback(() => {
     scope.wsReconnect();
