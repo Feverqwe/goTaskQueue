@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/creack/pty"
@@ -67,7 +68,7 @@ func (s *Task) RunPty(runAs []string) error {
 	s.Combined = &output
 	s.Stdout = &output
 
-	s.stdin = f
+	s.stdin = &closeOnce{File: f}
 
 	go func() {
 		chunk := make([]byte, 16*1024)
@@ -225,7 +226,7 @@ func (s *Task) Wait() int {
 }
 
 func (s *Task) Kill() error {
-	err := s.process.Process.Kill()
+	err := s.Signal(syscall.SIGKILL)
 	if err == nil {
 		s.IsCanceled = true
 		s.syncStatus()
@@ -233,9 +234,8 @@ func (s *Task) Kill() error {
 	return err
 }
 
-func (s *Task) Signal(sig os.Signal) error {
-	err := s.process.Process.Signal(sig)
-	return err
+func (s *Task) Signal(sig syscall.Signal) error {
+	return s.process.Process.Signal(sig)
 }
 
 func (s *Task) pushChanges(value int) {
@@ -260,6 +260,22 @@ func (s *Task) syncStatus() {
 	} else {
 		s.State = "IDLE"
 	}
+}
+
+type closeOnce struct {
+	*os.File
+
+	once sync.Once
+	err  error
+}
+
+func (c *closeOnce) Close() error {
+	c.once.Do(c.close)
+	return c.err
+}
+
+func (c *closeOnce) close() {
+	c.err = c.File.Close()
 }
 
 func NewTask(id string, command string, label string, isPty bool) *Task {
