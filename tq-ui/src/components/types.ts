@@ -15,4 +15,5 @@ export interface Task {
   createdAt: string;
   startedAt: string;
   finishedAt: string;
+  isPty: boolean;
 }

@@ -9,13 +9,12 @@ import {NotificationCtx} from '../Notifications/NotificationCtx';
 import TaskInfo from './components/TaskInfo';
 import {ApiError, HTTPError} from "../../tools/apiRequest";
 import DisplayError from "../DisplayError";
+import TaskView from "./components/TaskView";
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
 const TaskPage: FC = () => {
   const id = new URLSearchParams(location.search).get('id');
-  const [remapNewLine, setRemapNewLine] = useState(true);
-  const [showInfo, setInfo] = useState(false);
   const notification = useContext(NotificationCtx);
   const refTask = useRef<Task>();
 
@@ -62,14 +61,6 @@ const TaskPage: FC = () => {
     };
   }, [notification, task?.state]);
 
-  const handleToggleFixNewLine = useCallback(() => {
-    setRemapNewLine((v) => !v);
-  }, []);
-
-  const handleToggleInfo = useCallback(() => {
-    setInfo((v) => !v);
-  }, []);
-
   const handleRetry = useCallback(() => {
     id && fetchTask(id);
   }, [id]);
@@ -87,13 +78,7 @@ const TaskPage: FC = () => {
         </Box>
       )}
       {!error && task && (
-        <>
-          <TaskHeader task={task} remapNewLine={remapNewLine} onToggleInfo={handleToggleInfo} onToggleFixNewLine={handleToggleFixNewLine} onUpdate={handleUpdate} />
-          {showInfo && (
-            <TaskInfo task={task} />
-          )}
-          <TaskLog task={task} remapNewLine={remapNewLine} onUpdate={handleUpdate} />
-        </>
+        <TaskView task={task} onUpdate={handleUpdate}/>
       )}
     </Container>
   );

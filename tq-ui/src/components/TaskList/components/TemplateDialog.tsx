@@ -1,12 +1,22 @@
-import React, {FC, SyntheticEvent, useCallback, useMemo, useRef, useState} from 'react';
-import {Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from '@mui/material';
+import React, {FC, InputHTMLAttributes, SyntheticEvent, useCallback, useMemo, useRef, useState} from 'react';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  TextField
+} from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import {Template} from '../../RootStore/RootStoreProvider';
 
 interface TemplateDialogProps {
   onClose: () => void;
-  onSubmit: (command: string, label?: string, run?: boolean) => Promise<void>;
+  onSubmit: (run: boolean, command: string, label: string, isPty: boolean) => Promise<void>;
   template: Template;
 }
 
@@ -14,6 +24,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
   const {name, variables, command, label} = template;
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
+  const refPty = useRef<HTMLInputElement>(null);
   const refMap = useMemo(() => new Map(), []);
   const [isExtended, setExtended] = useState(() => !variables.length);
   variables.forEach(({value}) => {
@@ -50,19 +61,21 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
       labelResult = labelResult.replace(`{${variable}}`, current.value);
     });
 
-    return {command: commandResult, label: labelResult};
+    const isPty = refPty.current?.checked || false;
+
+    return {command: commandResult, label: labelResult, isPty};
   }, [refMap]);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
-    const {command, label} = getCommand();
-    await onSubmit(command, label);
+    const {command, label, isPty} = getCommand();
+    await onSubmit(true, command, label, isPty);
     onClose();
   }, [onSubmit, onClose, getCommand]);
 
   const handleAdd = useCallback(async () => {
-    const {command, label} = getCommand();
-    await onSubmit(command, label, false);
+    const {command, label, isPty} = getCommand();
+    await onSubmit(false, command, label, isPty);
     onClose();
   }, [onClose, onSubmit, getCommand]);
 
@@ -91,6 +104,14 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
                 fullWidth
                 type="text"
                 variant="standard"
+              />
+            </Box>
+            <Box p={1}>
+              <FormControlLabel
+                label="Pseudo-terminal"
+                control={
+                  <Checkbox inputRef={refPty} />
+                }
               />
             </Box>
             <Box p={1}>
