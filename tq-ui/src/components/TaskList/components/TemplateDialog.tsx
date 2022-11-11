@@ -141,7 +141,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>Cancel</Button>
           <Button variant="outlined" onClick={handleAdd}>Add</Button>
-          <Button variant="contained" type="submit">Add & Run</Button>
+          <Button variant="contained" type="submit" autoFocus={variables.length === 0}>Add & Run</Button>
         </DialogActions>
       </form>
     </Dialog>
