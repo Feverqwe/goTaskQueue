@@ -71,7 +71,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   }, []);
 
   const handleCustomCommand = useCallback(() => {
-    handleSelectTemplate({name: 'Run as', variables: [], command: '', label: '', isPty: false});
+    handleSelectTemplate({name: 'Run as', variables: [], command: '', label: '', isPty: false, isNew: true});
   }, [handleSelectTemplate]);
 
   return (

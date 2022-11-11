@@ -10,6 +10,7 @@ export interface Template {
   }[],
   command: string,
   isPty?: boolean,
+  isNew?: boolean;
 }
 
 export interface RootStore {

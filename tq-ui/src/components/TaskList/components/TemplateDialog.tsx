@@ -21,7 +21,7 @@ interface TemplateDialogProps {
 }
 
 const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) => {
-  const {name, variables, command, label, isPty} = template;
+  const {name, variables, command, label, isPty, isNew} = template;
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
@@ -104,6 +104,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
                 fullWidth
                 type="text"
                 variant="standard"
+                autoFocus={isNew}
               />
             </Box>
             <Box p={1}>
@@ -141,7 +142,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>Cancel</Button>
           <Button variant="outlined" onClick={handleAdd}>Add</Button>
-          <Button variant="contained" type="submit" autoFocus={variables.length === 0}>Add & Run</Button>
+          <Button variant="contained" type="submit" autoFocus={!isNew && variables.length === 0}>Add & Run</Button>
         </DialogActions>
       </form>
     </Dialog>
