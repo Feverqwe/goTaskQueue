@@ -63,12 +63,16 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
       sendCommand('in', char);
     });
 
-    terminal.onResize(({cols, rows}) => {
+    const handleResize = (cols: number, rows: number) => {
       const wrapper = refWrapper.current;
       if (!wrapper) return;
       const x = wrapper.clientWidth;
       const y = wrapper.clientHeight;
       sendCommand('resize', {cols, rows, x, y});
+    };
+
+    terminal.onResize(({cols, rows}) => {
+      handleResize(cols, rows);
     });
 
     return {
@@ -77,6 +81,7 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
         ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
         ws.onopen = () => {
           setOpen(isOpen = true);
+          handleResize(terminal.cols, terminal.rows);
         };
         ws.onclose = () => {
           setOpen(isOpen = false);
