@@ -53,6 +53,7 @@ func (s *Task) RunPty(runAs []string) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
+	process.Env = []string{"TERM=linux"}
 
 	f, err := pty.Start(process)
 	if err != nil {
