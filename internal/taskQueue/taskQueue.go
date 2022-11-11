@@ -23,9 +23,9 @@ func (s *Queue) Get(id string) (*Task, error) {
 	return task, nil
 }
 
-func (s *Queue) Add(command string, label string) *Task {
+func (s *Queue) Add(command string, label string, isPty bool) *Task {
 	id := s.getId()
-	task := NewTask(id, command, label)
+	task := NewTask(id, command, label, isPty)
 	s.idTask[task.Id] = task
 	s.tasks = append(s.tasks, task)
 	return task
@@ -37,7 +37,7 @@ func (s *Queue) Clone(id string) (*Task, error) {
 		return nil, err
 	}
 
-	task := s.Add(origTask.Command, origTask.Label)
+	task := s.Add(origTask.Command, origTask.Label, origTask.IsPty)
 
 	return task, nil
 }

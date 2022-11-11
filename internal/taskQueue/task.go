@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"sync"
 	"time"
+
+	"github.com/creack/pty"
 )
 
 const LogSize = 4 * 1024 * 1024
@@ -27,6 +29,7 @@ type Task struct {
 	CreatedAt  time.Time `json:"createdAt"`
 	StartedAt  time.Time `json:"startedAt"`
 	FinishedAt time.Time `json:"finishedAt"`
+	IsPty      bool      `json:"isPty"`
 	mu         sync.Mutex
 	combinedMu sync.Mutex
 	qCh        []chan int
@@ -34,6 +37,75 @@ type Task struct {
 }
 
 func (s *Task) Run(runAs []string) error {
+	if s.IsPty {
+		return s.RunPty(runAs)
+	} else {
+		return s.RunDirect(runAs)
+	}
+}
+
+func (s *Task) RunPty(runAs []string) error {
+	runCommand := runAs[0]
+	runArgs := make([]string, 0)
+	if len(runAs) > 1 {
+		runArgs = append(runArgs, runAs[1:]...)
+	}
+	runArgs = append(runArgs, s.Command)
+
+	process := exec.Command(runCommand, runArgs...)
+
+	f, err := pty.Start(process)
+	if err != nil {
+		return err
+	}
+
+	output := make([]byte, 0)
+	s.Combined = &output
+	s.Stdout = &output
+
+	s.stdin = f
+
+	go func() {
+		chunk := make([]byte, 16*1024)
+		for {
+			len, err := f.Read(chunk)
+			if err == io.EOF || err != nil {
+				break
+			}
+			output = append(output, chunk[0:len]...)
+
+			go s.pushChanges(1)
+		}
+	}()
+
+	s.StartedAt = time.Now()
+
+	s.process = process
+	s.IsStarted = true
+	s.syncStatus()
+
+	go func() {
+		defer f.Close()
+
+		err = process.Wait()
+
+		s.FinishedAt = time.Now()
+
+		s.IsFinished = true
+		if err != nil {
+			s.IsError = true
+			s.Error = err.Error()
+		}
+
+		s.syncStatus()
+
+		go s.pushChanges(0)
+	}()
+
+	return nil
+}
+
+func (s *Task) RunDirect(runAs []string) error {
 	runCommand := runAs[0]
 	runArgs := make([]string, 0)
 	if len(runAs) > 1 {
@@ -76,16 +148,6 @@ func (s *Task) Run(runAs []string) error {
 				s.combinedMu.Lock()
 				output = append(output, chunk[0:len]...)
 				s.combinedMu.Unlock()
-
-				// n := len(buffer)
-				// if n > LogSize {
-				// 	buffer = buffer[n-LogSize:]
-				// }
-
-				// n = len(output)
-				// if n > LogSize {
-				// 	output = output[n-LogSize:]
-				// }
 
 				go s.pushChanges(1)
 			}
@@ -182,12 +244,13 @@ func (s *Task) syncStatus() {
 	}
 }
 
-func NewTask(id string, command string, label string) *Task {
+func NewTask(id string, command string, label string, isPty bool) *Task {
 	task := Task{
 		Id:        id,
 		Label:     label,
 		Command:   command,
 		CreatedAt: time.Now(),
+		IsPty:     isPty,
 	}
 
 	task.syncStatus()

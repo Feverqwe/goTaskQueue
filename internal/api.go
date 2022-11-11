@@ -49,6 +49,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 	type AddTaskPayload struct {
 		Command string `json:"command"`
 		Label   string `json:"label"`
+		IsPty   bool   `json:"isPty"`
 	}
 
 	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
@@ -78,7 +79,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 				return nil, err
 			}
 
-			task := taskQueue.Add(payload.Command, payload.Label)
+			task := taskQueue.Add(payload.Command, payload.Label, payload.IsPty)
 
 			return task, err
 		})
