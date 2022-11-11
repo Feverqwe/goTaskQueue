@@ -36,15 +36,15 @@ type Task struct {
 	pty        *os.File
 }
 
-func (s *Task) Run(runAs []string) error {
+func (s *Task) Run(runAs []string, ptyEnv []string) error {
 	if s.IsPty {
-		return s.RunPty(runAs)
+		return s.RunPty(runAs, ptyEnv)
 	} else {
 		return s.RunDirect(runAs)
 	}
 }
 
-func (s *Task) RunPty(runAs []string) error {
+func (s *Task) RunPty(runAs []string, ptyEnv []string) error {
 	runCommand := runAs[0]
 	runArgs := make([]string, 0)
 	if len(runAs) > 1 {
@@ -53,7 +53,7 @@ func (s *Task) RunPty(runAs []string) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
-	process.Env = []string{"TERM=xterm-256color", "COLORTERM=truecolor", "HOME=/root"}
+	process.Env = ptyEnv
 
 	f, err := pty.Start(process)
 	if err != nil {

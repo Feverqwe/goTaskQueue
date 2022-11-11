@@ -120,7 +120,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 				return "", err
 			}
 
-			err = task.Run(config.RunAs)
+			err = task.Run(config.RunAs, config.PtyEnv)
 
 			return "ok", err
 		})

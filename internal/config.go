@@ -19,6 +19,7 @@ type Config struct {
 	Name      string
 	RunAs     []string
 	Templates []interface{}
+	PtyEnv    []string
 }
 
 var APP_ID = "com.rndnm.gotaskqueue"
@@ -46,6 +47,7 @@ func getNewConfig() Config {
 	} else {
 		config.RunAs = []string{"sh", "-c"}
 	}
+	config.PtyEnv = []string{"TERM=xterm-256color", "COLORTERM=truecolor", "HOME=/root"}
 	return config
 }
 
@@ -73,6 +75,10 @@ func LoadConfig() Config {
 
 	if config.RunAs == nil {
 		config.RunAs = getNewConfig().RunAs
+	}
+
+	if config.PtyEnv == nil {
+		config.PtyEnv = getNewConfig().PtyEnv
 	}
 
 	return config
