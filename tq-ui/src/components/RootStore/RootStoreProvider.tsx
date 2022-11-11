@@ -9,6 +9,7 @@ export interface Template {
     value: string,
   }[],
   command: string,
+  isPty?: boolean,
 }
 
 export interface RootStore {

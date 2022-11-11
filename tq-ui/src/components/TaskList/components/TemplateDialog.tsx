@@ -21,7 +21,7 @@ interface TemplateDialogProps {
 }
 
 const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) => {
-  const {name, variables, command, label} = template;
+  const {name, variables, command, label, isPty} = template;
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
@@ -110,7 +110,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
               <FormControlLabel
                 label="Pseudo-terminal"
                 control={
-                  <Checkbox inputRef={refPty} />
+                  <Checkbox inputRef={refPty} defaultChecked={isPty} />
                 }
               />
             </Box>
