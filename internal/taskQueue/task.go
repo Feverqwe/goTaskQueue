@@ -11,7 +11,7 @@ import (
 	"github.com/creack/pty"
 )
 
-const LogSize = 4 * 1024 * 1024
+const PtyLogSize = 4 * 1024 * 1024
 
 type Task struct {
 	Id         string `json:"id"`
@@ -73,11 +73,15 @@ func (s *Task) RunPty(runAs []string) error {
 	go func() {
 		chunk := make([]byte, 16*1024)
 		for {
-			len, err := f.Read(chunk)
+			bytes, err := f.Read(chunk)
 			if err == io.EOF || err != nil {
 				break
 			}
-			output = append(output, chunk[0:len]...)
+			output = append(output, chunk[0:bytes]...)
+
+			if len(output) > PtyLogSize {
+				output = output[len(output)-(PtyLogSize/2):]
+			}
 
 			go s.pushChanges(1)
 		}
