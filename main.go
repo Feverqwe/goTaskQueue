@@ -20,6 +20,8 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+const DEBUG_UI = false
+
 func main() {
 	if _, err := internal.CreateMutex("GoTaskQueue"); err != nil {
 		panic(err)
@@ -170,8 +172,6 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 }
 
 func handleWww(router *internal.Router, config *internal.Config) {
-	const DEBUG = false
-
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
 		if binStat, err := os.Stat(binPath); err == nil {
@@ -195,7 +195,7 @@ func handleWww(router *internal.Router, config *internal.Config) {
 
 		var err error
 		var content []byte
-		if DEBUG {
+		if DEBUG_UI {
 			path := "./tq-ui/dist" + assetPath
 			content, err = os.ReadFile(path)
 			if info, err := os.Stat(path); err == nil {
