@@ -152,7 +152,7 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
   }, [scope, state]);
 
   const handleReconnect = useCallback(() => {
-    scope.terminal.clear();
+    scope.terminal.reset();
     scope.wsConnect();
   }, [scope]);
 
