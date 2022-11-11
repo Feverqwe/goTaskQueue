@@ -33,7 +33,7 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
     let ws: WebSocket;
     let isOpen = false;
 
-    const sendCommand = (type: 'ping' | 'in', data = '') => {
+    const sendCommand = (type: 'ping' | 'in' | 'resize', data: any = '') => {
       if (!isOpen) return;
       let payload = '';
       switch (type) {
@@ -44,6 +44,9 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
         case 'in': {
           payload = `i${data}`;
           break;
+        }
+        case 'resize': {
+          payload = `r${JSON.stringify(data)}`
         }
       }
       ws.send(payload);
@@ -58,6 +61,14 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
         }
       }
       sendCommand('in', char);
+    });
+
+    terminal.onResize(({cols, rows}) => {
+      const wrapper = refWrapper.current;
+      if (!wrapper) return;
+      const x = wrapper.clientWidth;
+      const y = wrapper.clientHeight;
+      sendCommand('resize', {cols, rows, x, y});
     });
 
     return {
