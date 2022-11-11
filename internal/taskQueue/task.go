@@ -66,8 +66,7 @@ func (s *Task) RunPty(runAs []string, ptyEnv []string) error {
 	s.Combined = &output
 	s.Stdout = &output
 
-	stdin := &closeOnce{File: f}
-	s.stdin = stdin
+	s.stdin = &closeOnce{File: f}
 
 	go func() {
 		chunk := make([]byte, 16*1024)
@@ -89,7 +88,7 @@ func (s *Task) RunPty(runAs []string, ptyEnv []string) error {
 	s.syncStatus()
 
 	go func() {
-		defer stdin.Close()
+		defer f.Close()
 
 		err = process.Wait()
 
