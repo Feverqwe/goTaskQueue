@@ -123,6 +123,21 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 				if len(data) > 0 {
 					if data[0:1] == "i" {
 						task.Send(data[1:])
+					} else if data[0:1] == "r" {
+						reader := strings.NewReader(data[1:])
+						type ResizePayload struct {
+							Rows int `json:"rows"`
+							Cols int `json:"cols"`
+							X    int `json:"x"`
+							Y    int `json:"y"`
+						}
+						payload, err := internal.ParseJson[ResizePayload](reader)
+						if err == nil {
+							err = task.Resize(payload.Rows, payload.Cols, payload.X, payload.Y)
+							if err != nil {
+								fmt.Println("resize error", err)
+							}
+						}
 					}
 				}
 			}

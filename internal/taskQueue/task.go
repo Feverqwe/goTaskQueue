@@ -34,6 +34,7 @@ type Task struct {
 	combinedMu sync.Mutex
 	qCh        []chan int
 	stdin      io.WriteCloser
+	pty        *os.File
 }
 
 func (s *Task) Run(runAs []string) error {
@@ -59,6 +60,8 @@ func (s *Task) RunPty(runAs []string) error {
 	if err != nil {
 		return err
 	}
+
+	s.pty = f
 
 	output := make([]byte, 0)
 	s.Combined = &output
@@ -194,6 +197,20 @@ func (s *Task) Send(data string) error {
 
 	_, err := io.WriteString(s.stdin, data)
 	return err
+}
+
+func (s *Task) Resize(rows int, cels int, x int, y int) error {
+	if !s.IsPty {
+		return nil
+	}
+
+	ws := pty.Winsize{
+		Rows: uint16(rows),
+		Cols: uint16(cels),
+		X:    uint16(x),
+		Y:    uint16(y),
+	}
+	return pty.Setsize(s.pty, &ws)
 }
 
 func (s *Task) Wait() int {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	taskqueue "goTaskQueue/internal/taskQueue"
+	"io"
 	"net/http"
 	"syscall"
 
@@ -61,7 +62,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 
 	router.Post("/api/delete", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := readPayload[GetTaskPayload](r)
+			payload, err := ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -74,7 +75,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 
 	router.Post("/api/add", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (*taskqueue.Task, error) {
-			payload, err := readPayload[AddTaskPayload](r)
+			payload, err := ParseJson[AddTaskPayload](r.Body)
 			if err != nil {
 				return nil, err
 			}
@@ -87,7 +88,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 
 	router.Post("/api/clone", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (*taskqueue.Task, error) {
-			payload, err := readPayload[GetTaskPayload](r)
+			payload, err := ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return nil, err
 			}
@@ -109,7 +110,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 
 	router.Post("/api/task/run", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := readPayload[GetTaskPayload](r)
+			payload, err := ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -127,7 +128,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 
 	router.Post("/api/task/kill", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := readPayload[GetTaskPayload](r)
+			payload, err := ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -145,7 +146,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 
 	router.Post("/api/task/signal", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := readPayload[SignalTaskPayload](r)
+			payload, err := ParseJson[SignalTaskPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -236,8 +237,8 @@ func writeApiResult(w http.ResponseWriter, result interface{}, err error) error 
 	return err
 }
 
-func readPayload[T any](r *http.Request) (*T, error) {
-	decoder := json.NewDecoder(r.Body)
+func ParseJson[T any](data io.Reader) (*T, error) {
+	decoder := json.NewDecoder(data)
 	var payload T
 	err := decoder.Decode(&payload)
 	if err != nil {
