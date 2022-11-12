@@ -1,6 +1,7 @@
 package taskqueue
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -11,29 +12,32 @@ import (
 	"github.com/creack/pty"
 )
 
+const PtyLogSize = 4 * 1024 * 1024
+
 type Task struct {
-	Id         string `json:"id"`
-	Label      string `json:"label"`
-	Command    string `json:"command"`
-	process    *exec.Cmd
-	IsStarted  bool      `json:"-"`
-	IsFinished bool      `json:"-"`
-	IsCanceled bool      `json:"-"`
-	IsError    bool      `json:"-"`
-	State      string    `json:"state"`
-	Stdout     *[]byte   `json:"-"`
-	Stderr     *[]byte   `json:"-"`
-	Combined   *[]byte   `json:"-"`
-	Error      string    `json:"error"`
-	CreatedAt  time.Time `json:"createdAt"`
-	StartedAt  time.Time `json:"startedAt"`
-	FinishedAt time.Time `json:"finishedAt"`
-	IsPty      bool      `json:"isPty"`
-	mu         sync.Mutex
-	combinedMu sync.Mutex
-	qCh        []chan int
-	stdin      io.WriteCloser
-	pty        *os.File
+	Id             string `json:"id"`
+	Label          string `json:"label"`
+	Command        string `json:"command"`
+	process        *exec.Cmd
+	IsStarted      bool      `json:"-"`
+	IsFinished     bool      `json:"-"`
+	IsCanceled     bool      `json:"-"`
+	IsError        bool      `json:"-"`
+	State          string    `json:"state"`
+	Stdout         *[]byte   `json:"-"`
+	Stderr         *[]byte   `json:"-"`
+	Combined       *[]byte   `json:"-"`
+	Error          string    `json:"error"`
+	CreatedAt      time.Time `json:"createdAt"`
+	StartedAt      time.Time `json:"startedAt"`
+	FinishedAt     time.Time `json:"finishedAt"`
+	IsPty          bool      `json:"isPty"`
+	mu             sync.Mutex
+	combinedMu     sync.Mutex
+	qCh            []chan int
+	stdin          io.WriteCloser
+	pty            *os.File
+	combinedOffset int
 }
 
 func (s *Task) Run(runAs []string, ptyEnv []string) error {
@@ -76,6 +80,12 @@ func (s *Task) RunPty(runAs []string, ptyEnv []string) error {
 				break
 			}
 			output = append(output, chunk[0:bytes]...)
+
+			if len(output) > PtyLogSize {
+				off := len(output) - PtyLogSize
+				output = output[off:]
+				s.combinedOffset += off
+			}
 
 			go s.pushChanges(1)
 		}
@@ -143,13 +153,14 @@ func (s *Task) RunDirect(runAs []string) error {
 		go func() {
 			chunk := make([]byte, 16*1024)
 			for {
-				len, err := pipe.Read(chunk)
+				bytes, err := pipe.Read(chunk)
 				if err == io.EOF || err != nil {
 					break
 				}
-				buffer = append(buffer, chunk[0:len]...)
+				buffer = append(buffer, chunk[0:bytes]...)
+
 				s.combinedMu.Lock()
-				output = append(output, chunk[0:len]...)
+				output = append(output, chunk[0:bytes]...)
 				s.combinedMu.Unlock()
 
 				go s.pushChanges(1)
@@ -187,6 +198,22 @@ func (s *Task) RunDirect(runAs []string) error {
 	}()
 
 	return nil
+}
+
+func (s *Task) ReadCombined(offset int) (int, []byte) {
+	if offset == -1 {
+		offset = s.combinedOffset
+		if len(*s.Combined) > 100*1024 {
+			offset += len(*s.Combined) - 100*1024
+		}
+	}
+	if offset < s.combinedOffset {
+		fmt.Println("skip", s.combinedOffset-offset)
+		offset = s.combinedOffset
+	}
+	fragment := (*s.Combined)[offset-s.combinedOffset:]
+	offset += len(fragment)
+	return offset, fragment
 }
 
 func (s *Task) Send(data string) error {

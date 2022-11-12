@@ -159,15 +159,12 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 			return nil
 		}
 
-		offset := 0
-		if task.Combined != nil && len(*task.Combined) > 100*1024 {
-			offset = len(*task.Combined) - 100*1024
-		}
+		offset := -1
 		lastValue := -1
 		for {
 			if task.Combined != nil {
-				fragment := (*task.Combined)[offset:]
-				offset += len(fragment)
+				var fragment []byte
+				offset, fragment = task.ReadCombined(offset)
 				err := pushPart(fragment)
 				if err != nil {
 					fmt.Println("ws send error", err)
