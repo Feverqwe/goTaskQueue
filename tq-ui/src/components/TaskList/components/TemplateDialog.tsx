@@ -18,15 +18,16 @@ interface TemplateDialogProps {
   onClose: () => void;
   onSubmit: (run: boolean, command: string, label: string, isPty: boolean) => Promise<void>;
   template: Template;
+  isNew?: boolean;
 }
 
-const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) => {
-  const {name, variables, command, label, isPty, isNew} = template;
+const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
+  const {name, variables, command, label, isPty} = template;
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
   const refMap = useMemo(() => new Map(), []);
-  const [isExtended, setExtended] = useState(() => !variables.length);
+  const [isExtended, setExtended] = useState(() => isNew);
   variables.forEach(({value}) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     refMap.set(value, useRef());
@@ -126,7 +127,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose}) 
               />
             </Box>
           </Box>
-          {variableInputs.length > 0 && (
+          {!isNew && (
             <Box py={1}>
               <Button
                 onClick={handleAdvancedClick}

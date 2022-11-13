@@ -14,7 +14,7 @@ interface TaskInputProps {
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const refInput = useRef<HTMLInputElement>();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [template, setTemplate] = useState<Template | null>(null);
+  const [templateDlgParams, setTemplateDlgParams] = useState<{template: Template, isNew?: boolean} | null>(null);
 
   const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean) => {
     try {
@@ -52,13 +52,13 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     setAnchorEl(null);
   }, []);
 
-  const handleSelectTemplate = useCallback((template: Template) => {
-    setTemplate(template);
+  const handleSelectTemplate = useCallback((template: Template, isNew?: boolean) => {
+    setTemplateDlgParams({template, isNew});
     handleCloseTemplates();
   }, [handleCloseTemplates]);
 
   const handleChooseTemplate = useCallback((template: Template) => {
-    setTemplate(template);
+    setTemplateDlgParams({template});
   }, []);
 
   const handleReloadConfig = useCallback(async () => {
@@ -67,11 +67,11 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   }, [handleCloseTemplates]);
 
   const handleDialogClose = useCallback(() => {
-    setTemplate(null);
+    setTemplateDlgParams(null);
   }, []);
 
   const handleCustomCommand = useCallback(() => {
-    handleSelectTemplate({name: 'Run as', variables: [], command: '', label: '', isPty: false, isNew: true});
+    handleSelectTemplate({name: 'Run as', variables: [], command: '', isPty: false}, true);
   }, [handleSelectTemplate]);
 
   return (
@@ -98,8 +98,8 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         </Paper>
       </Box>
       <TemplateList onSelect={handleChooseTemplate} />
-      {template && (
-        <TemplateDialog template={template} onSubmit={handleAdd} onClose={handleDialogClose} />
+      {templateDlgParams && (
+        <TemplateDialog {...templateDlgParams} onSubmit={handleAdd} onClose={handleDialogClose} />
       )}
     </>
   );
