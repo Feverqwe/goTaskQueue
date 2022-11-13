@@ -176,8 +176,6 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 			}
 			lastValue = task.Wait()
 		}
-
-		time.Sleep(time.Second)
 	}
 
 	router.All("/ws", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
