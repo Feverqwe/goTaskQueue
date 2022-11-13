@@ -18,6 +18,7 @@ interface TaskLogProps {
 const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   const {id, state} = task;
   const [isOpen, setOpen] = useState(false);
+  const [isConnecting, setConnecting] = useState(false);
   const refWrapper = useRef<HTMLDivElement>(null);
   const refTask = useRef<Task>(task);
   refTask.current = task;
@@ -80,21 +81,20 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     return {
       wsConnect: () => {
-        // setError(false);
+        setConnecting(true);
         ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
         ws.onopen = () => {
           setOpen(isOpen = true);
+          setConnecting(false);
           handleResize(terminal.cols, terminal.rows);
         };
         ws.onclose = () => {
           setOpen(isOpen = false);
+          setConnecting(false);
         };
         ws.onmessage = async (e: MessageEvent<Blob>) => {
           const buffer = await e.data.arrayBuffer();
           terminal.write(new Uint8Array(buffer));
-        };
-        ws.onerror = () => {
-          // setError(true);
         };
       },
       wsClose: () => {
@@ -162,7 +162,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   return (
     <Box px={1} pb={1} sx={{flexGrow: 1}}>
       <div style={{height: '100%', width: '100%'}} ref={refWrapper} />
-      {!isOpen && state === TaskState.Started && (
+      {!isOpen && !isConnecting && state === TaskState.Started && (
         <Snackbar anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true}>
           <Alert
             severity="error"
