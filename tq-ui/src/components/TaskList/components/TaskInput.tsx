@@ -1,18 +1,17 @@
-import React, {FC, FormEvent, useCallback, useRef, useState} from 'react';
-import {Box, IconButton, Menu, MenuItem, Paper, TextField} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import React, {FC, useCallback, useContext, useState} from 'react';
+import {Box, Button, ButtonGroup, Menu, MenuItem} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {api} from '../../../tools/api';
 import {Template} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from './TemplateDialog';
-import TemplateList from './TemplateList';
+import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 
 interface TaskInputProps {
   onUpdate: () => void;
 }
 
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
-  const refInput = useRef<HTMLInputElement>();
+  const {templates} = useContext(RootStoreCtx);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [templateDlgParams, setTemplateDlgParams] = useState<{template: Template, isNew?: boolean} | null>(null);
 
@@ -32,74 +31,59 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     }
   }, [onUpdate]);
 
-  const handleSubmit = useCallback(async (e: FormEvent) => {
-    e.preventDefault();
-    const input = refInput.current;
-    if (!input) return;
-
-    const {value} = input;
-    if (!value) return;
-
-    await handleAdd(false, value, '', false);
-    input.value = '';
-  }, [handleAdd]);
-
-  const handleShowTemplates = useCallback((e: React.MouseEvent<HTMLElement>) => {
+  const handleShowMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(e.currentTarget);
   }, []);
 
-  const handleCloseTemplates = useCallback(() => {
+  const handleCloseMenu = useCallback(() => {
     setAnchorEl(null);
-  }, []);
-
-  const handleSelectTemplate = useCallback((template: Template, isNew?: boolean) => {
-    setTemplateDlgParams({template, isNew});
-    handleCloseTemplates();
-  }, [handleCloseTemplates]);
-
-  const handleChooseTemplate = useCallback((template: Template) => {
-    setTemplateDlgParams({template});
   }, []);
 
   const handleReloadConfig = useCallback(async () => {
     await api.reloadConfig();
-    handleCloseTemplates();
-  }, [handleCloseTemplates]);
+    handleCloseMenu();
+  }, [handleCloseMenu]);
 
-  const handleDialogClose = useCallback(() => {
+  const handleOpenTemplateDlg = useCallback((template: Template, isNew?: boolean) => {
+    setTemplateDlgParams({template, isNew});
+  }, []);
+
+  const handleCloseTemplateDlg = useCallback(() => {
     setTemplateDlgParams(null);
   }, []);
 
-  const handleCustomCommand = useCallback(() => {
-    handleSelectTemplate({name: 'Run as', variables: [], command: '', isPty: false}, true);
-  }, [handleSelectTemplate]);
+  const handleRunAs = useCallback(() => {
+    handleOpenTemplateDlg({name: 'Run as', variables: [], command: '', isPty: false}, true);
+  }, [handleOpenTemplateDlg]);
 
   return (
     <>
-      <Box p={1}>
-        <Paper>
-          <form onSubmit={handleSubmit}>
-            <Box display="flex" flexDirection="row" p={1} alignItems="center">
-              <TextField hiddenLabel variant="standard" placeholder="echo hi" inputProps={{ref: refInput}} fullWidth autoFocus />
-              <IconButton type="submit">
-                <AddIcon />
-              </IconButton>
-              <IconButton onClick={handleShowTemplates}>
-                <MenuIcon />
-              </IconButton>
-              <Menu open={Boolean(anchorEl)} onClose={handleCloseTemplates} anchorEl={anchorEl}>
-                <MenuItem onClick={handleCustomCommand}>
-                  Run as
-                </MenuItem>
-                <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
-              </Menu>
-            </Box>
-          </form>
-        </Paper>
+      <Box display="flex" flexWrap="wrap" mt={1}>
+        <ButtonGroup sx={{m: 1, mt: 0}} variant="outlined">
+          <Button sx={{p: 0}} onClick={handleShowMenu}>
+            <MenuIcon />
+          </Button>
+          <Button onClick={handleRunAs}>Run as</Button>
+        </ButtonGroup>
+        {templates.map((template, index) => {
+          const {name} = template;
+          return (
+            <Button
+              key={index}
+              sx={{m: 1, mt: 0}}
+              variant="outlined"
+              onClick={handleOpenTemplateDlg.bind(null, template, undefined)}
+            >
+              {name}
+            </Button>
+          );
+        })}
       </Box>
-      <TemplateList onSelect={handleChooseTemplate} />
+      <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
+        <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
+      </Menu>
       {templateDlgParams && (
-        <TemplateDialog {...templateDlgParams} onSubmit={handleAdd} onClose={handleDialogClose} />
+        <TemplateDialog {...templateDlgParams} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
       )}
     </>
   );
