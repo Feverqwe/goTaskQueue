@@ -1,8 +1,8 @@
-import React, {FC, Fragment, useCallback, useState} from "react";
-import {Task} from "../../types";
-import TaskHeader from "./TaskHeader";
-import TaskInfo from "./TaskInfo";
-import TaskLog from "./TaskLog";
+import React, {FC, useCallback, useState} from 'react';
+import {Task} from '../../types';
+import TaskHeader from './TaskHeader';
+import TaskInfo from './TaskInfo';
+import TaskLog from './TaskLog';
 
 interface TaskViewProps {
   task: Task;
@@ -23,14 +23,14 @@ const TaskView: FC<TaskViewProps> = ({task, onUpdate}) => {
   }, []);
 
   return (
-    <Fragment>
+    <>
       <TaskHeader task={task} remapNewLine={remapNewLine} onToggleInfo={handleToggleInfo} onToggleFixNewLine={handleToggleFixNewLine} onUpdate={onUpdate} />
       {showInfo && (
         <TaskInfo task={task} />
       )}
       <TaskLog task={task} remapNewLine={remapNewLine} onUpdate={onUpdate} />
-    </Fragment>
+    </>
   );
-}
+};
 
 export default TaskView;

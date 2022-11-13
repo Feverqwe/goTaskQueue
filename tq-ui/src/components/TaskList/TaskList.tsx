@@ -5,8 +5,8 @@ import TaskItem from './components/TaskItem';
 import TaskInput from './components/TaskInput';
 import {Task} from '../types';
 import {api} from '../../tools/api';
-import {ApiError, HTTPError} from "../../tools/apiRequest";
-import DisplayError from "../DisplayError";
+import {ApiError, HTTPError} from '../../tools/apiRequest';
+import DisplayError from '../DisplayError';
 
 interface TaskListProps {
 
@@ -52,7 +52,7 @@ const TaskList: FC<TaskListProps> = () => {
 
   const handleRetry = useCallback(() => {
     fetchTaskList();
-  }, []);
+  }, [fetchTaskList]);
 
   return (
     <Container maxWidth={false} disableGutters={true}>

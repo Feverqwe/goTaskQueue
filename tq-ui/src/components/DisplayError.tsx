@@ -1,5 +1,5 @@
-import React, {FC, useMemo} from "react";
-import { Button, Stack, Typography} from "@mui/material";
+import React, {FC, useMemo} from 'react';
+import {Button, Stack, Typography} from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 interface DisplayErrorProps {
@@ -17,12 +17,12 @@ const DisplayError: FC<DisplayErrorProps> = ({error, onRetry}) => {
   }, [error]);
 
   return (
-    <Stack spacing={2} p={1} direction={'row'} alignItems={'center'}>
-      <ErrorOutlineIcon color={'error'}/>
+    <Stack spacing={2} p={1} direction="row" alignItems="center">
+      <ErrorOutlineIcon color="error" />
       <Typography>{message}</Typography>
       <Button onClick={onRetry}>Retry</Button>
     </Stack>
   );
-}
+};
 
 export default DisplayError;

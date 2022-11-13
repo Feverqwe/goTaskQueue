@@ -15,10 +15,12 @@ interface TaskLogProps {
   onUpdate: () => void;
 }
 
-const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) => {
+const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
+  const {id, state} = task;
   const [isOpen, setOpen] = useState(false);
-  // const [isError, setError] = useState(false);
   const refWrapper = useRef<HTMLDivElement>(null);
+  const refTask = useRef<Task>(task);
+  refTask.current = task;
   const [scope] = useState(() => {
     const terminal = new Terminal({
       convertEol: true,
@@ -33,7 +35,7 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
     let ws: WebSocket;
     let isOpen = false;
 
-    const sendCommand = (type: 'ping' | 'in' | 'resize', data: any = '') => {
+    const sendCommand = (type: 'ping' | 'in' | 'resize', data: unknown = '') => {
       if (!isOpen) return;
       let payload = '';
       switch (type) {
@@ -46,7 +48,7 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
           break;
         }
         case 'resize': {
-          payload = `r${JSON.stringify(data)}`
+          payload = `r${JSON.stringify(data)}`;
         }
       }
       ws.send(payload);
@@ -66,6 +68,7 @@ const TaskLog: FC<TaskLogProps> = ({task: {id, state}, remapNewLine, onUpdate}) 
     const handleResize = (cols: number, rows: number) => {
       const wrapper = refWrapper.current;
       if (!wrapper) return;
+      if (!refTask.current.isPty || refTask.current.state !== TaskState.Started) return;
       const x = wrapper.clientWidth;
       const y = wrapper.clientHeight;
       sendCommand('resize', {cols, rows, x, y});

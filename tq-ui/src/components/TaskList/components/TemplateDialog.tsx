@@ -1,4 +1,4 @@
-import React, {FC, InputHTMLAttributes, SyntheticEvent, useCallback, useMemo, useRef, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useMemo, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
-  TextField
+  TextField,
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';

@@ -1,15 +1,12 @@
-import {Box, Button, CircularProgress, Container} from '@mui/material';
-import React, {FC, useCallback, useContext, useEffect, useRef, useState} from 'react';
+import {Box, CircularProgress, Container} from '@mui/material';
+import React, {FC, useCallback, useContext, useEffect, useRef} from 'react';
 import {observer, useLocalObservable} from 'mobx-react-lite';
-import TaskHeader from './components/TaskHeader';
-import TaskLog from './components/TaskLog';
 import {Task, TaskState} from '../types';
 import {api} from '../../tools/api';
 import {NotificationCtx} from '../Notifications/NotificationCtx';
-import TaskInfo from './components/TaskInfo';
-import {ApiError, HTTPError} from "../../tools/apiRequest";
-import DisplayError from "../DisplayError";
-import TaskView from "./components/TaskView";
+import {ApiError, HTTPError} from '../../tools/apiRequest';
+import DisplayError from '../DisplayError';
+import TaskView from './components/TaskView';
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
@@ -62,8 +59,10 @@ const TaskPage: FC = () => {
   }, [notification, task?.state]);
 
   const handleRetry = useCallback(() => {
-    id && fetchTask(id);
-  }, [id]);
+    if (id) {
+      fetchTask(id);
+    }
+  }, [id, fetchTask]);
 
   return (
     <Container maxWidth={false} disableGutters={true} sx={{display: 'flex', flexDirection: 'column', height: '100%'}}>
@@ -74,11 +73,11 @@ const TaskPage: FC = () => {
       )}
       {error && (
         <Box p={1} display="flex" justifyContent="center">
-          <DisplayError error={error} onRetry={handleRetry}/>
+          <DisplayError error={error} onRetry={handleRetry} />
         </Box>
       )}
       {!error && task && (
-        <TaskView task={task} onUpdate={handleUpdate}/>
+        <TaskView task={task} onUpdate={handleUpdate} />
       )}
     </Container>
   );
