@@ -113,10 +113,18 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 		}
 
 		go func() {
+			type ResizePayload struct {
+				Rows int `json:"rows"`
+				Cols int `json:"cols"`
+				X    int `json:"x"`
+				Y    int `json:"y"`
+			}
+
 			for {
 				var data string
 				err := websocket.Message.Receive(ws, &data)
 				if err == io.EOF || err != nil {
+					fmt.Println("ws receive error", err)
 					break
 				}
 
@@ -125,12 +133,6 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 						task.Send(data[1:])
 					} else if data[0:1] == "r" {
 						reader := strings.NewReader(data[1:])
-						type ResizePayload struct {
-							Rows int `json:"rows"`
-							Cols int `json:"cols"`
-							X    int `json:"x"`
-							Y    int `json:"y"`
-						}
 						payload, err := internal.ParseJson[ResizePayload](reader)
 						if err == nil {
 							err = task.Resize(payload.Rows, payload.Cols, payload.X, payload.Y)
