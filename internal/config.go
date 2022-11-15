@@ -17,9 +17,11 @@ type Config struct {
 	Port      int
 	Address   string
 	Name      string
-	RunAs     []string
+	Run       []string
+	PtyRun    []string
 	Templates []interface{}
-	PtyEnv    []string
+	PtyRunEnv []string
+	RunEnv    []string
 }
 
 var APP_ID = "com.rndnm.gotaskqueue"
@@ -43,11 +45,14 @@ func getNewConfig() Config {
 		Name:      "TaskQueue",
 	}
 	if runtime.GOOS == "windows" {
-		config.RunAs = []string{"cmd", "/C"}
+		config.Run = []string{"cmd", "/C"}
+		config.PtyRun = []string{"cmd", "/C"}
 	} else {
-		config.RunAs = []string{"sh", "-c"}
+		config.Run = []string{"sh", "-c"}
+		config.PtyRun = []string{"sh", "-c"}
 	}
-	config.PtyEnv = []string{"TERM=xterm-256color", "COLORTERM=truecolor", "HOME=/root"}
+	config.PtyRunEnv = []string{"TERM=xterm-256color", "COLORTERM=truecolor", "HOME=/root"}
+	config.RunEnv = []string{}
 	return config
 }
 
@@ -73,12 +78,20 @@ func LoadConfig() Config {
 		}
 	}
 
-	if config.RunAs == nil {
-		config.RunAs = getNewConfig().RunAs
+	if config.Run == nil {
+		config.Run = getNewConfig().Run
 	}
 
-	if config.PtyEnv == nil {
-		config.PtyEnv = getNewConfig().PtyEnv
+	if config.PtyRun == nil {
+		config.PtyRun = getNewConfig().PtyRun
+	}
+
+	if config.PtyRunEnv == nil {
+		config.PtyRunEnv = getNewConfig().PtyRunEnv
+	}
+
+	if config.RunEnv == nil {
+		config.RunEnv = getNewConfig().RunEnv
 	}
 
 	return config

@@ -120,7 +120,11 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 				return "", err
 			}
 
-			err = task.Run(config.RunAs, config.PtyEnv)
+			if task.IsPty {
+				err = task.Run(config.PtyRun, config.PtyRunEnv)
+			} else {
+				err = task.Run(config.Run, config.RunEnv)
+			}
 
 			return "ok", err
 		})
