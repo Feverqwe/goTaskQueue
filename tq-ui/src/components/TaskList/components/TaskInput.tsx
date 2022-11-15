@@ -70,7 +70,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           return (
             <Button
               key={index}
-              sx={{m: 1, mt: 0}}
+              sx={{m: 1, mt: 0, flexGrow: {xs: 1, sm: 0}}}
               variant="outlined"
               onClick={handleOpenTemplateDlg.bind(null, template, undefined)}
             >
