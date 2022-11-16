@@ -26,6 +26,8 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         await api.taskRun({id});
       }
       onUpdate();
+
+      location.href = `task?id=${id}`;
     } catch (err) {
       console.error(err);
     }
