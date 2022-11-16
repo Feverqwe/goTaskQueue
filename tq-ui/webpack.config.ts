@@ -7,7 +7,6 @@ export default (env: Record<string, any>, arg: Record<string, any>): Configurati
   return {
     entry: {
       index: './src/index',
-      task: './src/task',
     },
     output: {
       filename: '[name]-[contenthash].js',
@@ -65,12 +64,6 @@ export default (env: Record<string, any>, arg: Record<string, any>): Configurati
         filename: 'index.html',
         template: './src/assets/index.html',
         chunks: ['index'],
-        scriptLoading: 'blocking',
-      }),
-      new HtmlWebpackPlugin({
-        filename: 'task.html',
-        template: './src/assets/index.html',
-        chunks: ['task'],
         scriptLoading: 'blocking',
       }),
       new CopyPlugin({

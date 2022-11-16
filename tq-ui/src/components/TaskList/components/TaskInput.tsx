@@ -1,6 +1,7 @@
 import React, {FC, useCallback, useContext, useState} from 'react';
 import {Box, Button, ButtonGroup, Menu, MenuItem} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
 import {Template} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from './TemplateDialog';
@@ -11,6 +12,7 @@ interface TaskInputProps {
 }
 
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
+  const navigate = useNavigate();
   const {templates} = useContext(RootStoreCtx);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [templateDlgParams, setTemplateDlgParams] = useState<{template: Template, isNew?: boolean} | null>(null);
@@ -27,11 +29,11 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
       }
       onUpdate();
 
-      location.href = `task?id=${id}`;
+      navigate(`task?id=${id}`);
     } catch (err) {
       console.error(err);
     }
-  }, [onUpdate]);
+  }, [onUpdate, navigate]);
 
   const handleShowMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(e.currentTarget);

@@ -5,6 +5,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CopyAllIcon from '@mui/icons-material/CopyAll';
+import {useNavigate} from 'react-router-dom';
 import TaskStatusIcon from '../../Task/components/TaskStatus';
 import {api} from '../../../tools/api';
 import {Task, TaskState} from '../../types';
@@ -17,6 +18,7 @@ interface TaskItemProps {
 
 const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   const {id, state} = task;
+  const navigate = useNavigate();
 
   const handleDelete = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
@@ -46,10 +48,15 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     onUpdate();
   }, [id, onUpdate]);
 
+  const handleOpen = useCallback((e: SyntheticEvent) => {
+    e.preventDefault();
+    navigate(`task?id=${id}`);
+  }, [navigate, id]);
+
   return (
     <Box px={1} pb={1}>
       <Card>
-        <CardActionArea href={`task?id=${id}`}>
+        <CardActionArea href={`task?id=${id}`} onClick={handleOpen}>
           <Box display="flex" flexDirection="row" alignItems="center">
             <Box display="flex">
               <IconButton disabled={state === TaskState.Started} onClick={handleDelete}>

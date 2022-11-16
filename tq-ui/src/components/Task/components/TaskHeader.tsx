@@ -1,10 +1,11 @@
-import React, {FC, useCallback, useMemo, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useMemo, useState} from 'react';
 import {Box, CardActionArea, Divider, IconButton, Menu, MenuItem, Paper, Typography} from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {Check} from '@mui/icons-material';
+import {useLocation, useNavigate} from 'react-router-dom';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatus';
 import {api} from '../../../tools/api';
@@ -20,6 +21,7 @@ interface TaskInfoProps {
 }
 
 const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, onToggleInfo, onUpdate}) => {
+  const navigate = useNavigate();
   const {id, state, label, command, error} = task;
   const [confirmDialog, setConfirmDialog] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -62,12 +64,17 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
   const handleConfirmRestart = useCallback(async () => {
     const task = await api.clone({id});
     await api.taskRun({id: task.id});
-    location.href = `task?id=${task.id}`;
-  }, [id]);
+    navigate(`task?id=${task.id}`);
+  }, [id, navigate]);
 
   const handleCloseConfirm = useCallback(() => {
     setConfirmDialog(false);
   }, []);
+
+  const handleBack = useCallback((e: SyntheticEvent) => {
+    e.preventDefault();
+    navigate('/');
+  }, [navigate]);
 
   return (
     <>
@@ -75,7 +82,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
         <Paper component="form">
           <Box display="flex" flexDirection="row" alignItems="stretch">
             <Box display="flex" alignItems="center">
-              <IconButton href="/">
+              <IconButton href="/" onClick={handleBack}>
                 <ChevronLeftIcon />
               </IconButton>
             </Box>
