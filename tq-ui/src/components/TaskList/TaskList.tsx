@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect} from 'react';
+import React, {FC, useCallback, useEffect, useMemo} from 'react';
 import {Box, CircularProgress, Container} from '@mui/material';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import TaskItem from './components/TaskItem';
@@ -34,6 +34,10 @@ const TaskList: FC<TaskListProps> = () => {
       }
     },
   }));
+
+  useMemo(() => {
+    document.title = 'TaskQueue';
+  }, []);
 
   const handleUpdate = useCallback(() => {
     fetchTaskList(true);
