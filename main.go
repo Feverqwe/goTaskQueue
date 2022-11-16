@@ -201,10 +201,8 @@ func handleWww(router *internal.Router, config *internal.Config) {
 		mTime := binTime
 		assetPath := r.URL.Path
 
-		if assetPath == "/" {
+		if assetPath == "/" || assetPath == "/task" {
 			assetPath = "/index.html"
-		} else if assetPath == "/task" {
-			assetPath = "/task.html"
 		}
 
 		var err error
@@ -223,7 +221,7 @@ func handleWww(router *internal.Router, config *internal.Config) {
 			return
 		}
 
-		if assetPath == "/index.html" || assetPath == "/task.html" {
+		if assetPath == "/index.html" {
 			mTime = time.Now()
 
 			store := RootStore{
