@@ -1,5 +1,5 @@
 import React, {FC, ReactNode} from 'react';
-import {ListItemButton} from '@mui/material';
+import {Box, ListItemButton} from '@mui/material';
 
 interface DialogMenuItemProps {
   onClick?: () => void;
@@ -13,7 +13,9 @@ const DialogMenuItem: FC<DialogMenuItemProps> = ({onClick, component, href, targ
   return (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <ListItemButton component={component as any} href={href} target={target} onClick={onClick}>
-      {children}
+      <Box p={0.5}>
+        {children}
+      </Box>
     </ListItemButton>
   );
 };
