@@ -66,10 +66,15 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseMenu();
   }, [handleCloseMenu]);
 
-  const handleClickTemplate = useCallback((template: Template, isNew?: boolean) => {
-    setDialogProps({template, isNew});
-    setDialogType(DialogType.Run);
-  }, []);
+  const handleClickTemplate = useCallback((template: Template, as?: boolean) => {
+    if (!as && !template.variables.length) {
+      const {command, label = '', isPty = false} = template;
+      handleAdd(true, command, label, isPty);
+    } else {
+      setDialogProps({template});
+      setDialogType(DialogType.Run);
+    }
+  }, [handleAdd]);
 
   const handleEditTemplate = useCallback((template: Template) => {
     setDialogProps({template});
@@ -81,9 +86,10 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     setDialogType(null);
   }, []);
 
-  const handleRunAs = useCallback(() => {
-    handleClickTemplate(NEW_TEMPLATE, true);
-  }, [handleClickTemplate]);
+  const handleRun = useCallback(() => {
+    setDialogProps({template: NEW_TEMPLATE, isNew: true});
+    setDialogType(DialogType.Run);
+  }, []);
 
   const handleDeleteTemplate = useCallback(async (template: Template) => {
     const newTemplates = [...templates];
@@ -121,7 +127,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           <Button sx={{p: 0}} onClick={handleShowMenu}>
             <MenuIcon />
           </Button>
-          <Button onClick={handleRunAs}>Run as</Button>
+          <Button onClick={handleRun}>Run</Button>
         </ButtonGroup>
         {templates.map((template, index) => {
           return (

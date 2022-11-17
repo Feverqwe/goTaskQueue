@@ -4,7 +4,7 @@ import {Template} from '../../RootStore/RootStoreProvider';
 
 interface TemplateBtnProps {
   template: Template;
-  onClick: (template: Template) => void;
+  onClick: (template: Template, as?: boolean) => void;
   onEdit: (template: Template) => void;
   onDelete: (template: Template) => void;
   onClone: (template: Template) => void;
@@ -21,6 +21,11 @@ const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete,
   const handleCloseMenu = useCallback(() => {
     setAnchorEl(null);
   }, []);
+
+  const handleRunAs = useCallback(() => {
+    onClick(template, true);
+    handleCloseMenu();
+  }, [template, onClick, handleCloseMenu]);
 
   const handleEdit = useCallback(() => {
     onEdit(template);
@@ -54,6 +59,9 @@ const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete,
       </Button>
       {anchorEl && (
         <Menu open={true} onClose={handleCloseMenu} anchorEl={anchorEl}>
+          {!template.variables.length && (
+            <MenuItem onClick={handleRunAs}>Run as</MenuItem>
+          )}
           <MenuItem onClick={handleEdit}>Edit</MenuItem>
           <MenuItem onClick={handleClone}>Clone</MenuItem>
           <MenuItem onClick={handleDelete}>Delete</MenuItem>
