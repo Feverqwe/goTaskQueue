@@ -96,6 +96,11 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     await updateTemplates(newTemplates);
   }, [templates, updateTemplates]);
 
+  const handleCloneTemplate = useCallback(async (template: Template) => {
+    const newTemplates = [...templates, template];
+    await updateTemplates(newTemplates);
+  }, [templates, updateTemplates]);
+
   const handleEdit = useCallback(async (prevTemplate: null | Template, newTemplate: Template) => {
     const newTemplates = [...templates];
     if (prevTemplate) {
@@ -127,6 +132,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
               onClick={handleClickTemplate}
               onEdit={handleEditTemplate}
               onDelete={handleDeleteTemplate}
+              onClone={handleCloneTemplate}
             />
           );
         })}

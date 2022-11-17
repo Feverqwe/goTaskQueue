@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useMemo, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -107,12 +107,6 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
     onClose();
   }, [isNew, getTemplate, onSubmit, onClose, template]);
 
-  const handleCopy = useCallback(async () => {
-    const newTemplate = getTemplate();
-    await onSubmit(null, newTemplate);
-    onClose();
-  }, [getTemplate, onSubmit, onClose]);
-
   return (
     <Dialog open={true} onClose={handleClose} fullWidth>
       <DialogTitle>
@@ -187,9 +181,6 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
       </DialogContent>
       <DialogActions>
         <Button variant="outlined" onClick={onClose}>Cancel</Button>
-        {!isNew && (
-        <Button variant="outlined" onClick={handleCopy}>Copy</Button>
-        )}
         <Button variant="contained" onClick={handleSave}>Save</Button>
       </DialogActions>
     </Dialog>

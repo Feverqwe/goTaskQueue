@@ -7,9 +7,10 @@ interface TemplateBtnProps {
   onClick: (template: Template) => void;
   onEdit: (template: Template) => void;
   onDelete: (template: Template) => void;
+  onClone: (template: Template) => void;
 }
 
-const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete}) => {
+const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete, onClone}) => {
   const {name} = template;
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -31,6 +32,11 @@ const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete}
     handleCloseMenu();
   }, [template, onDelete, handleCloseMenu]);
 
+  const handleClone = useCallback(() => {
+    onClone(template);
+    handleCloseMenu();
+  }, [template, onClone, handleCloseMenu]);
+
   const handleCtxMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     setAnchorEl(e.currentTarget);
@@ -49,6 +55,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete}
       {anchorEl && (
         <Menu open={true} onClose={handleCloseMenu} anchorEl={anchorEl}>
           <MenuItem onClick={handleEdit}>Edit</MenuItem>
+          <MenuItem onClick={handleClone}>Clone</MenuItem>
           <MenuItem onClick={handleDelete}>Delete</MenuItem>
         </Menu>
       )}
