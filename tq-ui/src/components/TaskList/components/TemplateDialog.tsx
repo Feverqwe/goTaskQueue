@@ -38,7 +38,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
       const ref = refMap.get(value);
 
       return (
-        <Box p={1} key={value}>
+        <Box py={1} key={value}>
           <TextField
             inputProps={{ref}}
             autoFocus
@@ -96,7 +96,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
         <DialogContent>
           {variableInputs}
           <Box display={isExtended ? 'block' : 'none'}>
-            <Box p={1}>
+            <Box py={1}>
               <TextField
                 multiline
                 label="Command"
@@ -108,7 +108,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
                 autoFocus={isNew}
               />
             </Box>
-            <Box p={1}>
+            <Box py={1}>
               <FormControlLabel
                 label="Pseudo-terminal"
                 control={
@@ -116,7 +116,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
                 }
               />
             </Box>
-            <Box p={1}>
+            <Box py={1}>
               <TextField
                 label="Label"
                 defaultValue={label || ''}
