@@ -13,7 +13,7 @@ const DialogMenuItem: FC<DialogMenuItemProps> = ({onClick, component, href, targ
   return (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <ListItemButton component={component as any} href={href} target={target} onClick={onClick}>
-      <Box p={0.5}>
+      <Box display="flex" p={0.5}>
         {children}
       </Box>
     </ListItemButton>
