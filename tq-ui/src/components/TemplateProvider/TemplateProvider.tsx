@@ -13,14 +13,14 @@ const TemplateProvider: FC<TemplateProviderProps> = ({children}) => {
   const {templates: initTemplates} = useContext(RootStoreCtx);
   const [templates, setTemplates] = useState(initTemplates);
 
-  const updateTemplats = useCallback(async (templates: Template[]) => {
+  const updateTemplates = useCallback(async (templates: Template[]) => {
     await api.updateTemplates({templates});
     const freshTemplates = await api.templates();
     setTemplates(freshTemplates);
   }, []);
 
   return (
-    <TemplatesUpdateCtx.Provider value={updateTemplats}>
+    <TemplatesUpdateCtx.Provider value={updateTemplates}>
       <TemplatesCtx.Provider value={templates}>
         {children}
       </TemplatesCtx.Provider>
