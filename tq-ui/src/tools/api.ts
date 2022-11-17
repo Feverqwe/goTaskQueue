@@ -1,5 +1,6 @@
 import {handleApiResponse} from './apiRequest';
 import {Task} from '../components/types';
+import {Template} from '../components/RootStore/RootStoreProvider';
 
 interface ActionParams {
   method?: 'GET' | 'POST',
@@ -63,5 +64,13 @@ export const api = {
   reloadConfig: action<void>({
     method: 'POST',
     path: '/api/reloadConfig',
+  }),
+  updateTemplates: action<{templates: Template[]}>({
+    method: 'POST',
+    path: '/api/updateTemplates',
+  }),
+  templates: action<void, Template[]>({
+    method: 'GET',
+    path: '/api/templates',
   }),
 };

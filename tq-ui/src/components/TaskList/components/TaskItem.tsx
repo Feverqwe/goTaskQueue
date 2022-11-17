@@ -59,7 +59,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
         <CardActionArea href={`task?id=${id}`} onClick={handleOpen}>
           <Box display="flex" flexDirection="row" alignItems="center">
             <Box display="flex">
-              <IconButton disabled={state === TaskState.Started} onClick={handleDelete}>
+              <IconButton disabled={state === TaskState.Started} onClick={handleDelete} title="Delete">
                 <ClearIcon />
               </IconButton>
             </Box>
@@ -70,15 +70,15 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
             </Box>
             <Box display="flex" pl={1}>
               {state === TaskState.Started && (
-                <IconButton onClick={handleStop}>
+                <IconButton onClick={handleStop} title="Stop">
                   <StopIcon />
                 </IconButton>
               ) || state === TaskState.Idle && (
-                <IconButton onClick={handleStart}>
+                <IconButton onClick={handleStart} title="Start">
                   <PlayArrowIcon />
                 </IconButton>
               ) || (
-                <IconButton onClick={handleClone}>
+                <IconButton onClick={handleClone} title="Clone">
                   <CopyAllIcon />
                 </IconButton>
               )}

@@ -6,16 +6,29 @@ import {api} from '../../../tools/api';
 import {Template} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from './TemplateDialog';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
+import EditTemplateDialog from './EditTemplateDialog';
+import TemplateBtn from './TemplateBtn';
+import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
+import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
 
 interface TaskInputProps {
   onUpdate: () => void;
 }
 
+enum DialogType {
+  Edit = 'edit',
+  Run = 'run',
+}
+
+const NEW_TEMPLATE = {name: 'Run as', variables: [], command: '', isPty: false};
+
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
-  const {templates} = useContext(RootStoreCtx);
+  const templates = useContext(TemplatesCtx);
+  const updateTemplates = useContext(TemplatesUpdateCtx);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [templateDlgParams, setTemplateDlgParams] = useState<{template: Template, isNew?: boolean} | null>(null);
+  const [dialogProps, setDialogProps] = useState<{template: Template, isNew?: boolean} | null>(null);
+  const [dialogType, setDialogType] = useState<null | DialogType>(null);
 
   const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean) => {
     try {
@@ -48,17 +61,54 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseMenu();
   }, [handleCloseMenu]);
 
-  const handleOpenTemplateDlg = useCallback((template: Template, isNew?: boolean) => {
-    setTemplateDlgParams({template, isNew});
+  const handleNewTemplate = useCallback(() => {
+    setDialogProps({template: NEW_TEMPLATE, isNew: true});
+    setDialogType(DialogType.Edit);
+    handleCloseMenu();
+  }, [handleCloseMenu]);
+
+  const handleClickTemplate = useCallback((template: Template, isNew?: boolean) => {
+    setDialogProps({template, isNew});
+    setDialogType(DialogType.Run);
+  }, []);
+
+  const handleEditTemplate = useCallback((template: Template) => {
+    setDialogProps({template});
+    setDialogType(DialogType.Edit);
   }, []);
 
   const handleCloseTemplateDlg = useCallback(() => {
-    setTemplateDlgParams(null);
+    setDialogProps(null);
+    setDialogType(null);
   }, []);
 
   const handleRunAs = useCallback(() => {
-    handleOpenTemplateDlg({name: 'Run as', variables: [], command: '', isPty: false}, true);
-  }, [handleOpenTemplateDlg]);
+    handleClickTemplate(NEW_TEMPLATE, true);
+  }, [handleClickTemplate]);
+
+  const handleDeleteTemplate = useCallback(async (template: Template) => {
+    const newTemplates = [...templates];
+    const pos = newTemplates.indexOf(template);
+    if (pos === -1) {
+      throw new Error('prev template not found');
+    }
+    newTemplates.splice(pos, 1);
+    await updateTemplates(newTemplates);
+  }, [templates, updateTemplates]);
+
+  const handleEdit = useCallback(async (prevTemplate: null | Template, newTemplate: Template) => {
+    const newTemplates = [...templates];
+    if (prevTemplate) {
+      const pos = newTemplates.indexOf(prevTemplate);
+      if (pos === -1) {
+        throw new Error('prev template not found');
+      }
+      newTemplates.splice(pos, 1, newTemplate);
+    } else {
+      newTemplates.push(newTemplate);
+    }
+    await updateTemplates(newTemplates);
+  }, [templates, updateTemplates]);
 
   return (
     <>
@@ -70,24 +120,28 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           <Button onClick={handleRunAs}>Run as</Button>
         </ButtonGroup>
         {templates.map((template, index) => {
-          const {name} = template;
           return (
-            <Button
+            <TemplateBtn
               key={index}
-              sx={{m: 1, mt: 0, flexGrow: {xs: 1, sm: 0}}}
-              variant="outlined"
-              onClick={handleOpenTemplateDlg.bind(null, template, undefined)}
-            >
-              {name}
-            </Button>
+              template={template}
+              onClick={handleClickTemplate}
+              onEdit={handleEditTemplate}
+              onDelete={handleDeleteTemplate}
+            />
           );
         })}
       </Box>
-      <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
-        <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
-      </Menu>
-      {templateDlgParams && (
-        <TemplateDialog {...templateDlgParams} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
+      {anchorEl && (
+        <Menu open={true} onClose={handleCloseMenu} anchorEl={anchorEl}>
+          <MenuItem onClick={handleNewTemplate}>New template</MenuItem>
+          <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
+        </Menu>
+      )}
+      {dialogType === DialogType.Run && dialogProps && (
+        <TemplateDialog {...dialogProps} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
+      )}
+      {dialogType === DialogType.Edit && dialogProps && (
+        <EditTemplateDialog {...dialogProps} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
       )}
     </>
   );

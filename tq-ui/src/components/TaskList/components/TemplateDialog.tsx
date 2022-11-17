@@ -34,7 +34,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
   });
 
   const variableInputs = useMemo(() => {
-    return variables.map(({name, value}) => {
+    return variables.map(({name, value, defaultValue}) => {
       const ref = refMap.get(value);
 
       return (
@@ -46,6 +46,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
             type="text"
             fullWidth
             variant="standard"
+            defaultValue={defaultValue}
           />
         </Box>
       );

@@ -82,7 +82,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
         <Paper component="form">
           <Box display="flex" flexDirection="row" alignItems="stretch">
             <Box display="flex" alignItems="center">
-              <IconButton href="/" onClick={handleBack}>
+              <IconButton href="/" onClick={handleBack} title="Back">
                 <ChevronLeftIcon />
               </IconButton>
             </Box>
@@ -102,19 +102,19 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
             </Box>
             <Box display="flex" alignItems="center">
               {state === TaskState.Started && (
-                <IconButton onClick={handleStop}>
+                <IconButton onClick={handleStop} title="Stop">
                   <StopIcon />
                 </IconButton>
               ) || state === TaskState.Idle && (
-                <IconButton onClick={handleStart}>
+                <IconButton onClick={handleStart} title="Start">
                   <PlayArrowIcon />
                 </IconButton>
               ) || (
-                <IconButton onClick={handleRestart}>
+                <IconButton onClick={handleRestart} title="Restart">
                   <RestartAltIcon />
                 </IconButton>
               )}
-              <IconButton onClick={handleOpenMenu}>
+              <IconButton onClick={handleOpenMenu} title="Menu">
                 <TaskStatusIcon task={task} />
               </IconButton>
               <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>

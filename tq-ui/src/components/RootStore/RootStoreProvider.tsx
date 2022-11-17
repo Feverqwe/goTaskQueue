@@ -7,6 +7,7 @@ export interface Template {
   variables: {
     name: string,
     value: string,
+    defaultValue?: string;
   }[],
   command: string,
   isPty?: boolean,
