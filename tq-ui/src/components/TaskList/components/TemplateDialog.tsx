@@ -23,11 +23,11 @@ interface TemplateDialogProps {
 
 const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
   const {name, variables, command, label, isPty} = template;
+  const [isExtended, setExtended] = useState(() => isNew);
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
   const refMap = useMemo(() => new Map(), []);
-  const [isExtended, setExtended] = useState(() => isNew);
   variables.forEach(({value}) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     refMap.set(value, useRef());
