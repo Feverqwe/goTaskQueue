@@ -1,5 +1,5 @@
 import React, {FC, ReactNode, useCallback, useState} from 'react';
-import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from '@mui/material';
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 interface ConfirmDialogProps {
@@ -35,9 +35,7 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, 
       </DialogTitle>
       {message && (
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {message}
-          </DialogContentText>
+          {message}
         </DialogContent>
       )}
       <DialogActions>

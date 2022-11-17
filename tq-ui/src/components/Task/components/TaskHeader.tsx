@@ -5,7 +5,7 @@ import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {Check} from '@mui/icons-material';
-import {useLocation, useNavigate} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatus';
 import {api} from '../../../tools/api';

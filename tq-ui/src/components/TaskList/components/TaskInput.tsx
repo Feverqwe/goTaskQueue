@@ -5,7 +5,6 @@ import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
 import {Template} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from './TemplateDialog';
-import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 import EditTemplateDialog from './EditTemplateDialog';
 import TemplateBtn from './TemplateBtn';
 import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';

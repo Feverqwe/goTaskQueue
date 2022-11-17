@@ -7,7 +7,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel, IconButton,
+  FormControlLabel,
+  IconButton,
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';

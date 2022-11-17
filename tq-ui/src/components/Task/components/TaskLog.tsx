@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useRef, useState} from 'react';
+import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Alert, Box, Button, Snackbar} from '@mui/material';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
@@ -20,9 +20,13 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   const [isOpen, setOpen] = useState(false);
   const [isConnecting, setConnecting] = useState(false);
   const refWrapper = useRef<HTMLDivElement>(null);
+
   const refTask = useRef<Task>(task);
   refTask.current = task;
-  const [scope] = useState(() => {
+  const refRemapNewLine = useRef(remapNewLine);
+  refRemapNewLine.current = remapNewLine;
+
+  const scope = useMemo(() => {
     const terminal = new Terminal({
       convertEol: true,
       fontSize: 14,
@@ -56,7 +60,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     };
 
     terminal.onData((char) => {
-      if (scope.remapNewLine) {
+      if (refRemapNewLine.current) {
         if (char === '\r') {
           char = '\n';
         } else if (char === '\n') {
@@ -103,10 +107,8 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       wsSend: sendCommand,
       terminal,
       fitAddon,
-      remapNewLine,
     };
-  });
-  scope.remapNewLine = remapNewLine;
+  }, [id]);
 
   useEffect(() => {
     const {terminal, fitAddon} = scope;

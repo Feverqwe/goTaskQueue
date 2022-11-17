@@ -1,6 +1,7 @@
 import {Box, CircularProgress, Container} from '@mui/material';
 import React, {FC, useCallback, useContext, useEffect, useRef} from 'react';
 import {observer, useLocalObservable} from 'mobx-react-lite';
+import {useLocation} from 'react-router-dom';
 import {Task, TaskState} from '../types';
 import {api} from '../../tools/api';
 import {NotificationCtx} from '../Notifications/NotificationCtx';
@@ -11,6 +12,7 @@ import TaskView from './components/TaskView';
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
 const TaskPage: FC = () => {
+  const location = useLocation();
   const id = new URLSearchParams(location.search).get('id');
   const notification = useContext(NotificationCtx);
   const refTask = useRef<Task>();
