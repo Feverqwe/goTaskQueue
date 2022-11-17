@@ -206,6 +206,37 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 		w.WriteHeader(200)
 		w.Write(data)
 	})
+
+	type UpdateTemplatesPayload struct {
+		Templates []interface{} `json:"templates"`
+	}
+
+	router.Post("/api/updateTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := ParseJson[UpdateTemplatesPayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			config.Templates = payload.Templates
+
+			SaveConfig(*config)
+
+			callChan <- "reload"
+
+			return "ok", nil
+		})
+	})
+
+	router.Get("/api/templates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() ([]interface{}, error) {
+			var err error
+
+			templates := config.Templates
+
+			return templates, err
+		})
+	})
 }
 
 type ActionAny[T any] func() (T, error)
