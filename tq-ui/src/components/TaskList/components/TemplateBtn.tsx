@@ -1,6 +1,8 @@
 import React, {FC, useCallback} from 'react';
-import {Button, Menu, MenuItem} from '@mui/material';
+import {Button} from '@mui/material';
 import {Template} from '../../RootStore/RootStoreProvider';
+import DialogMenu from '../../DialogMenu/DialogMenu';
+import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 
 interface TemplateBtnProps {
   template: Template;
@@ -12,14 +14,14 @@ interface TemplateBtnProps {
 
 const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete, onClone}) => {
   const {name} = template;
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [showMenu, setShowMenu] = React.useState(false);
 
   const handleClick = useCallback(() => {
     onClick(template);
   }, [template, onClick]);
 
   const handleCloseMenu = useCallback(() => {
-    setAnchorEl(null);
+    setShowMenu(false);
   }, []);
 
   const handleRunAs = useCallback(() => {
@@ -44,7 +46,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete,
 
   const handleCtxMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
-    setAnchorEl(e.currentTarget);
+    setShowMenu(true);
   }, []);
 
   return (
@@ -57,16 +59,14 @@ const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete,
       >
         {name}
       </Button>
-      {anchorEl && (
-        <Menu open={true} onClose={handleCloseMenu} anchorEl={anchorEl}>
-          {!template.variables.length && (
-            <MenuItem onClick={handleRunAs}>Run as</MenuItem>
-          )}
-          <MenuItem onClick={handleEdit}>Edit</MenuItem>
-          <MenuItem onClick={handleClone}>Clone</MenuItem>
-          <MenuItem onClick={handleDelete}>Delete</MenuItem>
-        </Menu>
-      )}
+      <DialogMenu open={showMenu} onClose={handleCloseMenu}>
+        {!template.variables.length && (
+          <DialogMenuItem onClick={handleRunAs}>Run as</DialogMenuItem>
+        )}
+        <DialogMenuItem onClick={handleEdit}>Edit</DialogMenuItem>
+        <DialogMenuItem onClick={handleClone}>Clone</DialogMenuItem>
+        <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
+      </DialogMenu>
     </>
   );
 };

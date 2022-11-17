@@ -1,5 +1,5 @@
 import React, {FC, SyntheticEvent, useCallback, useMemo, useState} from 'react';
-import {Box, CardActionArea, Divider, IconButton, Menu, MenuItem, Paper, Typography} from '@mui/material';
+import {Box, CardActionArea, Divider, IconButton, Paper, Typography} from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -11,6 +11,8 @@ import TaskStatusIcon from './TaskStatus';
 import {api} from '../../../tools/api';
 import {Task, TaskState} from '../../types';
 import ConfirmDialog from './ConfirmDialog';
+import DialogMenu from '../../DialogMenu/DialogMenu';
+import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 
 interface TaskInfoProps {
   task: Task;
@@ -24,7 +26,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
   const navigate = useNavigate();
   const {id, state, label, command, error} = task;
   const [confirmDialog, setConfirmDialog] = useState(false);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [showMenu, setShowMenu] = React.useState(false);
 
   useMemo(() => {
     document.title = `Task ${label || command} — TaskQueue`;
@@ -40,12 +42,12 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
     onUpdate();
   }, [id, onUpdate]);
 
-  const handleOpenMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(e.currentTarget);
+  const handleOpenMenu = useCallback(() => {
+    setShowMenu(true);
   }, []);
 
   const handleCloseMenu = useCallback(() => {
-    setAnchorEl(null);
+    setShowMenu(false);
   }, []);
 
   const handleSigint = useCallback(() => {
@@ -117,23 +119,23 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
               <IconButton onClick={handleOpenMenu} title="Menu">
                 <TaskStatusIcon task={task} />
               </IconButton>
-              <Menu open={Boolean(anchorEl)} onClose={handleCloseMenu} anchorEl={anchorEl}>
-                <MenuItem onClick={onToggleFixNewLine}>
+              <DialogMenu open={showMenu} onClose={handleCloseMenu}>
+                <DialogMenuItem onClick={onToggleFixNewLine}>
                   Remap new line
                   {remapNewLine && (
                     <Box display="flex" alignItems="center" pl={1}>
                       <Check fontSize="small" />
                     </Box>
                   )}
-                </MenuItem>
+                </DialogMenuItem>
                 {state === TaskState.Started && (
-                  <MenuItem onClick={handleSigint}>SIGINT</MenuItem>
+                  <DialogMenuItem onClick={handleSigint}>SIGINT</DialogMenuItem>
                 )}
                 <Divider />
-                <MenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank">stdout.log</MenuItem>
-                <MenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank">stderr.log</MenuItem>
-                <MenuItem component="a" href={`/api/task/combined?id=${id}`} target="_blank">combined.log</MenuItem>
-              </Menu>
+                <DialogMenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank">stdout.log</DialogMenuItem>
+                <DialogMenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank">stderr.log</DialogMenuItem>
+                <DialogMenuItem component="a" href={`/api/task/combined?id=${id}`} target="_blank">combined.log</DialogMenuItem>
+              </DialogMenu>
             </Box>
           </Box>
         </Paper>

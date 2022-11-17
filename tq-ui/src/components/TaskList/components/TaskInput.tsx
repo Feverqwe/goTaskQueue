@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useContext, useState} from 'react';
-import {Box, Button, ButtonGroup, Menu, MenuItem} from '@mui/material';
+import {Box, Button, ButtonGroup} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
@@ -9,6 +9,8 @@ import EditTemplateDialog from './EditTemplateDialog';
 import TemplateBtn from './TemplateBtn';
 import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
 import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
+import DialogMenu from '../../DialogMenu/DialogMenu';
+import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -25,7 +27,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
   const templates = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [showRunMenu, setShowRunMenu] = React.useState(false);
   const [dialogProps, setDialogProps] = useState<{template: Template, isNew?: boolean} | null>(null);
   const [dialogType, setDialogType] = useState<null | DialogType>(null);
 
@@ -47,12 +49,12 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     }
   }, [onUpdate, navigate]);
 
-  const handleShowMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(e.currentTarget);
+  const handleShowMenu = useCallback(() => {
+    setShowRunMenu(true);
   }, []);
 
   const handleCloseMenu = useCallback(() => {
-    setAnchorEl(null);
+    setShowRunMenu(false);
   }, []);
 
   const handleReloadConfig = useCallback(async () => {
@@ -142,11 +144,11 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           );
         })}
       </Box>
-      {anchorEl && (
-        <Menu open={true} onClose={handleCloseMenu} anchorEl={anchorEl}>
-          <MenuItem onClick={handleNewTemplate}>New template</MenuItem>
-          <MenuItem onClick={handleReloadConfig}>Reload config</MenuItem>
-        </Menu>
+      {showRunMenu && (
+        <DialogMenu onClose={handleCloseMenu} open={true}>
+          <DialogMenuItem onClick={handleNewTemplate}>New template</DialogMenuItem>
+          <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
+        </DialogMenu>
       )}
       {dialogType === DialogType.Run && dialogProps && (
         <TemplateDialog {...dialogProps} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
