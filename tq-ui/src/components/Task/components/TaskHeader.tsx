@@ -64,7 +64,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
   const handleConfirmRestart = useCallback(async () => {
     const task = await api.clone({id});
     await api.taskRun({id: task.id});
-    navigate(`task?id=${task.id}`);
+    navigate(`/task?id=${task.id}`);
   }, [id, navigate]);
 
   const handleCloseConfirm = useCallback(() => {
