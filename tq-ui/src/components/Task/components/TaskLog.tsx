@@ -126,6 +126,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     window.addEventListener('resize', onResizeThrottled);
 
     requestAnimationFrame(onResize);
+    setTimeout(onResize, 1000);
 
     return () => {
       window.removeEventListener('resize', onResizeThrottled);
