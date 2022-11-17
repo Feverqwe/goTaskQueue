@@ -116,7 +116,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
   return (
     <Dialog open={true} onClose={handleClose} fullWidth>
       <DialogTitle>
-        {isNew ? 'Add variable' : 'Edit variable'}
+        {isNew ? 'Add template' : 'Edit template'}
       </DialogTitle>
       <DialogContent>
         <Box py={1}>
