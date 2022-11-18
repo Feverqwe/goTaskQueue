@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 	"time"
 
@@ -194,7 +195,8 @@ func handleWww(router *internal.Router, config *internal.Config) {
 	}
 
 	type RootStore struct {
-		Templates []interface{} `json:"templates"`
+		Templates      []interface{} `json:"templates"`
+		IsPtySupported bool          `json:"isPtySupported"`
 	}
 
 	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +227,8 @@ func handleWww(router *internal.Router, config *internal.Config) {
 			mTime = time.Now()
 
 			store := RootStore{
-				Templates: config.Templates,
+				Templates:      config.Templates,
+				IsPtySupported: runtime.GOOS != "windows",
 			}
 			storeJson, err := json.Marshal(store)
 
