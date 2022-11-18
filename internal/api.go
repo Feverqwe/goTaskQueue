@@ -53,6 +53,11 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 		IsPty   bool   `json:"isPty"`
 	}
 
+	type TaskSetLabelPayload struct {
+		Id    string `json:"id"`
+		Label string `json:"label"`
+	}
+
 	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() ([]*taskqueue.Task, error) {
 			tasks := taskQueue.GetAll()
@@ -166,6 +171,24 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 			default:
 				err = errors.New("unsupported_signal")
 			}
+
+			return "ok", err
+		})
+	})
+
+	router.Post("/api/task/setLabel", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := ParseJson[TaskSetLabelPayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			task, err := taskQueue.Get(payload.Id)
+			if err != nil {
+				return "", err
+			}
+
+			task.Label = payload.Label
 
 			return "ok", err
 		})
