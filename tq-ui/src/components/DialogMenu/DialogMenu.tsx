@@ -12,7 +12,7 @@ const DialogMenu: FC<DialogMenuProps> = ({children, title, open, onClose}) => {
   if (!open) return null;
 
   return (
-    <Dialog hideBackdrop={true} onClose={onClose} open={open}>
+    <Dialog onClose={onClose} open={open}>
       {Boolean(title) && (
         <DialogTitle>{title}</DialogTitle>
       )}

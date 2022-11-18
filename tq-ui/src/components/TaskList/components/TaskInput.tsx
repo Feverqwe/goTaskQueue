@@ -11,7 +11,6 @@ import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
 import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
-import {ThemeSwitchCtx} from '../../ThemePaletteProvider/ThemeSwitchCtx';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -27,7 +26,6 @@ const NEW_TEMPLATE = {name: 'Run', variables: [], command: '', isPty: false};
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
   const templates = useContext(TemplatesCtx);
-  const switchTheme = useContext(ThemeSwitchCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
   const [showRunMenu, setShowRunMenu] = React.useState(false);
   const [dialogProps, setDialogProps] = useState<{template: Template, isNew?: boolean} | null>(null);
@@ -124,10 +122,6 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     await updateTemplates(newTemplates);
   }, [templates, updateTemplates]);
 
-  const handleSwitchTheme = useCallback(() => {
-    switchTheme();
-  }, [switchTheme]);
-
   return (
     <>
       <Box display="flex" flexWrap="wrap" mt={1}>
@@ -153,7 +147,6 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
       {showRunMenu && (
         <DialogMenu onClose={handleCloseMenu} open={true}>
           <DialogMenuItem onClick={handleNewTemplate}>New template</DialogMenuItem>
-          <DialogMenuItem onClick={handleSwitchTheme}>Switch theme</DialogMenuItem>
           <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
         </DialogMenu>
       )}

@@ -235,35 +235,6 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 			return templates, err
 		})
 	})
-
-	type SetThemePayload struct {
-		Theme string `json:"theme"`
-	}
-
-	router.Post("/api/setTheme", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[SetThemePayload](r.Body)
-			if err != nil {
-				return "", err
-			}
-
-			config.Theme = payload.Theme
-
-			SaveConfig(*config)
-
-			return "ok", nil
-		})
-	})
-
-	router.Get("/api/theme", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (string, error) {
-			var err error
-
-			theme := config.Theme
-
-			return theme, err
-		})
-	})
 }
 
 type ActionAny[T any] func() (T, error)

@@ -1,7 +1,6 @@
 import {handleApiResponse} from './apiRequest';
 import {Task} from '../components/types';
 import {Template} from '../components/RootStore/RootStoreProvider';
-import {Themes} from '../constants';
 
 interface ActionParams {
   method?: 'GET' | 'POST',
@@ -73,13 +72,5 @@ export const api = {
   templates: action<void, Template[]>({
     method: 'GET',
     path: '/api/templates',
-  }),
-  setTheme: action<{theme: Themes}>({
-    method: 'POST',
-    path: '/api/setTheme',
-  }),
-  theme: action<void, Themes>({
-    method: 'GET',
-    path: '/api/theme',
   }),
 };

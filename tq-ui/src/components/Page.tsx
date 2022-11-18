@@ -1,10 +1,10 @@
 import {CacheProvider} from '@emotion/react';
-import {CssBaseline, GlobalStyles} from '@mui/material';
+import {CssBaseline, GlobalStyles, ThemeProvider} from '@mui/material';
 import * as React from 'react';
 import {FC, ReactNode} from 'react';
+import theme from '../tools/muiTheme';
 import cache from '../tools/muiCache';
 import NotificationProvider from './Notifications/NotificationProvider';
-import ThemePaletteProvider from './ThemePaletteProvider/ThemePaletteProvider';
 
 const RootStyles = {
   html: {
@@ -27,13 +27,13 @@ interface PageProps {
 const Page: FC<PageProps> = ({children}) => {
   return (
     <CacheProvider value={cache}>
-      <ThemePaletteProvider>
+      <ThemeProvider theme={theme}>
         <NotificationProvider>
           <CssBaseline />
           <GlobalStyles styles={RootStyles} />
           {children}
         </NotificationProvider>
-      </ThemePaletteProvider>
+      </ThemeProvider>
     </CacheProvider>
   );
 };

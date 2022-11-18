@@ -10,8 +10,8 @@ import TemplateProvider from './components/TemplateProvider/TemplateProvider';
 const root = createRoot(document.getElementById('root')!);
 
 root.render(
-  <RootStoreProvider>
-    <Page>
+  <Page>
+    <RootStoreProvider>
       <TemplateProvider>
         <BrowserRouter>
           <Routes>
@@ -20,6 +20,6 @@ root.render(
           </Routes>
         </BrowserRouter>
       </TemplateProvider>
-    </Page>
-  </RootStoreProvider>,
+    </RootStoreProvider>
+  </Page>,
 );

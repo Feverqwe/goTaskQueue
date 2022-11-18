@@ -1,6 +1,5 @@
 import React, {FC, ReactNode} from 'react';
 import {RootStoreCtx} from './RootStoreCtx';
-import {ThemeName} from '../../constants';
 
 export interface Template {
   label?: string;
@@ -17,7 +16,6 @@ export interface Template {
 export interface RootStore {
   templates: Template[];
   isPtySupported: boolean;
-  theme: ThemeName;
 }
 
 declare const ROOT_STORE: RootStore | undefined;
