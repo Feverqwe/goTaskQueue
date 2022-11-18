@@ -61,6 +61,10 @@ export const api = {
     method: 'POST',
     path: '/api/task/signal',
   }),
+  setTaskLabel: action<{id: string, label: string}, string>({
+    method: 'POST',
+    path: '/api/task/setLabel',
+  }),
   reloadConfig: action<void>({
     method: 'POST',
     path: '/api/reloadConfig',

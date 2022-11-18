@@ -26,7 +26,7 @@ const TaskView: FC<TaskViewProps> = ({task, onUpdate}) => {
     <>
       <TaskHeader task={task} remapNewLine={remapNewLine} onToggleInfo={handleToggleInfo} onToggleFixNewLine={handleToggleFixNewLine} onUpdate={onUpdate} />
       {showInfo && (
-        <TaskInfo task={task} />
+        <TaskInfo task={task} onUpdate={onUpdate} />
       )}
       <TaskLog task={task} remapNewLine={remapNewLine} onUpdate={onUpdate} />
     </>
