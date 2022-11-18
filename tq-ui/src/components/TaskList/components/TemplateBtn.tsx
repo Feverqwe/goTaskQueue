@@ -59,7 +59,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete,
       >
         {name}
       </Button>
-      <DialogMenu open={showMenu} onClose={handleCloseMenu}>
+      <DialogMenu open={showMenu} onClose={handleCloseMenu} title={name}>
         {!template.variables.length && (
           <DialogMenuItem onClick={handleRunAs}>Run as</DialogMenuItem>
         )}

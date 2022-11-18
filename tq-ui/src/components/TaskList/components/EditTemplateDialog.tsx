@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useMemo, useRef, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useContext, useMemo, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -14,6 +14,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {Template} from '../../RootStore/RootStoreProvider';
+import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
   onClose: () => void;
@@ -24,6 +25,7 @@ interface TemplateDialogProps {
 
 const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
   const {name, command, label, isPty} = template;
+  const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
   const refVariableValue = useRef<HTMLInputElement>(null);
   const refVariableName = useRef<HTMLInputElement>(null);
@@ -160,14 +162,16 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
               required
             />
           </Box>
-          <Box py={1}>
-            <FormControlLabel
-              label="Pseudo-terminal"
-              control={
-                <Checkbox inputRef={refPty} defaultChecked={isPty} />
+          {isPtySupported && (
+            <Box py={1}>
+              <FormControlLabel
+                label="Pseudo-terminal"
+                control={
+                  <Checkbox inputRef={refPty} defaultChecked={isPty} />
                 }
-            />
-          </Box>
+              />
+            </Box>
+          )}
           <Box py={1}>
             <TextField
               label="Label"

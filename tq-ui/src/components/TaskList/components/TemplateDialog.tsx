@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useMemo, useRef, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useContext, useMemo, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -13,6 +13,7 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import {Template} from '../../RootStore/RootStoreProvider';
+import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
   onClose: () => void;
@@ -23,6 +24,7 @@ interface TemplateDialogProps {
 
 const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
   const {name, variables, command, label, isPty} = template;
+  const {isPtySupported} = useContext(RootStoreCtx);
   const [isExtended, setExtended] = useState(() => isNew);
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
@@ -109,14 +111,16 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
                 autoFocus={isNew}
               />
             </Box>
-            <Box py={1}>
-              <FormControlLabel
-                label="Pseudo-terminal"
-                control={
-                  <Checkbox inputRef={refPty} defaultChecked={isPty} />
-                }
-              />
-            </Box>
+            {isPtySupported && (
+              <Box py={1}>
+                <FormControlLabel
+                  label="Pseudo-terminal"
+                  control={
+                    <Checkbox inputRef={refPty} defaultChecked={isPty} />
+                  }
+                />
+              </Box>
+            )}
             <Box py={1}>
               <TextField
                 label="Label"

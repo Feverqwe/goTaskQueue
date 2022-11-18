@@ -14,7 +14,8 @@ export interface Template {
 }
 
 export interface RootStore {
-  templates: Template[],
+  templates: Template[];
+  isPtySupported: boolean;
 }
 
 declare const ROOT_STORE: RootStore | undefined;
