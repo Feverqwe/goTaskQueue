@@ -22,6 +22,7 @@ type Config struct {
 	Templates []interface{}
 	PtyRunEnv []string
 	RunEnv    []string
+	Theme     string
 }
 
 var APP_ID = "com.rndnm.gotaskqueue"

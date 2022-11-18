@@ -197,6 +197,7 @@ func handleWww(router *internal.Router, config *internal.Config) {
 	type RootStore struct {
 		Templates      []interface{} `json:"templates"`
 		IsPtySupported bool          `json:"isPtySupported"`
+		Theme          string        `json:"theme"`
 	}
 
 	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -229,6 +230,7 @@ func handleWww(router *internal.Router, config *internal.Config) {
 			store := RootStore{
 				Templates:      config.Templates,
 				IsPtySupported: runtime.GOOS != "windows",
+				Theme:          config.Theme,
 			}
 			storeJson, err := json.Marshal(store)
 
