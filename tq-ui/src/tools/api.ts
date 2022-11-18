@@ -65,9 +65,9 @@ export const api = {
     method: 'POST',
     path: '/api/reloadConfig',
   }),
-  updateTemplates: action<{templates: Template[]}>({
+  setTemplates: action<{templates: Template[]}>({
     method: 'POST',
-    path: '/api/updateTemplates',
+    path: '/api/setTemplates',
   }),
   templates: action<void, Template[]>({
     method: 'GET',

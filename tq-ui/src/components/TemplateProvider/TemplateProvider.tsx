@@ -14,7 +14,7 @@ const TemplateProvider: FC<TemplateProviderProps> = ({children}) => {
   const [templates, setTemplates] = useState(initTemplates);
 
   const updateTemplates = useCallback(async (templates: Template[]) => {
-    await api.updateTemplates({templates});
+    await api.setTemplates({templates});
     const freshTemplates = await api.templates();
     setTemplates(freshTemplates);
   }, []);

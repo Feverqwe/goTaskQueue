@@ -207,13 +207,13 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 		w.Write(data)
 	})
 
-	type UpdateTemplatesPayload struct {
+	type SetTemplatesPayload struct {
 		Templates []interface{} `json:"templates"`
 	}
 
-	router.Post("/api/updateTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/setTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[UpdateTemplatesPayload](r.Body)
+			payload, err := ParseJson[SetTemplatesPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -221,8 +221,6 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 			config.Templates = payload.Templates
 
 			SaveConfig(*config)
-
-			callChan <- "reload"
 
 			return "ok", nil
 		})
