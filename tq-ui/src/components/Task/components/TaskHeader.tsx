@@ -13,6 +13,7 @@ import {Task, TaskState} from '../../types';
 import ConfirmDialog from './ConfirmDialog';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
+import TaskLinks from './TaskLinks';
 
 interface TaskInfoProps {
   task: Task;
@@ -102,6 +103,11 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleFixNewLine, 
                 )}
               </CardActionArea>
             </Box>
+            {task.links.length > 0 && (
+              <Box display="flex" alignItems="center">
+                <TaskLinks task={task} />
+              </Box>
+            )}
             <Box display="flex" alignItems="center">
               {state === TaskState.Started && (
                 <IconButton onClick={handleStop} title="Stop">

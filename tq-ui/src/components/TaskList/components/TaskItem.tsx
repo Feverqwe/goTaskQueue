@@ -10,6 +10,7 @@ import TaskStatusIcon from '../../Task/components/TaskStatus';
 import {api} from '../../../tools/api';
 import {Task, TaskState} from '../../types';
 import TaskName from '../../Task/components/TaskName';
+import TaskLinks from '../../Task/components/TaskLinks';
 
 interface TaskItemProps {
   task: Task,
@@ -68,6 +69,11 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
                 <TaskName task={task} />
               </Box>
             </Box>
+            {task.links.length > 0 && (
+              <Box display="flex" pl={1}>
+                <TaskLinks task={task} />
+              </Box>
+            )}
             <Box display="flex" pl={1}>
               {state === TaskState.Started && (
                 <IconButton onClick={handleStop} title="Stop">
