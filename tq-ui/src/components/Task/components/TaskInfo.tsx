@@ -28,11 +28,12 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
   }, []);
 
   return (
-    <Box p={1} pt={0}>
-      <Paper>
-        <Box component="form" onSubmit={handleSetLabel} display="flex" alignItems="center" p={1}>
+    <Box m={1} mt={0} component={Paper} display="flex">
+      <Box display="flex" flexGrow={1} sx={{flexDirection: {xs: 'column', sm: 'row'}}}>
+        <Box component="form" onSubmit={handleSetLabel} flexGrow={1} alignItems="center" m={1}>
           <TextField
-            variant="standard"
+            size="small"
+            variant="outlined"
             defaultValue={initLabel}
             label="Label"
             fullWidth
@@ -40,7 +41,7 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton type="submit">
+                  <IconButton type="submit" edge="end">
                     <SaveIcon />
                   </IconButton>
                 </InputAdornment>
@@ -48,9 +49,10 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
             }}
           />
         </Box>
-        <Box p={1}>
+        <Box m={1} flexGrow={4}>
           <TextField
-            variant="standard"
+            size="small"
+            variant="outlined"
             value={command}
             label="Command"
             multiline
@@ -60,7 +62,7 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
             onFocus={handleCommandFocus}
           />
         </Box>
-      </Paper>
+      </Box>
     </Box>
   );
 };
