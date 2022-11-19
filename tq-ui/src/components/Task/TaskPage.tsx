@@ -75,7 +75,7 @@ const TaskPage: FC = () => {
       )}
       {error && (
         <Box p={1} display="flex" justifyContent="center">
-          <DisplayError error={error} onRetry={handleRetry} />
+          <DisplayError error={error} onRetry={handleRetry} back={true} />
         </Box>
       )}
       {!error && task && (
