@@ -30,7 +30,7 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
   return (
     <Box m={1} mt={0} component={Paper} display="flex">
       <Box display="flex" flexGrow={1} sx={{flexDirection: {xs: 'column', sm: 'row'}}}>
-        <Box component="form" onSubmit={handleSetLabel} flexGrow={1} alignItems="center" m={1} mr={{sm: 1, sx: 0}}>
+        <Box component="form" onSubmit={handleSetLabel} flexGrow={1} alignItems="center" m={1} mr={{xs: 1, sm: 0}}>
           <TextField
             size="small"
             variant="outlined"
