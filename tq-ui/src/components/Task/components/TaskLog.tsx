@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {FC, Fragment, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Alert, Box, Button, Snackbar} from '@mui/material';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
@@ -20,6 +20,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   const [isOpen, setOpen] = useState(false);
   const [isConnecting, setConnecting] = useState(false);
   const refWrapper = useRef<HTMLDivElement>(null);
+  const refCtr = useRef<HTMLDivElement>(null);
 
   const refTask = useRef<Task>(task);
   refTask.current = task;
@@ -36,6 +37,10 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     const fitAddon = new FitAddon();
 
     terminal.loadAddon(fitAddon);
+
+    const resizeObserver = new ResizeObserver(throttle(() => {
+      fitAddon.fit();
+    }, 100));
 
     let ws: WebSocket;
     let isOpen = false;
@@ -71,7 +76,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     });
 
     const handleResize = (cols: number, rows: number) => {
-      const wrapper = refWrapper.current;
+      const wrapper = refCtr.current;
       if (!wrapper) return;
       if (!refTask.current.isPty || refTask.current.state !== TaskState.Started) return;
       const x = wrapper.clientWidth;
@@ -106,32 +111,24 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       },
       wsSend: sendCommand,
       terminal,
-      fitAddon,
+      resizeObserver,
     };
   }, [id]);
 
   useEffect(() => {
-    const {terminal, fitAddon} = scope;
+    const {terminal, resizeObserver} = scope;
+    const ctr = refCtr.current;
     const wrapper = refWrapper.current;
-    if (!wrapper) return;
+    if (!wrapper || !ctr) return;
 
-    const onResize = () => {
-      fitAddon.fit();
-    };
-
-    const onResizeThrottled = throttle(onResize, 100);
-
+    resizeObserver.observe(ctr);
     terminal.open(wrapper);
     scope.wsConnect();
-    window.addEventListener('resize', onResizeThrottled);
-
-    requestAnimationFrame(onResize);
-    setTimeout(onResize, 1000);
 
     return () => {
-      window.removeEventListener('resize', onResizeThrottled);
       scope.wsClose();
       terminal.dispose();
+      resizeObserver.disconnect();
     };
   }, [scope]);
 
@@ -163,7 +160,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   }, [scope]);
 
   return (
-    <Box px={1} pb={1} sx={{flexGrow: 1}}>
+    <Box mx={1} mb={1} sx={{flexGrow: 1, overflow: 'auto'}} ref={refCtr}>
       <div style={{height: '100%', width: '100%'}} ref={refWrapper} />
       {!isOpen && !isConnecting && state === TaskState.Started && (
         <Snackbar anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true}>
