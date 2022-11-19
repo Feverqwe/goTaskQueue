@@ -65,6 +65,14 @@ export const api = {
     method: 'POST',
     path: '/api/task/setLabel',
   }),
+  addTaskLink: action<{id: string, name: string, type: string, url: string}, string>({
+    method: 'POST',
+    path: '/api/task/addLink',
+  }),
+  delTaskLink: action<{id: string, name: string}, string>({
+    method: 'POST',
+    path: '/api/task/delLink',
+  }),
   reloadConfig: action<void>({
     method: 'POST',
     path: '/api/reloadConfig',

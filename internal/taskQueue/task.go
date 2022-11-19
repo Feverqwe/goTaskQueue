@@ -14,6 +14,12 @@ import (
 
 const PtyLogSize = 4 * 1024 * 1024
 
+type TaskLink struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Url  string `json:"url"`
+}
+
 type Task struct {
 	Id             string `json:"id"`
 	Label          string `json:"label"`
@@ -38,6 +44,7 @@ type Task struct {
 	stdin          io.WriteCloser
 	pty            *os.File
 	combinedOffset int
+	Links          []*TaskLink `json:"actions"`
 }
 
 func (s *Task) Run(runAs []string, ptyEnv []string) error {
@@ -263,6 +270,37 @@ func (s *Task) Signal(sig syscall.Signal) error {
 	return s.process.Process.Signal(sig)
 }
 
+func (s *Task) GetLink(name string) (*TaskLink, int) {
+	for pos, link := range s.Links {
+		if link.Name == name {
+			return link, pos
+		}
+	}
+	return nil, -1
+}
+
+func (s *Task) AddLink(Name string, Type string, Url string) {
+	link, index := s.GetLink(Name)
+	if link == nil {
+		link := TaskLink{
+			Name: Name,
+			Type: Type,
+			Url:  Url,
+		}
+		s.Links = append(s.Links[:index], &link)
+	} else {
+		link.Type = Type
+		link.Url = Url
+	}
+}
+
+func (s *Task) DelLink(name string) {
+	_, index := s.GetLink(name)
+	if index != -1 {
+		s.Links = append(s.Links[:index], s.Links[:index+1]...)
+	}
+}
+
 func (s *Task) pushChanges(value int) {
 	s.mu.Lock()
 	q := s.qCh
@@ -310,6 +348,7 @@ func NewTask(id string, command string, label string, isPty bool) *Task {
 		Command:   command,
 		CreatedAt: time.Now(),
 		IsPty:     isPty,
+		Links:     make([]*TaskLink, 0),
 	}
 
 	task.syncStatus()

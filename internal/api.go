@@ -53,9 +53,21 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 		IsPty   bool   `json:"isPty"`
 	}
 
-	type TaskSetLabelPayload struct {
+	type SetLabelPayload struct {
 		Id    string `json:"id"`
 		Label string `json:"label"`
+	}
+
+	type AddLinkPayload struct {
+		Id   string `json:"taskId"`
+		Name string `json:"name"`
+		Type string `json:"type"`
+		Url  string `json:"url"`
+	}
+
+	type DelLinkPayload struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
 	}
 
 	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
@@ -178,7 +190,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 
 	router.Post("/api/task/setLabel", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[TaskSetLabelPayload](r.Body)
+			payload, err := ParseJson[SetLabelPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -189,6 +201,42 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 			}
 
 			task.Label = payload.Label
+
+			return "ok", err
+		})
+	})
+
+	router.Post("/api/task/addLink", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := ParseJson[AddLinkPayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			task, err := taskQueue.Get(payload.Id)
+			if err != nil {
+				return "", err
+			}
+
+			task.AddLink(payload.Name, payload.Type, payload.Url)
+
+			return "ok", err
+		})
+	})
+
+	router.Post("/api/task/delLink", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := ParseJson[DelLinkPayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			task, err := taskQueue.Get(payload.Id)
+			if err != nil {
+				return "", err
+			}
+
+			task.DelLink(payload.Name)
 
 			return "ok", err
 		})
