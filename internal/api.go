@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"goTaskQueue/internal/cfg"
 	taskqueue "goTaskQueue/internal/taskQueue"
 	"io"
 	"net/http"
@@ -19,7 +20,7 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, taskQueue *taskqueue.Queue, config *Config, callChan chan string) {
+func HandleApi(router *Router, taskQueue *taskqueue.Queue, config *cfg.Config, callChan chan string) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
@@ -37,7 +38,7 @@ func handleFobidden(router *Router) {
 	})
 }
 
-func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, callChan chan string) {
+func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue, callChan chan string) {
 	type GetTaskPayload struct {
 		Id string `json:"id"`
 	}
@@ -138,9 +139,9 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 			}
 
 			if task.IsPty {
-				err = task.Run(config.PtyRun, config.PtyRunEnv)
+				err = task.Run(config.PtyRun, config)
 			} else {
-				err = task.Run(config.Run, config.RunEnv)
+				err = task.Run(config.Run, config)
 			}
 
 			return "ok", err
@@ -291,7 +292,7 @@ func handleAction(router *Router, config *Config, taskQueue *taskqueue.Queue, ca
 
 			config.Templates = payload.Templates
 
-			SaveConfig(*config)
+			cfg.SaveConfig(*config)
 
 			return "ok", nil
 		})

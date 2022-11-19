@@ -1,4 +1,4 @@
-package internal
+package cfg
 
 import (
 	"bytes"
@@ -64,7 +64,7 @@ func LoadConfig() Config {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if err := os.MkdirAll(getProfilePath(), 0750); err != nil {
+			if err := os.MkdirAll(GetProfilePath(), 0750); err != nil {
 				log.Println("Create profile path error", err)
 			}
 
@@ -108,11 +108,11 @@ func SaveConfig(config Config) error {
 }
 
 func getConfigPath() string {
-	place := getProfilePath()
+	place := GetProfilePath()
 	return filepath.Join(place, "config.json")
 }
 
-func getProfilePath() string {
+func GetProfilePath() string {
 	place := ""
 	for _, e := range os.Environ() {
 		pair := strings.SplitN(e, "=", 2)

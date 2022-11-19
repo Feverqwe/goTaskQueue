@@ -4,6 +4,7 @@ package internal
 
 import (
 	"goTaskQueue/assets"
+	"goTaskQueue/internal/cfg"
 	"log"
 	"strconv"
 
@@ -13,7 +14,7 @@ import (
 
 var icon []byte
 
-func TrayIcon(config *Config, callChan chan string) {
+func TrayIcon(config *cfg.Config, callChan chan string) {
 	if icon == nil {
 		data, err := assets.Asset("icon.ico")
 		if err != nil {
@@ -58,7 +59,7 @@ func TrayIcon(config *Config, callChan chan string) {
 						portStr := result
 						if port, err := strconv.Atoi(portStr); err == nil {
 							config.Port = port
-							if err := SaveConfig(*config); err == nil {
+							if err := cfg.SaveConfig(*config); err == nil {
 								callChan <- "reload"
 							}
 						}
@@ -71,12 +72,12 @@ func TrayIcon(config *Config, callChan chan string) {
 						}
 					} else {
 						config.Address = result
-						if err := SaveConfig(*config); err == nil {
+						if err := cfg.SaveConfig(*config); err == nil {
 							callChan <- "reload"
 						}
 					}
 				case <-mOpenProfilePath.ClickedCh:
-					open.Start(getProfilePath())
+					open.Start(cfg.GetProfilePath())
 				case <-mReloadConfig.ClickedCh:
 					callChan <- "reload"
 				}

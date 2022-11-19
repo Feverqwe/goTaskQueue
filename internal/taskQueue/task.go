@@ -2,6 +2,7 @@ package taskqueue
 
 import (
 	"fmt"
+	"goTaskQueue/internal/cfg"
 	"io"
 	"os"
 	"os/exec"
@@ -47,15 +48,15 @@ type Task struct {
 	Links          []*TaskLink `json:"actions"`
 }
 
-func (s *Task) Run(runAs []string, ptyEnv []string) error {
+func (s *Task) Run(runAs []string, config *cfg.Config) error {
 	if s.IsPty {
-		return s.RunPty(runAs, ptyEnv)
+		return s.RunPty(runAs, config)
 	} else {
-		return s.RunDirect(runAs)
+		return s.RunDirect(runAs, config)
 	}
 }
 
-func (s *Task) RunPty(runAs []string, ptyEnv []string) error {
+func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 	runCommand := runAs[0]
 	runArgs := make([]string, 0)
 	if len(runAs) > 1 {
@@ -64,7 +65,7 @@ func (s *Task) RunPty(runAs []string, ptyEnv []string) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
-	process.Env = ptyEnv
+	process.Env = append(config.PtyRunEnv, "TASK_QUEUE_ID="+s.Id, "TASK_QUEUE_URL="+config.GetBrowserAddress())
 
 	f, err := pty.Start(process)
 	if err != nil {
@@ -125,7 +126,7 @@ func (s *Task) RunPty(runAs []string, ptyEnv []string) error {
 	return nil
 }
 
-func (s *Task) RunDirect(runAs []string) error {
+func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 	runCommand := runAs[0]
 	runArgs := make([]string, 0)
 	if len(runAs) > 1 {
@@ -134,6 +135,7 @@ func (s *Task) RunDirect(runAs []string) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
+	process.Env = []string{"TASK_QUEUE_ID=" + s.Id, "TASK_QUEUE_URL=" + config.GetBrowserAddress()}
 
 	const Out = "out"
 	const Err = "err"

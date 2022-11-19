@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"goTaskQueue/assets"
 	"goTaskQueue/internal"
+	"goTaskQueue/internal/cfg"
+	"goTaskQueue/internal/powerCtr"
 	taskqueue "goTaskQueue/internal/taskQueue"
 	"io"
 	"log"
@@ -21,16 +23,16 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-const DEBUG_UI = false
+const DEBUG_UI = true
 
 func main() {
 	if _, err := internal.CreateMutex("GoTaskQueue"); err != nil {
 		panic(err)
 	}
 
-	var config internal.Config
+	var config cfg.Config
 
-	var powerControl = internal.GetPowerControl()
+	var powerControl = powerCtr.GetPowerControl()
 	var taskQueue = taskqueue.NewQueue()
 
 	callChan := make(chan string)
@@ -48,7 +50,7 @@ func main() {
 
 			switch v {
 			case "reload":
-				config = internal.LoadConfig()
+				config = cfg.LoadConfig()
 
 				if httpServer != nil {
 					httpServer.Close()
@@ -90,7 +92,7 @@ func main() {
 	}
 }
 
-func powerLock(router *internal.Router, powerControl *internal.PowerControl) {
+func powerLock(router *internal.Router, powerControl *powerCtr.PowerControl) {
 	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
 		if powerControl != nil {
 			powerControl.Inc()
@@ -186,7 +188,7 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 	})
 }
 
-func handleWww(router *internal.Router, config *internal.Config) {
+func handleWww(router *internal.Router, config *cfg.Config) {
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
 		if binStat, err := os.Stat(binPath); err == nil {
