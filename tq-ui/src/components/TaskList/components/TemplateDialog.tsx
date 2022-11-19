@@ -36,21 +36,24 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
   });
 
   const variableInputs = useMemo(() => {
-    return variables.map(({name, value, defaultValue}) => {
+    return variables.map(({name, value, defaultValue}, index) => {
       const ref = refMap.get(value);
-
       return (
-        <Box py={1} key={value}>
-          <TextField
-            inputProps={{ref}}
-            autoFocus
-            label={name}
-            type="text"
-            fullWidth
-            variant="standard"
-            defaultValue={defaultValue}
-          />
-        </Box>
+        <TextField
+          size="small"
+          sx={{my: 1}}
+          key={index}
+          inputProps={{ref}}
+          autoFocus
+          label={name}
+          type="text"
+          fullWidth
+          variant="outlined"
+          defaultValue={defaultValue}
+          InputLabelProps={{
+            shrink: true,
+          }}
+        />
       );
     });
   }, [variables, refMap]);
@@ -99,50 +102,55 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
         <DialogContent>
           {variableInputs}
           <Box display={isExtended ? 'block' : 'none'}>
-            <Box py={1}>
-              <TextField
-                multiline
-                label="Command"
-                defaultValue={command}
-                inputProps={{ref: refCommand}}
-                fullWidth
-                type="text"
-                variant="standard"
-                autoFocus={isNew}
-              />
-            </Box>
+            <TextField
+              size="small"
+              sx={{my: 1}}
+              multiline
+              label="Command"
+              defaultValue={command}
+              inputProps={{ref: refCommand}}
+              fullWidth
+              type="text"
+              variant="outlined"
+              autoFocus={isNew}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
             {isPtySupported && (
-              <Box py={1}>
-                <FormControlLabel
-                  label="Pseudo-terminal"
-                  control={
-                    <Checkbox inputRef={refPty} defaultChecked={isPty} />
-                  }
-                />
-              </Box>
-            )}
-            <Box py={1}>
-              <TextField
-                label="Label"
-                defaultValue={label || ''}
-                inputProps={{ref: refLabel}}
-                fullWidth
-                type="text"
-                variant="standard"
+              <FormControlLabel
+                sx={{my: 1}}
+                label="Pseudo-terminal"
+                control={
+                  <Checkbox size="small" inputRef={refPty} defaultChecked={isPty} />
+                }
               />
-            </Box>
+            )}
+            <TextField
+              size="small"
+              sx={{my: 1}}
+              label="Label"
+              defaultValue={label || ''}
+              inputProps={{ref: refLabel}}
+              fullWidth
+              type="text"
+              variant="outlined"
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
           </Box>
           {!isNew && (
-            <Box py={1}>
-              <Button
-                onClick={handleAdvancedClick}
-                startIcon={
-                  isExtended ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
-                }
-              >
-                Advanced
-              </Button>
-            </Box>
+            <Button
+              sx={{my: 1}}
+              size="small"
+              onClick={handleAdvancedClick}
+              startIcon={
+                isExtended ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
+              }
+            >
+              Advanced
+            </Button>
           )}
         </DialogContent>
         <DialogActions>

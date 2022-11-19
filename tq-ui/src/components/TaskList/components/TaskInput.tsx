@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useContext, useEffect, useState} from 'react';
+import React, {FC, useCallback, useContext, useState} from 'react';
 import {Box, Button, ButtonGroup} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
