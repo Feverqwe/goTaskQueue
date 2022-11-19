@@ -8,8 +8,10 @@ import (
 	"goTaskQueue/assets"
 	"goTaskQueue/internal"
 	"goTaskQueue/internal/cfg"
+	"goTaskQueue/internal/imutex"
 	"goTaskQueue/internal/powerCtr"
 	taskqueue "goTaskQueue/internal/taskQueue"
+	"goTaskQueue/internal/trayIcon"
 	"io"
 	"log"
 	"net/http"
@@ -26,7 +28,7 @@ import (
 const DEBUG_UI = true
 
 func main() {
-	if _, err := internal.CreateMutex("GoTaskQueue"); err != nil {
+	if _, err := imutex.CreateMutex("GoTaskQueue"); err != nil {
 		panic(err)
 	}
 
@@ -85,7 +87,7 @@ func main() {
 	flag.Parse()
 
 	if !*disableTrayIconPtr {
-		internal.TrayIcon(&config, callChan)
+		trayIcon.TrayIcon(&config, callChan)
 	} else {
 		loopChan := make(chan string)
 		<-loopChan

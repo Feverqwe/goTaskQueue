@@ -1,6 +1,6 @@
 //go:build darwin
 
-package internal
+package dialogs
 
 import (
 	"context"

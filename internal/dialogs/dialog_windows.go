@@ -1,6 +1,6 @@
 //go:build windows || linux
 
-package internal
+package dialogs
 
 import (
 	"errors"

@@ -1,6 +1,6 @@
 //go:build linux
 
-package internal
+package trayIcon
 
 func TrayIcon(config *Config, callChan chan string) {
 	loopChan := make(chan string)

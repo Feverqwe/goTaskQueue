@@ -1,10 +1,11 @@
 //go:build darwin || windows
 
-package internal
+package trayIcon
 
 import (
 	"goTaskQueue/assets"
 	"goTaskQueue/internal/cfg"
+	"goTaskQueue/internal/dialogs"
 	"log"
 	"strconv"
 
@@ -50,7 +51,7 @@ func TrayIcon(config *cfg.Config, callChan chan string) {
 						log.Println("Open url error", err)
 					}
 				case <-mSetPort.ClickedCh:
-					result, err := ShowEntry("Change port", "Enter port number:", strconv.Itoa(config.Port))
+					result, err := dialogs.ShowEntry("Change port", "Enter port number:", strconv.Itoa(config.Port))
 					if err != nil {
 						if err.Error() != "Canceled" {
 							log.Println("Enter port error", err)
@@ -65,7 +66,7 @@ func TrayIcon(config *cfg.Config, callChan chan string) {
 						}
 					}
 				case <-mSetAddress.ClickedCh:
-					result, err := ShowEntry("Change address", "Enter address:", config.Address)
+					result, err := dialogs.ShowEntry("Change address", "Enter address:", config.Address)
 					if err != nil {
 						if err.Error() != "Canceled" {
 							log.Println("Enter address error", err)
