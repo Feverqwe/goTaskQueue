@@ -282,14 +282,14 @@ func (s *Task) GetLink(name string) (*TaskLink, int) {
 }
 
 func (s *Task) AddLink(Name string, Type string, Url string) {
-	link, index := s.GetLink(Name)
+	link, _ := s.GetLink(Name)
 	if link == nil {
 		link := TaskLink{
 			Name: Name,
 			Type: Type,
 			Url:  Url,
 		}
-		s.Links = append(s.Links[:index], &link)
+		s.Links = append(s.Links, &link)
 	} else {
 		link.Type = Type
 		link.Url = Url
