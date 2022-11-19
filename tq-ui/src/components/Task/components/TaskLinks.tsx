@@ -23,7 +23,7 @@ const TaskLinks: FC<TaskLinksProps> = ({task}) => {
           }
         }
         return (
-          <IconButton key={name} href={url}>
+          <IconButton key={name} href={url} target="_blank">
             {icon}
           </IconButton>
         );
