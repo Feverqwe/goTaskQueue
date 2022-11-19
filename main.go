@@ -8,7 +8,7 @@ import (
 	"goTaskQueue/assets"
 	"goTaskQueue/internal"
 	"goTaskQueue/internal/cfg"
-	"goTaskQueue/internal/imutex"
+	"goTaskQueue/internal/mutex"
 	"goTaskQueue/internal/powerCtr"
 	taskqueue "goTaskQueue/internal/taskQueue"
 	"goTaskQueue/internal/trayIcon"
@@ -28,7 +28,7 @@ import (
 const DEBUG_UI = false
 
 func main() {
-	if _, err := imutex.CreateMutex("GoTaskQueue"); err != nil {
+	if _, err := mutex.CreateMutex("GoTaskQueue"); err != nil {
 		panic(err)
 	}
 

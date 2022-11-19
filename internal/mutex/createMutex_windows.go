@@ -1,6 +1,6 @@
 //go:build windows
 
-package imutex
+package mutex
 
 import (
 	"syscall"

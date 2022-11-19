@@ -1,6 +1,6 @@
 //go:build linux || darwin
 
-package imutex
+package mutex
 
 import (
 	"os"
