@@ -65,7 +65,7 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
-	process.Env = append(config.PtyRunEnv, "TASK_QUEUE_ID="+s.Id, "TASK_QUEUE_URL="+config.GetBrowserAddress())
+	process.Env = append(append(process.Env, config.PtyRunEnv...), "TASK_QUEUE_ID="+s.Id, "TASK_QUEUE_URL="+config.GetBrowserAddress())
 
 	f, err := pty.Start(process)
 	if err != nil {
@@ -135,7 +135,7 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
-	process.Env = []string{"TASK_QUEUE_ID=" + s.Id, "TASK_QUEUE_URL=" + config.GetBrowserAddress()}
+	process.Env = append(process.Env, "TASK_QUEUE_ID="+s.Id, "TASK_QUEUE_URL="+config.GetBrowserAddress())
 
 	const Out = "out"
 	const Err = "err"
