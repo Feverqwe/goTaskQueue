@@ -53,7 +53,7 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
           />
         </Box>
         <TextField
-          sx={{flexGrow: 4}}
+          sx={{flexGrow: 3}}
           size="small"
           variant="outlined"
           value={command}
