@@ -18,9 +18,11 @@
     },
     "plugins": [
         "react",
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "unused-imports"
     ],
     "rules": {
+        "unused-imports/no-unused-imports": "error",
         "object-curly-spacing": [0],
         "import/extensions": [0],
         "import/prefer-default-export": [0],

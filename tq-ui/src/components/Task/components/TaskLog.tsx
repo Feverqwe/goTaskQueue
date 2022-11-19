@@ -1,4 +1,4 @@
-import React, {FC, Fragment, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Alert, Box, Button, Snackbar} from '@mui/material';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';

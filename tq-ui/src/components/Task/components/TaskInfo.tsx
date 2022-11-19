@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useRef, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useRef} from 'react';
 import {Box, IconButton, InputAdornment, Paper, TextField} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import {Task} from '../../types';
@@ -38,6 +38,9 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
             label="Label"
             fullWidth
             inputProps={{ref: refLabel}}
+            InputLabelProps={{
+              shrink: true,
+            }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -60,6 +63,9 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
             InputProps={{readOnly: true}}
             inputProps={{ref: refCommand}}
             onFocus={handleCommandFocus}
+            InputLabelProps={{
+              shrink: true,
+            }}
           />
         </Box>
       </Box>
