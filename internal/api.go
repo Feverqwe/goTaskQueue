@@ -20,11 +20,11 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, taskQueue *taskQueue.Queue, config *cfg.Config, callChan chan string) {
+func HandleApi(router *Router, queue *taskQueue.Queue, config *cfg.Config, callChan chan string) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
-	handleAction(apiRouter, config, taskQueue, callChan)
+	handleAction(apiRouter, config, queue, callChan)
 	handleFobidden(apiRouter)
 
 	router.All("^/api/", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {

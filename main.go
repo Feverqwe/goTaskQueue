@@ -10,7 +10,7 @@ import (
 	"goTaskQueue/internal/cfg"
 	"goTaskQueue/internal/mutex"
 	"goTaskQueue/internal/powerCtr"
-	taskqueue "goTaskQueue/internal/taskQueue"
+	"goTaskQueue/internal/taskQueue"
 	"goTaskQueue/internal/trayIcon"
 	"io"
 	"log"
@@ -35,7 +35,7 @@ func main() {
 	var config cfg.Config
 
 	var powerControl = powerCtr.GetPowerControl()
-	var taskQueue = taskqueue.NewQueue()
+	var taskQueue = taskQueue.NewQueue()
 
 	callChan := make(chan string)
 
@@ -104,7 +104,7 @@ func powerLock(router *internal.Router, powerControl *powerCtr.PowerControl) {
 	})
 }
 
-func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
+func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 	const CHUNK_SIZE = 1 * 1024 * 1024
 
 	ws := func(ws *websocket.Conn) {
@@ -112,7 +112,7 @@ func handleWebsocket(router *internal.Router, taskQueue *taskqueue.Queue) {
 
 		id := ws.Request().URL.Query().Get("id")
 
-		task, err := taskQueue.Get(id)
+		task, err := queue.Get(id)
 		if err != nil {
 			return
 		}
