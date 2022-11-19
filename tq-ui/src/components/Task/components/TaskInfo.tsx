@@ -29,8 +29,8 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
 
   return (
     <Box m={1} mt={0} component={Paper} display="flex">
-      <Box m={1} display="flex" flexGrow={1} sx={{flexDirection: {xs: 'column', sm: 'row'}}}>
-        <Box component="form" onSubmit={handleSetLabel} flexGrow={1} alignItems="center" mr={1}>
+      <Box display="flex" flexGrow={1} sx={{flexDirection: {xs: 'column', sm: 'row'}}}>
+        <Box component="form" onSubmit={handleSetLabel} flexGrow={1} alignItems="center" m={1} mr={{sm: 1, sx: 0}}>
           <TextField
             size="small"
             variant="outlined"
@@ -53,7 +53,7 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
           />
         </Box>
         <TextField
-          sx={{flexGrow: 3}}
+          sx={{flexGrow: 3, m: 1}}
           size="small"
           variant="outlined"
           value={command}
