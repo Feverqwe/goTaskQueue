@@ -60,7 +60,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	}
 
 	type AddLinkPayload struct {
-		Id   string `json:"taskId"`
+		Id   string `json:"id"`
 		Name string `json:"name"`
 		Type string `json:"type"`
 		Url  string `json:"url"`
