@@ -29,8 +29,8 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
 
   return (
     <Box m={1} mt={0} component={Paper} display="flex">
-      <Box display="flex" flexGrow={1} sx={{flexDirection: {xs: 'column', sm: 'row'}}}>
-        <Box component="form" onSubmit={handleSetLabel} flexGrow={1} alignItems="center" m={1}>
+      <Box m={1} display="flex" flexGrow={1} sx={{flexDirection: {xs: 'column', sm: 'row'}}}>
+        <Box component="form" onSubmit={handleSetLabel} flexGrow={1} alignItems="center" mr={1}>
           <TextField
             size="small"
             variant="outlined"
@@ -52,22 +52,21 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
             }}
           />
         </Box>
-        <Box m={1} flexGrow={4}>
-          <TextField
-            size="small"
-            variant="outlined"
-            value={command}
-            label="Command"
-            multiline
-            fullWidth
-            InputProps={{readOnly: true}}
-            inputProps={{ref: refCommand}}
-            onFocus={handleCommandFocus}
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-        </Box>
+        <TextField
+          sx={{flexGrow: 4}}
+          size="small"
+          variant="outlined"
+          value={command}
+          label="Command"
+          multiline
+          fullWidth
+          InputProps={{readOnly: true}}
+          inputProps={{ref: refCommand}}
+          onFocus={handleCommandFocus}
+          InputLabelProps={{
+            shrink: true,
+          }}
+        />
       </Box>
     </Box>
   );
