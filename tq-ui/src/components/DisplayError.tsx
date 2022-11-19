@@ -1,8 +1,8 @@
 import React, {FC, SyntheticEvent, useCallback, useMemo} from 'react';
 import {Button, IconButton, Stack, Typography} from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import {useNavigate} from "react-router-dom";
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import {useNavigate} from 'react-router-dom';
 
 interface DisplayErrorProps {
   error: unknown;
@@ -24,7 +24,7 @@ const DisplayError: FC<DisplayErrorProps> = ({error, onRetry, back}) => {
   const handleBack = useCallback((e: SyntheticEvent) => {
     e.preventDefault();
     navigate('/');
-  }, []);
+  }, [navigate]);
 
   return (
     <Stack spacing={2} p={1} direction="row" alignItems="center">
