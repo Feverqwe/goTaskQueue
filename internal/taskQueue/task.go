@@ -45,7 +45,7 @@ type Task struct {
 	stdin          io.WriteCloser
 	pty            *os.File
 	combinedOffset int
-	Links          []*TaskLink `json:"actions"`
+	Links          []*TaskLink `json:"links"`
 }
 
 func (s *Task) Run(runAs []string, config *cfg.Config) error {
