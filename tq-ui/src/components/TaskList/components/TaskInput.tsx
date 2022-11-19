@@ -63,7 +63,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   }, [handleCloseMenu]);
 
   const handleNewTemplate = useCallback(() => {
-    setDialogProps({template: NEW_TEMPLATE, isNew: true});
+    setDialogProps({template: {...NEW_TEMPLATE, name: ''}, isNew: true});
     setDialogType(DialogType.Edit);
     handleCloseMenu();
   }, [handleCloseMenu]);
