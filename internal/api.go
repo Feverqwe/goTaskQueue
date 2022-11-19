@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"goTaskQueue/internal/cfg"
-	taskqueue "goTaskQueue/internal/taskQueue"
+	"goTaskQueue/internal/taskQueue"
 	"io"
 	"net/http"
 	"syscall"
@@ -20,7 +20,7 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, taskQueue *taskqueue.Queue, config *cfg.Config, callChan chan string) {
+func HandleApi(router *Router, taskQueue *taskQueue.Queue, config *cfg.Config, callChan chan string) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
@@ -38,7 +38,7 @@ func handleFobidden(router *Router) {
 	})
 }
 
-func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue, callChan chan string) {
+func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, callChan chan string) {
 	type GetTaskPayload struct {
 		Id string `json:"id"`
 	}
@@ -72,8 +72,8 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 	}
 
 	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() ([]*taskqueue.Task, error) {
-			tasks := taskQueue.GetAll()
+		apiCall(w, func() ([]*taskQueue.Task, error) {
+			tasks := queue.GetAll()
 			return tasks, nil
 		})
 	})
@@ -85,43 +85,43 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 				return "", err
 			}
 
-			err = taskQueue.Del(payload.Id)
+			err = queue.Del(payload.Id)
 
 			return "ok", err
 		})
 	})
 
 	router.Post("/api/add", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (*taskqueue.Task, error) {
+		apiCall(w, func() (*taskQueue.Task, error) {
 			payload, err := ParseJson[AddTaskPayload](r.Body)
 			if err != nil {
 				return nil, err
 			}
 
-			task := taskQueue.Add(payload.Command, payload.Label, payload.IsPty)
+			task := queue.Add(payload.Command, payload.Label, payload.IsPty)
 
 			return task, err
 		})
 	})
 
 	router.Post("/api/clone", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (*taskqueue.Task, error) {
+		apiCall(w, func() (*taskQueue.Task, error) {
 			payload, err := ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return nil, err
 			}
 
-			task, err := taskQueue.Clone(payload.Id)
+			task, err := queue.Clone(payload.Id)
 
 			return task, err
 		})
 	})
 
 	router.Get("/api/task", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (*taskqueue.Task, error) {
+		apiCall(w, func() (*taskQueue.Task, error) {
 			id := r.URL.Query().Get("id")
 
-			task, err := taskQueue.Get(id)
+			task, err := queue.Get(id)
 			return task, err
 		})
 	})
@@ -133,7 +133,7 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 				return "", err
 			}
 
-			task, err := taskQueue.Get(payload.Id)
+			task, err := queue.Get(payload.Id)
 			if err != nil {
 				return "", err
 			}
@@ -155,7 +155,7 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 				return "", err
 			}
 
-			task, err := taskQueue.Get(payload.Id)
+			task, err := queue.Get(payload.Id)
 			if err != nil {
 				return "", err
 			}
@@ -173,7 +173,7 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 				return "", err
 			}
 
-			task, err := taskQueue.Get(payload.Id)
+			task, err := queue.Get(payload.Id)
 			if err != nil {
 				return "", err
 			}
@@ -196,7 +196,7 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 				return "", err
 			}
 
-			task, err := taskQueue.Get(payload.Id)
+			task, err := queue.Get(payload.Id)
 			if err != nil {
 				return "", err
 			}
@@ -214,7 +214,7 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 				return "", err
 			}
 
-			task, err := taskQueue.Get(payload.Id)
+			task, err := queue.Get(payload.Id)
 			if err != nil {
 				return "", err
 			}
@@ -232,7 +232,7 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 				return "", err
 			}
 
-			task, err := taskQueue.Get(payload.Id)
+			task, err := queue.Get(payload.Id)
 			if err != nil {
 				return "", err
 			}
@@ -255,7 +255,7 @@ func handleAction(router *Router, config *cfg.Config, taskQueue *taskqueue.Queue
 		logType := r.URL.Path[10:]
 		id := r.URL.Query().Get("id")
 
-		task, err := taskQueue.Get(id)
+		task, err := queue.Get(id)
 		if err != nil {
 			sendStatus(w, 403)
 			return
