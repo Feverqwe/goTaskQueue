@@ -14,21 +14,18 @@ import ConfirmDialog from './ConfirmDialog';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
-import {ScreenSize} from '../types';
 
 interface TaskInfoProps {
   task: Task;
   remapNewLine: boolean;
-  screenSize: ScreenSize | null;
   onToggleRemapNewLine: () => void;
   onToggleInfo: () => void;
   onUpdate: () => void;
-  onSetScreenSize: (size: ScreenSize | null) => void;
 }
 
-const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, screenSize, onToggleRemapNewLine, onSetScreenSize, onToggleInfo, onUpdate}) => {
+const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onToggleInfo, onUpdate}) => {
   const navigate = useNavigate();
-  const {id, state, label, command, error, isPty} = task;
+  const {id, state, label, command, error} = task;
   const [confirmDialog, setConfirmDialog] = useState(false);
   const [showMenu, setShowMenu] = React.useState(false);
 
@@ -141,24 +138,6 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, screenSize, onToggle
                   <DialogMenuItem onClick={handleSigint}>SIGINT</DialogMenuItem>
                 )}
                 <Divider />
-                {isPty && (
-                  <>
-                    {[null, {width: 640, height: 480}, {width: 1280, height: 720}].map((sizes, index) => {
-                      const isCurrent = screenSize?.height === sizes?.height;
-                      return (
-                        <DialogMenuItem key={index} onClick={onSetScreenSize.bind(null, sizes)}>
-                          Size: {!sizes ? 'auto' : `${sizes.width}x${sizes.height}`}
-                          {isCurrent && (
-                            <Box display="flex" alignItems="center" pl={1}>
-                              <Check fontSize="small" />
-                            </Box>
-                          )}
-                        </DialogMenuItem>
-                      );
-                    })}
-                    <Divider />
-                  </>
-                )}
                 <DialogMenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank">stdout.log</DialogMenuItem>
                 <DialogMenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank">stderr.log</DialogMenuItem>
                 <DialogMenuItem component="a" href={`/api/task/combined?id=${id}`} target="_blank">combined.log</DialogMenuItem>

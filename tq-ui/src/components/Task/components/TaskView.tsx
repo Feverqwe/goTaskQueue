@@ -3,7 +3,6 @@ import {Task} from '../../types';
 import TaskHeader from './TaskHeader';
 import TaskInfo from './TaskInfo';
 import TaskLog from './TaskLog';
-import {ScreenSize} from '../types';
 
 interface TaskViewProps {
   task: Task;
@@ -14,7 +13,6 @@ const TaskView: FC<TaskViewProps> = ({task, onUpdate}) => {
   const {isPty} = task;
   const [remapNewLine, setRemapNewLine] = useState(!isPty);
   const [showInfo, setInfo] = useState(false);
-  const [screenSize, setScreenSize] = useState<ScreenSize | null>(null);
 
   const handleToggleRemapNewLine = useCallback(() => {
     setRemapNewLine((v) => !v);
@@ -24,17 +22,13 @@ const TaskView: FC<TaskViewProps> = ({task, onUpdate}) => {
     setInfo((v) => !v);
   }, []);
 
-  const handleSetScreenSize = useCallback((data: ScreenSize | null) => {
-    setScreenSize(data);
-  }, []);
-
   return (
     <>
-      <TaskHeader task={task} screenSize={screenSize} remapNewLine={remapNewLine} onToggleInfo={handleToggleInfo} onSetScreenSize={handleSetScreenSize} onToggleRemapNewLine={handleToggleRemapNewLine} onUpdate={onUpdate} />
+      <TaskHeader task={task} remapNewLine={remapNewLine} onToggleInfo={handleToggleInfo} onToggleRemapNewLine={handleToggleRemapNewLine} onUpdate={onUpdate} />
       {showInfo && (
         <TaskInfo task={task} onUpdate={onUpdate} />
       )}
-      <TaskLog task={task} screenSize={screenSize} remapNewLine={remapNewLine} onUpdate={onUpdate} />
+      <TaskLog task={task} remapNewLine={remapNewLine} onUpdate={onUpdate} />
     </>
   );
 };
