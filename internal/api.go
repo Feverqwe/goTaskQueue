@@ -60,10 +60,11 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	}
 
 	type AddLinkPayload struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
-		Type string `json:"type"`
-		Url  string `json:"url"`
+		Id    string `json:"id"`
+		Name  string `json:"name"`
+		Type  string `json:"type"`
+		Url   string `json:"url"`
+		Title string `json:"title"`
 	}
 
 	type DelLinkPayload struct {
@@ -219,7 +220,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task.AddLink(payload.Name, payload.Type, payload.Url)
+			task.AddLink(payload.Name, payload.Type, payload.Url, payload.Title)
 
 			return "ok", err
 		})

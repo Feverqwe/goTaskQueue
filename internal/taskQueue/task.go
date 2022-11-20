@@ -16,9 +16,10 @@ import (
 const PtyLogSize = 4 * 1024 * 1024
 
 type TaskLink struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-	Url  string `json:"url"`
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Url   string `json:"url"`
+	Title string `json:"title"`
 }
 
 type PtyScreenSize struct {
@@ -288,18 +289,20 @@ func (s *Task) GetLink(name string) (*TaskLink, int) {
 	return nil, -1
 }
 
-func (s *Task) AddLink(Name string, Type string, Url string) {
+func (s *Task) AddLink(Name string, Type string, Url string, Title string) {
 	link, _ := s.GetLink(Name)
 	if link == nil {
 		link := TaskLink{
-			Name: Name,
-			Type: Type,
-			Url:  Url,
+			Name:  Name,
+			Type:  Type,
+			Url:   Url,
+			Title: Title,
 		}
 		s.Links = append(s.Links, &link)
 	} else {
 		link.Type = Type
 		link.Url = Url
+		link.Title = Title
 	}
 }
 
