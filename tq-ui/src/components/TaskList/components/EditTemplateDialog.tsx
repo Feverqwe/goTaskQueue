@@ -58,7 +58,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
       }, {} as Record<keyof Variable, (el: HTMLInputElement) => void>);
 
       return (
-        <Box my={1} key={`${arr.length}_${index}`} display="flex" alignItems="center">
+        <Box py={1} key={`${arr.length}_${index}`} display="flex" alignItems="center">
           <TextField
             size="small"
             sx={{flexGrow: 1, mr: 1}}
