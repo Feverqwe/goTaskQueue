@@ -24,3 +24,10 @@ export interface Task {
   isPty: boolean;
   links: TaskLink[];
 }
+
+export interface PtyScreenSize {
+  x: number;
+  y: number;
+  cols: number;
+  rows: number;
+}

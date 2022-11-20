@@ -1,21 +1,30 @@
-import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {Alert, Box, Button, Snackbar} from '@mui/material';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
-import {Task, TaskState} from '../../types';
+import {PtyScreenSize, Task, TaskState} from '../../types';
 
 import 'xterm/css/xterm.css';
 import './XTerm.css';
+import {ScreenSize} from '../types';
 
 interface TaskLogProps {
   task: Task,
   remapNewLine: boolean;
+  screenSize: ScreenSize | null;
   onUpdate: () => void;
 }
 
-const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
+const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, screenSize, onUpdate}) => {
   const {id, state} = task;
   const [isOpen, setOpen] = useState(false);
   const [isConnecting, setConnecting] = useState(false);
@@ -81,7 +90,10 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       if (!refTask.current.isPty || refTask.current.state !== TaskState.Started) return;
       const x = wrapper.clientWidth;
       const y = wrapper.clientHeight;
-      sendCommand('resize', {cols, rows, x, y});
+      const screenSize: PtyScreenSize = {
+        x, y, cols, rows,
+      };
+      sendCommand('resize', screenSize);
     };
 
     terminal.onResize(({cols, rows}) => {
@@ -112,25 +124,46 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       wsSend: sendCommand,
       terminal,
       resizeObserver,
+      fitAddon,
     };
   }, [id]);
 
   useEffect(() => {
-    const {terminal, resizeObserver} = scope;
-    const ctr = refCtr.current;
+    const {terminal} = scope;
     const wrapper = refWrapper.current;
-    if (!wrapper || !ctr) return;
+    if (!wrapper) return;
 
-    resizeObserver.observe(ctr);
     terminal.open(wrapper);
     scope.wsConnect();
 
     return () => {
       scope.wsClose();
       terminal.dispose();
-      resizeObserver.disconnect();
     };
   }, [scope]);
+
+  useEffect(() => {
+    const {fitAddon, resizeObserver} = scope;
+    const ctr = refCtr.current;
+    const wrapper = refWrapper.current;
+    if (!ctr || !wrapper) return;
+
+    if (screenSize) {
+      ctr.style.width = `${screenSize.width}px`;
+      ctr.style.height = `${screenSize.height}px`;
+      ctr.style.flexGrow = '0';
+
+      fitAddon.fit();
+    } else {
+      resizeObserver.observe(ctr);
+      ctr.style.width = 'auto';
+      ctr.style.height = 'auto';
+      ctr.style.flexGrow = '1';
+      return () => {
+        resizeObserver.disconnect();
+      };
+    }
+  }, [scope, screenSize]);
 
   useEffect(() => {
     // when ws closed do update task
