@@ -4,7 +4,6 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import ClearIcon from '@mui/icons-material/Clear';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import CopyAllIcon from '@mui/icons-material/CopyAll';
 import {useNavigate} from 'react-router-dom';
 import TaskStatusIcon from '../../Task/components/TaskStatus';
 import {api} from '../../../tools/api';
@@ -22,30 +21,17 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   const navigate = useNavigate();
 
   const handleDelete = useCallback(async (e: SyntheticEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
     await api.delete({id});
     onUpdate();
   }, [id, onUpdate]);
 
   const handleStart = useCallback(async (e: SyntheticEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
     await api.taskRun({id});
     onUpdate();
   }, [id, onUpdate]);
 
   const handleStop = useCallback(async (e: SyntheticEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
     await api.taskKill({id});
-    onUpdate();
-  }, [id, onUpdate]);
-
-  const handleClone = useCallback(async (e: SyntheticEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await api.clone({id});
     onUpdate();
   }, [id, onUpdate]);
 
@@ -57,46 +43,42 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   return (
     <Box px={1} pb={1}>
       <Card>
-        <CardActionArea href={`task?id=${id}`} onClick={handleOpen}>
-          <Box display="flex" flexDirection="row" alignItems="center">
-            <Box display="flex">
-              <IconButton disabled={state === TaskState.Started} onClick={handleDelete} title="Delete">
-                <ClearIcon />
-              </IconButton>
-            </Box>
-            <Box display="flex" pl={1} flexGrow={1}>
-              <Box sx={{wordBreak: 'break-all'}}>
+        <Box display="flex" flexDirection="row" alignItems="stretch">
+          <Box display="flex">
+            <IconButton disabled={state === TaskState.Started} onClick={handleDelete} title="Delete">
+              <ClearIcon />
+            </IconButton>
+          </Box>
+          <Box flexGrow={1}>
+            <CardActionArea href={`task?id=${id}`} onClick={handleOpen} sx={{height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+              <Box pl={1} width="100%" sx={{wordBreak: 'break-all'}}>
                 <TaskName task={task} />
               </Box>
-            </Box>
-            {task.links.length > 0 && (
-              <Box display="flex" pl={1}>
-                <TaskLinks task={task} />
-              </Box>
-            )}
-            <Box display="flex" pl={1}>
-              {state === TaskState.Started && (
-                <IconButton onClick={handleStop} title="Stop">
-                  <StopIcon />
-                </IconButton>
-              ) || state === TaskState.Idle && (
-                <IconButton onClick={handleStart} title="Start">
-                  <PlayArrowIcon />
-                </IconButton>
-              ) || (
-                <IconButton onClick={handleClone} title="Clone">
-                  <CopyAllIcon />
-                </IconButton>
-              )}
-            </Box>
-            <Box display="flex" pl={1}>
-              <TaskStatusIcon task={task} />
-            </Box>
-            <Box display="flex" pl={1}>
-              <KeyboardArrowRightIcon />
-            </Box>
+            </CardActionArea>
           </Box>
-        </CardActionArea>
+          {task.links.length > 0 && (
+          <Box display="flex">
+            <TaskLinks task={task} />
+          </Box>
+          )}
+          <Box display="flex" pl={task.links.length ? 1 : 0}>
+            {state === TaskState.Started && (
+            <IconButton onClick={handleStop} title="Stop">
+              <StopIcon />
+            </IconButton>
+            ) || state === TaskState.Idle && (
+            <IconButton onClick={handleStart} title="Start">
+              <PlayArrowIcon />
+            </IconButton>
+            )}
+          </Box>
+          <Box display="flex" pl={1} alignItems="center">
+            <TaskStatusIcon task={task} />
+          </Box>
+          <Box display="flex" pl={1} alignItems="center">
+            <KeyboardArrowRightIcon />
+          </Box>
+        </Box>
       </Card>
     </Box>
   );
