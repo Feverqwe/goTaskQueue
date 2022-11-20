@@ -10,6 +10,7 @@ export interface TaskLink {
   name: string;
   type: string;
   url: string;
+  title: string;
 }
 
 export interface Task {

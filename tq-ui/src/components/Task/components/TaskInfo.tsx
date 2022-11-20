@@ -59,6 +59,7 @@ const TaskInfo:FC<TaskInfoProps> = ({task, onUpdate}) => {
           value={command}
           label="Command"
           multiline
+          maxRows={3}
           InputProps={{readOnly: true}}
           inputProps={{ref: refCommand}}
           onFocus={handleCommandFocus}

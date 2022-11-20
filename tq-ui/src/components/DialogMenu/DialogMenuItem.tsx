@@ -1,8 +1,8 @@
-import React, {FC, ReactNode} from 'react';
+import React, {FC, ReactNode, SyntheticEvent} from 'react';
 import {Box, ListItemButton} from '@mui/material';
 
 interface DialogMenuItemProps {
-  onClick?: () => void;
+  onClick?: (e: SyntheticEvent) => void;
   component?: string;
   href?: string;
   target?: string;
