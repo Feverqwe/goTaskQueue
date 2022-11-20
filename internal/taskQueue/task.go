@@ -21,6 +21,13 @@ type TaskLink struct {
 	Url  string `json:"url"`
 }
 
+type PtyScreenSize struct {
+	Rows int `json:"rows"`
+	Cols int `json:"cols"`
+	X    int `json:"x"`
+	Y    int `json:"y"`
+}
+
 type Task struct {
 	Id             string `json:"id"`
 	Label          string `json:"label"`
@@ -234,16 +241,16 @@ func (s *Task) Send(data string) error {
 	return err
 }
 
-func (s *Task) Resize(rows int, cels int, x int, y int) error {
+func (s *Task) Resize(screenSize *PtyScreenSize) error {
 	if !s.IsPty {
 		return nil
 	}
 
 	ws := pty.Winsize{
-		Rows: uint16(rows),
-		Cols: uint16(cels),
-		X:    uint16(x),
-		Y:    uint16(y),
+		Rows: uint16(screenSize.Rows),
+		Cols: uint16(screenSize.Cols),
+		X:    uint16(screenSize.X),
+		Y:    uint16(screenSize.Y),
 	}
 	return pty.Setsize(s.pty, &ws)
 }
