@@ -15,7 +15,7 @@ const TaskLinks: FC<TaskLinksProps> = ({task}) => {
 
   return (
     <>
-      {task.links.map(({name, type, url}) => {
+      {task.links.map(({name, type, url, title}) => {
         let icon: ReactNode;
         switch (type) {
           case 'play': {
@@ -27,7 +27,7 @@ const TaskLinks: FC<TaskLinksProps> = ({task}) => {
           }
         }
         return (
-          <IconButton key={name} href={url} target="_blank" onClick={handleClick}>
+          <IconButton key={name} href={url} title={title} target="_blank" onClick={handleClick}>
             {icon}
           </IconButton>
         );
