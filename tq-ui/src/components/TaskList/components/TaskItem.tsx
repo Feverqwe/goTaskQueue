@@ -44,14 +44,14 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     const result = [];
     if (task.links.length > 0) {
       result.push(
-        <Box key={result.length} display="flex" pl={result.length ? 1 : 0}>
+        <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
           <TaskLinks task={task} />
         </Box>,
       );
     }
     if ([TaskState.Started, TaskState.Idle].includes(state)) {
       result.push(
-        <Box key={result.length} display="flex" pl={result.length ? 1 : 0}>
+        <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
           {state === TaskState.Started && (
             <IconButton onClick={handleStop} title="Stop">
               <StopIcon />
@@ -65,12 +65,12 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       );
     }
     result.push(
-      <Box key={result.length} display="flex" pl={result.length ? 1 : 0} alignItems="center">
+      <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
         <TaskStatusIcon task={task} />
       </Box>,
     );
     result.push(
-      <Box key={result.length} display="flex" pl={1} alignItems="center">
+      <Box key={result.length} display="flex" alignItems="center" pl={1}>
         <KeyboardArrowRightIcon />
       </Box>,
     );
@@ -81,14 +81,14 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     <Box px={1} pb={1}>
       <Card>
         <Box display="flex" flexDirection="row" alignItems="stretch">
-          <Box display="flex">
+          <Box display="flex" alignItems="center">
             <IconButton disabled={state === TaskState.Started} onClick={handleDelete} title="Delete">
               <ClearIcon />
             </IconButton>
           </Box>
           <Box flexGrow={1}>
             <CardActionArea href={`task?id=${id}`} onClick={handleOpen} sx={{height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-              <Box pl={1} width="100%" sx={{wordBreak: 'break-all'}}>
+              <Box px={1} width="100%" sx={{wordBreak: 'break-all'}}>
                 <TaskName task={task} />
               </Box>
             </CardActionArea>
