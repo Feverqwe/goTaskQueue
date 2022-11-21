@@ -65,7 +65,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       );
     }
     result.push(
-      <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
+      <Box key={result.length} display="flex" alignItems="center" pl={1}>
         <TaskStatusIcon task={task} />
       </Box>,
     );
