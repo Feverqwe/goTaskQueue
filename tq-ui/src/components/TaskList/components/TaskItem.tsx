@@ -1,15 +1,17 @@
 import {Box, Card, CardActionArea, IconButton} from '@mui/material';
-import React, {FC, SyntheticEvent, useCallback, useMemo} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useMemo, useState} from 'react';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import ClearIcon from '@mui/icons-material/Clear';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import {useNavigate} from 'react-router-dom';
-import TaskStatusIcon from '../../Task/components/TaskStatus';
+import CircleIcon from '@mui/icons-material/Circle';
+import TaskStatusIcon from '../../Task/components/TaskStatusIcon';
 import {api} from '../../../tools/api';
 import {Task, TaskState} from '../../types';
 import TaskName from '../../Task/components/TaskName';
 import TaskLinks from '../../Task/components/TaskLinks';
+import DialogMenu from '../../DialogMenu/DialogMenu';
 
 interface TaskItemProps {
   task: Task,
@@ -19,6 +21,7 @@ interface TaskItemProps {
 const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   const {id, state} = task;
   const navigate = useNavigate();
+  const [openMenu, setOpenMenu] = useState(false);
 
   const handleDelete = useCallback(async () => {
     await api.delete({id});
@@ -40,15 +43,16 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     navigate(`task?id=${id}`);
   }, [navigate, id]);
 
+  const handleOpenMenu = useCallback(() => {
+    setOpenMenu(true);
+  }, []);
+
+  const handleCloseMenu = useCallback(() => {
+    setOpenMenu(false);
+  }, []);
+
   const extraButtons = useMemo(() => {
     const result = [];
-    if (task.links.length > 0) {
-      result.push(
-        <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
-          <TaskLinks task={task} />
-        </Box>,
-      );
-    }
     if ([TaskState.Started, TaskState.Idle].includes(state)) {
       result.push(
         <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
@@ -64,18 +68,29 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
         </Box>,
       );
     }
+    if (task.links.length) {
+      result.push(
+        <Box key={result.length} display="flex" alignItems="center">
+          <IconButton onClick={handleOpenMenu} title="Menu">
+            <TaskStatusIcon task={task} />
+            <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="warning" />
+          </IconButton>
+        </Box>,
+      );
+    } else {
+      result.push(
+        <Box key={result.length} display="flex" alignItems="center" px={1}>
+          <TaskStatusIcon task={task} />
+        </Box>,
+      );
+    }
     result.push(
-      <Box key={result.length} display="flex" alignItems="center" pl={1}>
-        <TaskStatusIcon task={task} />
-      </Box>,
-    );
-    result.push(
-      <Box key={result.length} display="flex" alignItems="center" pl={1}>
+      <Box key={result.length} display="flex" alignItems="center">
         <KeyboardArrowRightIcon />
       </Box>,
     );
     return result;
-  }, [handleStart, handleStop, state, task]);
+  }, [handleStart, handleStop, handleOpenMenu, state, task]);
 
   return (
     <Box px={1} pb={1}>
@@ -96,6 +111,11 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
           {extraButtons}
         </Box>
       </Card>
+      {openMenu && (
+        <DialogMenu open={openMenu} onClose={handleCloseMenu}>
+          <TaskLinks task={task} />
+        </DialogMenu>
+      )}
     </Box>
   );
 };

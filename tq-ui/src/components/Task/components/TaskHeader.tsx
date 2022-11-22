@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useMemo, useState} from 'react';
+import React, {FC, Fragment, SyntheticEvent, useCallback, useMemo, useState} from 'react';
 import {Box, CardActionArea, Divider, IconButton, Paper, Typography} from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
@@ -6,8 +6,9 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {Check} from '@mui/icons-material';
 import {useNavigate} from 'react-router-dom';
+import CircleIcon from '@mui/icons-material/Circle';
 import TaskName from './TaskName';
-import TaskStatusIcon from './TaskStatus';
+import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
 import {Task, TaskState} from '../../types';
 import ConfirmDialog from './ConfirmDialog';
@@ -103,11 +104,6 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
                 )}
               </CardActionArea>
             </Box>
-            {task.links.length > 0 && (
-              <Box display="flex" alignItems="center">
-                <TaskLinks task={task} />
-              </Box>
-            )}
             <Box display="flex" alignItems="center">
               {state === TaskState.Started && (
                 <IconButton onClick={handleStop} title="Stop">
@@ -124,8 +120,17 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
               )}
               <IconButton onClick={handleOpenMenu} title="Menu">
                 <TaskStatusIcon task={task} />
+                {task.links.length > 0 && (
+                  <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="warning" />
+                )}
               </IconButton>
               <DialogMenu open={showMenu} onClose={handleCloseMenu}>
+                {task.links.length > 0 && (
+                  <>
+                    <TaskLinks task={task} />
+                    <Divider />
+                  </>
+                )}
                 <DialogMenuItem onClick={onToggleRemapNewLine}>
                   Remap new line
                   {remapNewLine && (

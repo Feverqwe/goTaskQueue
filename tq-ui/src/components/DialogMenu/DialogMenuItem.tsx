@@ -1,5 +1,5 @@
 import React, {FC, ReactNode, SyntheticEvent} from 'react';
-import {Box, ListItemButton} from '@mui/material';
+import {ListItemButton} from '@mui/material';
 
 interface DialogMenuItemProps {
   onClick?: (e: SyntheticEvent) => void;
@@ -13,9 +13,7 @@ const DialogMenuItem: FC<DialogMenuItemProps> = ({onClick, component, href, targ
   return (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <ListItemButton component={component as any} href={href} target={target} onClick={onClick}>
-      <Box display="flex" p={0.5}>
-        {children}
-      </Box>
+      {children}
     </ListItemButton>
   );
 };

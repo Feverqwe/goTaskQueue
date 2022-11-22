@@ -1,8 +1,7 @@
-import React, {FC, ReactNode} from 'react';
-import {IconButton} from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import LaunchIcon from '@mui/icons-material/Launch';
+import React, {FC} from 'react';
 import {Task} from '../../types';
+import LinkIcon from './LinkIcon';
+import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 
 interface TaskLinksProps {
   task: Task;
@@ -12,20 +11,10 @@ const TaskLinks: FC<TaskLinksProps> = ({task}) => {
   return (
     <>
       {task.links.map(({name, type, url, title}) => {
-        let icon: ReactNode;
-        switch (type) {
-          case 'play': {
-            icon = <PlayArrowIcon />;
-            break;
-          }
-          default: {
-            icon = <LaunchIcon />;
-          }
-        }
         return (
-          <IconButton key={name} href={url} title={title} target="_blank">
-            {icon}
-          </IconButton>
+          <DialogMenuItem key={name} component="a" href={url} target="_blank">
+            <LinkIcon type={type} sx={{ml: -1, mr: 1}} />{title}
+          </DialogMenuItem>
         );
       })}
     </>
