@@ -113,7 +113,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       </Card>
       {openMenu && (
         <DialogMenu open={openMenu} onClose={handleCloseMenu}>
-          <TaskLinks task={task} />
+          <TaskLinks task={task} onClick={handleCloseMenu} />
         </DialogMenu>
       )}
     </Box>

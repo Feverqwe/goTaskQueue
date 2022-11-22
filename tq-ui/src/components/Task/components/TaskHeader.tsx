@@ -127,7 +127,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
               <DialogMenu open={showMenu} onClose={handleCloseMenu}>
                 {task.links.length > 0 && (
                   <>
-                    <TaskLinks task={task} />
+                    <TaskLinks task={task} onClick={handleCloseMenu} />
                     <Divider />
                   </>
                 )}
