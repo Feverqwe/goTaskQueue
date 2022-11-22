@@ -122,7 +122,9 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				var data string
 				err := websocket.Message.Receive(ws, &data)
 				if err == io.EOF || err != nil {
-					fmt.Println("ws receive error", err)
+					if err != io.EOF {
+						fmt.Println("ws receive error", err)
+					}
 					break
 				}
 
@@ -167,7 +169,9 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				offset, fragment = task.ReadCombined(offset)
 				err := pushPart(fragment)
 				if err != nil {
-					fmt.Println("ws send error", err)
+					if err != io.EOF {
+						fmt.Println("ws send error", err)
+					}
 					return
 				}
 			}

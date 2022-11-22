@@ -73,7 +73,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
         <Box key={result.length} display="flex" alignItems="center">
           <IconButton onClick={handleOpenMenu} title="Menu">
             <TaskStatusIcon task={task} />
-            <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="warning" />
+            <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="disabled" />
           </IconButton>
         </Box>,
       );

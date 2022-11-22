@@ -121,7 +121,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
               <IconButton onClick={handleOpenMenu} title="Menu">
                 <TaskStatusIcon task={task} />
                 {task.links.length > 0 && (
-                  <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="warning" />
+                  <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="disabled" />
                 )}
               </IconButton>
               <DialogMenu open={showMenu} onClose={handleCloseMenu}>
