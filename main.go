@@ -35,7 +35,7 @@ func main() {
 	var config cfg.Config
 
 	var powerControl = powerCtr.GetPowerControl()
-	var taskQueue = taskQueue.NewQueue()
+	var taskQueue = taskQueue.LoadQueue()
 
 	callChan := make(chan string)
 

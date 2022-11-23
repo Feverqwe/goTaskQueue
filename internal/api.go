@@ -202,7 +202,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task.Label = payload.Label
+			task.SetLabel(payload.Label)
 
 			return "ok", err
 		})

@@ -34,10 +34,10 @@ type Task struct {
 	Label          string `json:"label"`
 	Command        string `json:"command"`
 	process        *exec.Cmd
-	IsStarted      bool      `json:"-"`
-	IsFinished     bool      `json:"-"`
-	IsCanceled     bool      `json:"-"`
-	IsError        bool      `json:"-"`
+	IsStarted      bool      `json:"isStarted"`
+	IsFinished     bool      `json:"isFinished"`
+	IsCanceled     bool      `json:"isCanceled"`
+	IsError        bool      `json:"isError"`
 	State          string    `json:"state"`
 	Stdout         *[]byte   `json:"-"`
 	Stderr         *[]byte   `json:"-"`
@@ -54,6 +54,7 @@ type Task struct {
 	pty            *os.File
 	combinedOffset int
 	Links          []*TaskLink `json:"links"`
+	queue          *Queue
 }
 
 func (s *Task) Run(runAs []string, config *cfg.Config) error {
@@ -304,6 +305,7 @@ func (s *Task) AddLink(Name string, Type string, Url string, Title string) {
 		link.Url = Url
 		link.Title = Title
 	}
+	go s.queue.SaveQueue()
 }
 
 func (s *Task) DelLink(name string) {
@@ -311,6 +313,7 @@ func (s *Task) DelLink(name string) {
 	if index != -1 {
 		s.Links = append(s.Links[:index], s.Links[:index+1]...)
 	}
+	go s.queue.SaveQueue()
 }
 
 func (s *Task) pushChanges(value int) {
@@ -323,7 +326,7 @@ func (s *Task) pushChanges(value int) {
 	}
 }
 
-func (s *Task) syncStatus() {
+func (s *Task) SyncStatus() {
 	if s.IsCanceled {
 		s.State = "CANCELED"
 	} else if s.IsError {
@@ -335,6 +338,20 @@ func (s *Task) syncStatus() {
 	} else {
 		s.State = "IDLE"
 	}
+}
+
+func (s *Task) syncStatus() {
+	s.SyncStatus()
+	go s.queue.SaveQueue()
+}
+
+func (s *Task) SetQueue(queue *Queue) {
+	s.queue = queue
+}
+
+func (s *Task) SetLabel(label string) {
+	s.Label = label
+	go s.queue.SaveQueue()
 }
 
 type closeOnce struct {
