@@ -14,7 +14,7 @@ import (
 )
 
 type Queue struct {
-	Tasks  []*Task `json:"tesks"`
+	Tasks  []*Task `json:"tasks"`
 	idTask map[string]*Task
 }
 
