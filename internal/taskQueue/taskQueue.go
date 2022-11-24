@@ -16,6 +16,7 @@ import (
 type Queue struct {
 	Tasks  []*Task `json:"tasks"`
 	idTask map[string]*Task
+	ch     chan int
 }
 
 func (s *Queue) GetAll() []*Task {
@@ -88,10 +89,16 @@ func (s *Queue) getId() string {
 	return id
 }
 
-func (s *Queue) SaveQueue() error {
+func (s *Queue) SaveQueue() {
+	if len(s.ch) == 0 {
+		s.ch <- 1
+	}
+}
+
+func (s *Queue) WriteQueue() error {
 	if data, err := json.Marshal(s); err == nil {
 		reader := bytes.NewReader(data)
-		path := getStatePath()
+		path := getQueuePath()
 		err = atomic.WriteFile(path, reader)
 		return err
 	}
@@ -101,7 +108,7 @@ func (s *Queue) SaveQueue() error {
 func LoadQueue() *Queue {
 	queue := NewQueue()
 
-	path := getStatePath()
+	path := getQueuePath()
 	data, err := os.ReadFile(path)
 	if err == nil {
 		err = json.Unmarshal(data, &queue)
@@ -120,17 +127,28 @@ func LoadQueue() *Queue {
 		}
 	}
 
+	go func() {
+		for {
+			<-queue.ch
+			err := queue.WriteQueue()
+			if err != nil {
+				log.Println("Write queue error", err)
+			}
+		}
+	}()
+
 	return queue
 }
 
-func getStatePath() string {
-	return filepath.Join(cfg.GetProfilePath(), "state.json")
+func getQueuePath() string {
+	return filepath.Join(cfg.GetProfilePath(), "queue.json")
 }
 
 func NewQueue() *Queue {
 	queue := &Queue{
 		Tasks:  make([]*Task, 0),
 		idTask: make(map[string]*Task),
+		ch:     make(chan int, 1),
 	}
 	return queue
 }

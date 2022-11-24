@@ -112,7 +112,7 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 
 	s.process = process
 	s.IsStarted = true
-	s.syncStatus()
+	s.syncStatusAndSave()
 
 	go func() {
 		defer f.Close()
@@ -127,7 +127,7 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 			s.Error = err.Error()
 		}
 
-		s.syncStatus()
+		s.syncStatusAndSave()
 
 		go s.pushChanges(0)
 	}()
@@ -195,7 +195,7 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 
 	s.process = process
 	s.IsStarted = true
-	s.syncStatus()
+	s.syncStatusAndSave()
 
 	go func() {
 		defer stdin.Close()
@@ -210,7 +210,7 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 			s.Error = err.Error()
 		}
 
-		s.syncStatus()
+		s.syncStatusAndSave()
 
 		go s.pushChanges(0)
 	}()
@@ -272,7 +272,7 @@ func (s *Task) Kill() error {
 	err := s.Signal(syscall.SIGKILL)
 	if err == nil {
 		s.IsCanceled = true
-		s.syncStatus()
+		s.syncStatusAndSave()
 	}
 	return err
 }
@@ -305,7 +305,7 @@ func (s *Task) AddLink(Name string, Type string, Url string, Title string) {
 		link.Url = Url
 		link.Title = Title
 	}
-	go s.queue.SaveQueue()
+	s.queue.SaveQueue()
 }
 
 func (s *Task) DelLink(name string) {
@@ -313,7 +313,7 @@ func (s *Task) DelLink(name string) {
 	if index != -1 {
 		s.Links = append(s.Links[:index], s.Links[:index+1]...)
 	}
-	go s.queue.SaveQueue()
+	s.queue.SaveQueue()
 }
 
 func (s *Task) pushChanges(value int) {
@@ -340,9 +340,9 @@ func (s *Task) SyncStatus() {
 	}
 }
 
-func (s *Task) syncStatus() {
+func (s *Task) syncStatusAndSave() {
 	s.SyncStatus()
-	go s.queue.SaveQueue()
+	s.queue.SaveQueue()
 }
 
 func (s *Task) SetQueue(queue *Queue) {
@@ -351,7 +351,7 @@ func (s *Task) SetQueue(queue *Queue) {
 
 func (s *Task) SetLabel(label string) {
 	s.Label = label
-	go s.queue.SaveQueue()
+	s.queue.SaveQueue()
 }
 
 type closeOnce struct {
@@ -380,7 +380,7 @@ func NewTask(id string, command string, label string, isPty bool) *Task {
 		Links:     make([]*TaskLink, 0),
 	}
 
-	task.syncStatus()
+	task.SyncStatus()
 
 	return &task
 }
