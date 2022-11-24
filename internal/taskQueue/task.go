@@ -326,7 +326,7 @@ func (s *Task) pushChanges(value int) {
 	}
 }
 
-func (s *Task) SyncStatus() {
+func (s *Task) syncStatus() {
 	if s.IsCanceled {
 		s.State = "CANCELED"
 	} else if s.IsError {
@@ -341,7 +341,7 @@ func (s *Task) SyncStatus() {
 }
 
 func (s *Task) syncStatusAndSave() {
-	s.SyncStatus()
+	s.syncStatus()
 	s.queue.Save()
 }
 
@@ -350,7 +350,7 @@ func (s *Task) Init(queue *Queue) {
 	if s.IsStarted && !s.IsFinished {
 		s.IsCanceled = true
 		s.IsFinished = true
-		s.SyncStatus()
+		s.syncStatus()
 	}
 }
 
@@ -385,7 +385,7 @@ func NewTask(id string, command string, label string, isPty bool) *Task {
 		Links:     make([]*TaskLink, 0),
 	}
 
-	task.SyncStatus()
+	task.syncStatus()
 
 	return &task
 }
