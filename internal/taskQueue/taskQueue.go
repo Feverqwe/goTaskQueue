@@ -34,10 +34,10 @@ func (s *Queue) Get(id string) (*Task, error) {
 func (s *Queue) Add(command string, label string, isPty bool) *Task {
 	id := s.getId()
 	task := NewTask(id, command, label, isPty)
-	s.idTask[task.Id] = task
-	task.SetQueue(s)
 	s.Tasks = append(s.Tasks, task)
-	go s.SaveQueue()
+	s.idTask[task.Id] = task
+	task.Init(s)
+	s.Save()
 	return task
 }
 
@@ -72,7 +72,7 @@ func (s *Queue) Del(id string) error {
 	s.Tasks = append(s.Tasks[:index], s.Tasks[index+1:]...)
 	delete(s.idTask, task.Id)
 
-	go s.SaveQueue()
+	s.Save()
 
 	return nil
 }
@@ -89,7 +89,7 @@ func (s *Queue) getId() string {
 	return id
 }
 
-func (s *Queue) SaveQueue() {
+func (s *Queue) Save() {
 	if len(s.ch) == 0 {
 		s.ch <- 1
 	}
@@ -119,12 +119,7 @@ func LoadQueue() *Queue {
 
 	for _, task := range queue.Tasks {
 		queue.idTask[task.Id] = task
-		task.SetQueue(queue)
-		if !task.IsFinished {
-			task.IsCanceled = true
-			task.IsFinished = true
-			task.SyncStatus()
-		}
+		task.Init(queue)
 	}
 
 	go func() {

@@ -305,7 +305,7 @@ func (s *Task) AddLink(Name string, Type string, Url string, Title string) {
 		link.Url = Url
 		link.Title = Title
 	}
-	s.queue.SaveQueue()
+	s.queue.Save()
 }
 
 func (s *Task) DelLink(name string) {
@@ -313,7 +313,7 @@ func (s *Task) DelLink(name string) {
 	if index != -1 {
 		s.Links = append(s.Links[:index], s.Links[:index+1]...)
 	}
-	s.queue.SaveQueue()
+	s.queue.Save()
 }
 
 func (s *Task) pushChanges(value int) {
@@ -342,16 +342,21 @@ func (s *Task) SyncStatus() {
 
 func (s *Task) syncStatusAndSave() {
 	s.SyncStatus()
-	s.queue.SaveQueue()
+	s.queue.Save()
 }
 
-func (s *Task) SetQueue(queue *Queue) {
+func (s *Task) Init(queue *Queue) {
 	s.queue = queue
+	if s.IsStarted && !s.IsFinished {
+		s.IsCanceled = true
+		s.IsFinished = true
+		s.SyncStatus()
+	}
 }
 
 func (s *Task) SetLabel(label string) {
 	s.Label = label
-	s.queue.SaveQueue()
+	s.queue.Save()
 }
 
 type closeOnce struct {
