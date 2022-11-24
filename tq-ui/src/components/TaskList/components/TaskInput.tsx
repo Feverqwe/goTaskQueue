@@ -43,7 +43,9 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
       }
       onUpdate();
 
-      navigate(`task?id=${id}`);
+      if (run) {
+        navigate(`task?id=${id}`);
+      }
     } catch (err) {
       console.error(err);
     }
