@@ -12,6 +12,7 @@ import {Task, TaskState} from '../../types';
 import TaskName from '../../Task/components/TaskName';
 import TaskLinks from '../../Task/components/TaskLinks';
 import DialogMenu from '../../DialogMenu/DialogMenu';
+import LinkIcon from '../../Task/components/LinkIcon';
 
 interface TaskItemProps {
   task: Task,
@@ -69,12 +70,20 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       );
     }
     if (task.links.length) {
+      const {links, state} = task;
+      const {type, title, url} = links[0];
       result.push(
         <Box key={result.length} display="flex" alignItems="center">
-          <IconButton onClick={handleOpenMenu} title="Menu">
-            <TaskStatusIcon task={task} />
-            <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="disabled" />
-          </IconButton>
+          {links.length === 1 && state === TaskState.Finished ? (
+            <IconButton onClick={handleOpenMenu} href={url} target="_blank" title={title}>
+              <LinkIcon color="success" type={type} />
+            </IconButton>
+          ) : (
+            <IconButton onClick={handleOpenMenu} title="Menu">
+              <TaskStatusIcon task={task} />
+              <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="disabled" />
+            </IconButton>
+          )}
         </Box>,
       );
     } else {
