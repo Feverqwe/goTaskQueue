@@ -144,7 +144,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     };
   }, [onUpdate, isOpen]);
 
-  useEffectWhenVisible(() => {
+  useEffect(() => {
     // when ws closed do stop interval
     if (!isOpen) return;
     const intervalId = setInterval(() => {
