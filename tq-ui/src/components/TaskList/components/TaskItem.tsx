@@ -75,7 +75,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       result.push(
         <Box key={result.length} display="flex" alignItems="center">
           {links.length === 1 && state === TaskState.Finished ? (
-            <IconButton onClick={handleOpenMenu} href={url} target="_blank" title={title}>
+            <IconButton href={url} target="_blank" title={title}>
               <LinkIcon color="success" type={type} />
             </IconButton>
           ) : (
