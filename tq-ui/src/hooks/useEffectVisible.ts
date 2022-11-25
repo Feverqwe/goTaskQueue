@@ -8,9 +8,9 @@ export const useEffectWhenVisible = (effect: (isInit: boolean) => ReturnType<Eff
   const subEffect = useMemo(() => effect, deps);
 
   useEffect(() => {
-    if (isHidden) return;
     const isInit = refInit.current;
     refInit.current = false;
+    if (isHidden) return;
     return subEffect(isInit);
   }, [isHidden, subEffect]);
 
