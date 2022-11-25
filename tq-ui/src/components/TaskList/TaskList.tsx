@@ -48,10 +48,12 @@ const TaskList: FC<TaskListProps> = () => {
     fetchTaskList();
   }, [fetchTaskList]);
 
-  useEffectWhenVisible(() => {
-    const intervalId = setInterval(() => {
-      fetchTaskList(true);
-    }, 10 * 1000);
+  useEffectWhenVisible((isInit) => {
+    const run = () => fetchTaskList(true);
+    const intervalId = setInterval(run, 10 * 1000);
+    if (!isInit) {
+      run();
+    }
     return () => clearInterval(intervalId);
   }, [fetchTaskList]);
 

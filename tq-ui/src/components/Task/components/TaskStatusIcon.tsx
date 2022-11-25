@@ -4,7 +4,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import BlockIcon from '@mui/icons-material/Block';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-import { SvgIconProps } from '@mui/material';
+import {SvgIconProps} from '@mui/material';
 import {Task, TaskState} from '../../types';
 
 const typeIcon = {

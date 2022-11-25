@@ -5,7 +5,6 @@ import {FitAddon} from 'xterm-addon-fit';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
 import {PtyScreenSize, Task, TaskState} from '../../types';
-import {useEffectWhenVisible} from '../../../hooks/useEffectVisible';
 
 import 'xterm/css/xterm.css';
 import './XTerm.css';
