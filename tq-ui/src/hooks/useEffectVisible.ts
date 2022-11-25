@@ -1,10 +1,10 @@
-import {DependencyList, EffectCallback, useCallback, useEffect, useState} from 'react';
+import {DependencyList, EffectCallback, useEffect, useMemo, useState} from 'react';
 
-export const useEffectWhenVisible = (effect: EffectCallback, deps: DependencyList) => {
+export const useEffectWhenVisible = (effect: () => ReturnType<EffectCallback>, deps: DependencyList) => {
   const [isHidden, setHidden] = useState(document.hidden);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const subEffect = useCallback(() => effect(), deps);
+  const subEffect = useMemo(() => effect, deps);
 
   useEffect(() => {
     if (isHidden) return;
