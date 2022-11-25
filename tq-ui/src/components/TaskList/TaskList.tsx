@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useMemo} from 'react';
+import React, {FC, useCallback, useEffect, useMemo, useRef} from 'react';
 import {Box, CircularProgress, Container} from '@mui/material';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import TaskItem from './components/TaskItem';
@@ -7,13 +7,16 @@ import {Task} from '../types';
 import {api} from '../../tools/api';
 import {ApiError, HTTPError} from '../../tools/apiRequest';
 import DisplayError from '../DisplayError';
-import {useEffectWhenVisible} from '../../hooks/useEffectVisible';
+import {useVisibility} from '../../hooks/useVisibility';
 
 interface TaskListProps {
 
 }
 
 const TaskList: FC<TaskListProps> = () => {
+  const isVisible = useVisibility();
+  const refInit = useRef(true);
+
   const {loading, error, taskList, fetchTaskList} = useLocalObservable(() => ({
     loading: true,
     error: null as null | HTTPError | ApiError | TypeError,
@@ -48,14 +51,17 @@ const TaskList: FC<TaskListProps> = () => {
     fetchTaskList();
   }, [fetchTaskList]);
 
-  useEffectWhenVisible((isInit) => {
+  useEffect(() => {
+    if (!isVisible) return;
     const run = () => fetchTaskList(true);
     const intervalId = setInterval(run, 10 * 1000);
+    const isInit = refInit.current;
+    refInit.current = false;
     if (!isInit) {
       run();
     }
     return () => clearInterval(intervalId);
-  }, [fetchTaskList]);
+  }, [fetchTaskList, isVisible]);
 
   const handleRetry = useCallback(() => {
     fetchTaskList();
