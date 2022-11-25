@@ -7,6 +7,7 @@ import {Task} from '../types';
 import {api} from '../../tools/api';
 import {ApiError, HTTPError} from '../../tools/apiRequest';
 import DisplayError from '../DisplayError';
+import {useEffectWhenVisible} from '../../hooks/useEffectVisible';
 
 interface TaskListProps {
 
@@ -47,7 +48,7 @@ const TaskList: FC<TaskListProps> = () => {
     fetchTaskList();
   }, [fetchTaskList]);
 
-  useEffect(() => {
+  useEffectWhenVisible(() => {
     const intervalId = setInterval(() => {
       fetchTaskList(true);
     }, 10 * 1000);

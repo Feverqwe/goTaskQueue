@@ -5,6 +5,7 @@ import {FitAddon} from 'xterm-addon-fit';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
 import {PtyScreenSize, Task, TaskState} from '../../types';
+import {useEffectWhenVisible} from '../../../hooks/useEffectVisible';
 
 import 'xterm/css/xterm.css';
 import './XTerm.css';
@@ -143,12 +144,12 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     };
   }, [onUpdate, isOpen]);
 
-  useEffect(() => {
+  useEffectWhenVisible(() => {
     // when ws closed do stop interval
     if (!isOpen) return;
     const intervalId = setInterval(() => {
       scope.wsSend('ping');
-    }, 5 * 1000);
+    }, 30 * 1000);
     return () => clearInterval(intervalId);
   }, [scope, isOpen]);
 
