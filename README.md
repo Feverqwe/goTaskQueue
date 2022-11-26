@@ -1,9 +1,11 @@
 <div align="center">
+	<img src="assets/preview.png" alt=""/>
 	<h1>GoTaskQueue</h1>
 	<p>
 		<b>Simple task runner</b>
 	</p>
 	<br>
+	<img src="assets/mc.png" alt=""/>
 	<br>
 	<br>
 </div>
