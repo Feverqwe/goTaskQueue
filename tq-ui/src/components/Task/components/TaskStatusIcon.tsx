@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import BlockIcon from '@mui/icons-material/Block';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
@@ -8,7 +8,7 @@ import {SvgIconProps} from '@mui/material';
 import {Task, TaskState} from '../../types';
 
 const typeIcon = {
-  [TaskState.Finished]: CheckCircleIcon,
+  [TaskState.Finished]: CheckCircleOutlineIcon,
   [TaskState.Error]: ErrorOutlineIcon,
   [TaskState.Canceled]: BlockIcon,
   [TaskState.Started]: HourglassEmptyIcon,
