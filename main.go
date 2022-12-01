@@ -25,7 +25,7 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-const DEBUG_UI = false
+var DEBUG_UI = os.Getenv("DEBUG_UI") != ""
 
 func main() {
 	if _, err := mutex.CreateMutex("GoTaskQueue"); err != nil {
