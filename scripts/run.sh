@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ "$1" = "dev" ]; then
+    DEBUG_UI=1
+fi
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR/..
 
