@@ -12,8 +12,8 @@ import {
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import {Template} from '../../RootStore/RootStoreProvider';
-import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
+import {Template} from '../RootStore/RootStoreProvider';
+import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
   onClose: () => void;

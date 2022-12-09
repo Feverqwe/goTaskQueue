@@ -4,7 +4,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
 import {Template} from '../../RootStore/RootStoreProvider';
-import TemplateDialog from './TemplateDialog';
+import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 import EditTemplateDialog from './EditTemplateDialog';
 import TemplateBtn from './TemplateBtn';
 import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
@@ -44,7 +44,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
       onUpdate();
 
       if (run) {
-        navigate(`task?id=${id}`);
+        navigate(`/task?id=${id}`);
       }
     } catch (err) {
       console.error(err);

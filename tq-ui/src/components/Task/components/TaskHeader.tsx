@@ -11,10 +11,11 @@ import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
 import {Task, TaskState} from '../../types';
-import ConfirmDialog from './ConfirmDialog';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
+import {Template} from '../../RootStore/RootStoreProvider';
+import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 
 interface TaskInfoProps {
   task: Task;
@@ -27,7 +28,7 @@ interface TaskInfoProps {
 const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onToggleInfo, onUpdate}) => {
   const navigate = useNavigate();
   const {id, state, label, command, error} = task;
-  const [confirmDialog, setConfirmDialog] = useState(false);
+  const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | Template>(null);
   const [showMenu, setShowMenu] = React.useState(false);
 
   useMemo(() => {
@@ -58,21 +59,41 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
   }, [id, handleCloseMenu]);
 
   const handleRestart = useCallback(async () => {
-    setConfirmDialog(true);
-  }, []);
+    const {label, command, isPty} = task;
+    setRestartDialogTemplate({
+      name: 'New task',
+      label,
+      variables: [],
+      command,
+      isPty,
+    });
+  }, [task]);
 
   const handleTitleClick = useCallback(() => {
     onToggleInfo();
   }, [onToggleInfo]);
 
-  const handleConfirmRestart = useCallback(async () => {
-    const task = await api.clone({id});
-    await api.taskRun({id: task.id});
-    navigate(`/task?id=${task.id}`);
-  }, [id, navigate]);
+  const handleRestartTask = useCallback(async (run: boolean, command: string, label: string, isPty: boolean) => {
+    try {
+      const {id} = await api.add({
+        command,
+        label,
+        isPty,
+      });
+      if (run) {
+        await api.taskRun({id});
+      }
 
-  const handleCloseConfirm = useCallback(() => {
-    setConfirmDialog(false);
+      if (run) {
+        navigate(`/task?id=${id}`);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [navigate]);
+
+  const handleCloseRestartDlg = useCallback(() => {
+    setRestartDialogTemplate(null);
   }, []);
 
   const handleBack = useCallback((e: SyntheticEvent) => {
@@ -151,13 +172,12 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
           </Box>
         </Paper>
       </Box>
-      {confirmDialog && (
-        <ConfirmDialog
-          open={true}
-          title="Restart task?"
-          message={<TaskName task={task} />}
-          onClose={handleCloseConfirm}
-          onSubmit={handleConfirmRestart}
+      {restartDialogTemplate && (
+        <TemplateDialog
+          template={restartDialogTemplate}
+          isNew={true}
+          onClose={handleCloseRestartDlg}
+          onSubmit={handleRestartTask}
         />
       )}
     </>
