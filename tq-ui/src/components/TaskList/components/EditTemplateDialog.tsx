@@ -25,6 +25,8 @@ interface TemplateDialogProps {
 
 type Variable = Template['variables'][number];
 
+const variableIdMap = new WeakMap<Variable, string>();
+
 const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
   const {name, command, label, isPty} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
@@ -34,6 +36,14 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
   const refLabel = useRef<HTMLInputElement>(null);
   const refName = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
+
+  useMemo(() => {
+    variables.forEach((variable) => {
+      if (!variableIdMap.has(variable)) {
+        variableIdMap.set(variable, String(Math.random()));
+      }
+    });
+  }, [variables]);
 
   const handleDeleteVariable = useCallback((variable: Variable) => {
     if (!variable) return;
@@ -58,7 +68,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
       }, {} as Record<keyof Variable, (el: HTMLInputElement) => void>);
 
       return (
-        <Box py={1} key={`${arr.length}_${index}`} display="flex" alignItems="center">
+        <Box py={1} key={variableIdMap.get(variable)} display="flex" alignItems="center">
           <TextField
             size="small"
             sx={{flexGrow: 1, mr: 1}}
