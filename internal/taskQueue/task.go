@@ -3,6 +3,7 @@ package taskQueue
 import (
 	"fmt"
 	"goTaskQueue/internal/cfg"
+	gzbuffer "goTaskQueue/internal/gzBuffer"
 	"io"
 	"os"
 	"os/exec"
@@ -34,19 +35,19 @@ type Task struct {
 	Label          string `json:"label"`
 	Command        string `json:"command"`
 	process        *exec.Cmd
-	IsStarted      bool      `json:"isStarted"`
-	IsFinished     bool      `json:"isFinished"`
-	IsCanceled     bool      `json:"isCanceled"`
-	IsError        bool      `json:"isError"`
-	State          string    `json:"state"`
-	Stdout         *[]byte   `json:"-"`
-	Stderr         *[]byte   `json:"-"`
-	Combined       *[]byte   `json:"-"`
-	Error          string    `json:"error"`
-	CreatedAt      time.Time `json:"createdAt"`
-	StartedAt      time.Time `json:"startedAt"`
-	FinishedAt     time.Time `json:"finishedAt"`
-	IsPty          bool      `json:"isPty"`
+	IsStarted      bool               `json:"isStarted"`
+	IsFinished     bool               `json:"isFinished"`
+	IsCanceled     bool               `json:"isCanceled"`
+	IsError        bool               `json:"isError"`
+	State          string             `json:"state"`
+	Stdout         *gzbuffer.GzBuffer `json:"-"`
+	Stderr         *gzbuffer.GzBuffer `json:"-"`
+	Combined       *gzbuffer.GzBuffer `json:"-"`
+	Error          string             `json:"error"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	StartedAt      time.Time          `json:"startedAt"`
+	FinishedAt     time.Time          `json:"finishedAt"`
+	IsPty          bool               `json:"isPty"`
 	mu             sync.Mutex
 	combinedMu     sync.Mutex
 	qCh            []chan int
@@ -83,9 +84,9 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 
 	s.pty = f
 
-	output := make([]byte, 0)
-	s.Combined = &output
-	s.Stdout = &output
+	output := gzbuffer.NewGzBuffer()
+	s.Combined = output
+	s.Stdout = output
 
 	s.stdin = &closeOnce{File: f}
 
@@ -96,11 +97,11 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 			if err == io.EOF || err != nil {
 				break
 			}
-			output = append(output, chunk[0:bytes]...)
+			output.Append(chunk[0:bytes])
 
-			if len(output) > PtyLogSize {
-				off := len(output) - PtyLogSize
-				output = output[off:]
+			if output.Len() > PtyLogSize {
+				off := output.Len() - PtyLogSize
+				output.Trim(off)
 				s.combinedOffset += off
 			}
 
@@ -151,21 +152,21 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 
 	pipes := []string{Out, Err}
 
-	output := make([]byte, 0)
-	s.Combined = &output
+	output := gzbuffer.NewGzBuffer()
+	s.Combined = output
 
 	stdin, _ := process.StdinPipe()
 	s.stdin = stdin
 
 	for _, pT := range pipes {
 		var pipe io.ReadCloser
-		buffer := make([]byte, 0)
+		buffer := gzbuffer.NewGzBuffer()
 		if pT == Err {
 			pipe, _ = process.StderrPipe()
-			s.Stderr = &buffer
+			s.Stderr = buffer
 		} else {
 			pipe, _ = process.StdoutPipe()
-			s.Stdout = &buffer
+			s.Stdout = buffer
 		}
 
 		go func() {
@@ -175,10 +176,10 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 				if err == io.EOF || err != nil {
 					break
 				}
-				buffer = append(buffer, chunk[0:bytes]...)
+				buffer.Append(chunk[0:bytes])
 
 				s.combinedMu.Lock()
-				output = append(output, chunk[0:bytes]...)
+				output.Append(chunk[0:bytes])
 				s.combinedMu.Unlock()
 
 				go s.pushChanges(1)
@@ -210,6 +211,16 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 			s.Error = err.Error()
 		}
 
+		if s.Stderr != nil {
+			s.Stderr.Finish()
+		}
+		if s.Stdout != nil {
+			s.Stdout.Finish()
+		}
+		if s.Combined != nil {
+			s.Combined.Finish()
+		}
+
 		s.syncStatusAndSave()
 
 		go s.pushChanges(0)
@@ -221,15 +232,15 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 func (s *Task) ReadCombined(offset int) (int, []byte) {
 	if offset == -1 {
 		offset = s.combinedOffset
-		if len(*s.Combined) > 100*1024 {
-			offset += len(*s.Combined) - 100*1024
+		if s.Combined.Len() > 100*1024 {
+			offset += s.Combined.Len() - 100*1024
 		}
 	}
 	if offset < s.combinedOffset {
 		fmt.Println("skip", s.combinedOffset-offset)
 		offset = s.combinedOffset
 	}
-	fragment := (*s.Combined)[offset-s.combinedOffset:]
+	fragment := s.Combined.Read(offset - s.combinedOffset)
 	offset += len(fragment)
 	return offset, fragment
 }
