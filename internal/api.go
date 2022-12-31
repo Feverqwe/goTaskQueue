@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"goTaskQueue/internal/cfg"
-	gzbuffer "goTaskQueue/internal/gzBuffer"
 	"goTaskQueue/internal/taskQueue"
 	"io"
 	"net/http"
@@ -263,13 +262,13 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			return
 		}
 
-		var data *gzbuffer.GzBuffer
+		var data []byte
 		if logType == "stdout" && task.Stdout != nil {
-			data = task.Stdout
+			data = *task.Stdout
 		} else if logType == "stderr" && task.Stderr != nil {
-			data = task.Stderr
+			data = *task.Stderr
 		} else if logType == "combined" && task.Combined != nil {
-			data = task.Combined
+			data = *task.Combined
 		}
 		if data == nil {
 			sendStatus(w, 404)
@@ -278,7 +277,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 		w.Header().Add("Content-type", "text/plain")
 		w.WriteHeader(200)
-		data.PipeTo(w)
+		w.Write(data)
 	})
 
 	type SetTemplatesPayload struct {
