@@ -12,7 +12,7 @@ const ChunkSize = 4 * 1024 * 1024
 const UncompressSize = 1 * 1024 * 1024
 
 type GzBuffer struct {
-	gzChunks []*bytes.Buffer
+	gzChunks []bytes.Buffer
 	gzOffset int
 	buf      []byte
 	mu       sync.Mutex
@@ -28,7 +28,7 @@ func (s *GzBuffer) Append(data []byte) {
 }
 
 func (s *GzBuffer) Read(offset int) []byte {
-	s.mu.Lock()
+	// fmt.Println("read", offset)
 	buf := s.buf
 	goff := s.gzOffset
 	i := len(s.gzChunks) - 1
@@ -36,7 +36,8 @@ func (s *GzBuffer) Read(offset int) []byte {
 		idx := i
 		i -= 1
 		ch := s.gzChunks[idx]
-		r, err := gzip.NewReader(ch)
+		// fmt.Println("read chunk idx", idx, ch.Len())
+		r, err := gzip.NewReader(&ch)
 		if err != nil {
 			fmt.Println("gzip.NewReader error", idx, err)
 			break
@@ -46,16 +47,16 @@ func (s *GzBuffer) Read(offset int) []byte {
 			fmt.Println("io.ReadAll error", idx, err)
 			break
 		}
+		// fmt.Println("append chunk", len(chunk))
 		buf = append(chunk, buf...)
 		goff -= len(chunk)
 	}
-	s.mu.Unlock()
 	return buf[offset-goff:]
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
 	for _, chunk := range s.gzChunks {
-		r, err := gzip.NewReader(chunk)
+		r, err := gzip.NewReader(&chunk)
 		if err != nil {
 			return err
 		}
@@ -74,7 +75,7 @@ func (s *GzBuffer) Trim(offset int) {
 	buf := s.Read(offset)
 	s.mu.Lock()
 	s.buf = buf
-	s.gzChunks = make([]*bytes.Buffer, 0)
+	s.gzChunks = make([]bytes.Buffer, 0)
 	s.gzOffset = 0
 	s.mu.Unlock()
 }
@@ -88,7 +89,7 @@ func (s *GzBuffer) Finish() {
 }
 
 func (s *GzBuffer) compress(minSize int) {
-	s.mu.Lock()
+	// fmt.Println("compress", minSize)
 	for len(s.buf) > minSize {
 		size := len(s.buf) - minSize
 		if size > ChunkSize {
@@ -104,15 +105,17 @@ func (s *GzBuffer) compress(minSize int) {
 			break
 		}
 		if err := gz.Close(); err != nil {
-			fmt.Println("gz.Write Close", err)
+			fmt.Println("gz.Close error", err)
 			break
 		}
-		s.buf = s.buf[size:]
 
-		s.gzChunks = append(s.gzChunks, &b)
+		s.mu.Lock()
+		s.buf = s.buf[size:]
+		// fmt.Println("add chunk", b.Len(), size)
+		s.gzChunks = append(s.gzChunks, b)
 		s.gzOffset += size
+		s.mu.Unlock()
 	}
-	s.mu.Unlock()
 }
 
 func NewGzBuffer() *GzBuffer {
