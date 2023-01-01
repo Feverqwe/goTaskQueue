@@ -12,27 +12,27 @@ const ChunkSize = 4 * 1024 * 1024
 const UncompressSize = 1 * 1024 * 1024
 
 type GzBuffer struct {
-	gzChunks []bytes.Buffer
-	gzOffset int
 	buf      []byte
+	offset   int
 	mu       sync.Mutex
+	gzChunks []bytes.Buffer
 }
 
 func (s *GzBuffer) Append(data []byte) {
 	s.mu.Lock()
 	s.buf = append(s.buf, data...)
+	s.mu.Unlock()
 	if len(s.buf) > ChunkSize+UncompressSize {
 		s.compress(UncompressSize)
 	}
-	s.mu.Unlock()
 }
 
 func (s *GzBuffer) Read(offset int) []byte {
 	// fmt.Println("read", offset)
 	buf := s.buf
-	goff := s.gzOffset
+	off := s.offset
 	i := len(s.gzChunks) - 1
-	for goff > offset && i >= 0 {
+	for off > offset && i >= 0 {
 		idx := i
 		i -= 1
 		ch := s.gzChunks[idx]
@@ -49,9 +49,9 @@ func (s *GzBuffer) Read(offset int) []byte {
 		}
 		// fmt.Println("append chunk", len(chunk))
 		buf = append(chunk, buf...)
-		goff -= len(chunk)
+		off -= len(chunk)
 	}
-	return buf[offset-goff:]
+	return buf[offset-off:]
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
@@ -73,24 +73,22 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 
 func (s *GzBuffer) Trim(offset int) {
 	s.mu.Lock()
-	buf := s.Read(offset)
-	s.buf = buf
+	s.buf = s.Read(offset)
+	s.offset = 0
 	s.gzChunks = make([]bytes.Buffer, 0)
-	s.gzOffset = 0
 	s.mu.Unlock()
 }
 
 func (s *GzBuffer) Len() int {
-	return s.gzOffset + len(s.buf)
+	return s.offset + len(s.buf)
 }
 
 func (s *GzBuffer) Finish() {
-	s.mu.Lock()
 	s.compress(0)
-	s.mu.Unlock()
 }
 
 func (s *GzBuffer) compress(minSize int) {
+	s.mu.Lock()
 	// fmt.Println("compress", minSize)
 	for len(s.buf) > minSize {
 		size := len(s.buf) - minSize
@@ -112,10 +110,11 @@ func (s *GzBuffer) compress(minSize int) {
 		}
 
 		s.buf = s.buf[size:]
+		s.offset += size
 		// fmt.Println("add chunk", b.Len(), size)
 		s.gzChunks = append(s.gzChunks, b)
-		s.gzOffset += size
 	}
+	s.mu.Unlock()
 }
 
 func NewGzBuffer() *GzBuffer {
