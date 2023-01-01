@@ -21,10 +21,10 @@ type GzBuffer struct {
 func (s *GzBuffer) Append(data []byte) {
 	s.mu.Lock()
 	s.buf = append(s.buf, data...)
-	s.mu.Unlock()
 	if len(s.buf) > ChunkSize+UncompressSize {
 		s.compress(UncompressSize)
 	}
+	s.mu.Unlock()
 }
 
 func (s *GzBuffer) Read(offset int) []byte {
@@ -85,7 +85,9 @@ func (s *GzBuffer) Len() int {
 }
 
 func (s *GzBuffer) Finish() {
+	s.mu.Lock()
 	s.compress(0)
+	s.mu.Unlock()
 }
 
 func (s *GzBuffer) compress(minSize int) {
@@ -109,12 +111,10 @@ func (s *GzBuffer) compress(minSize int) {
 			break
 		}
 
-		s.mu.Lock()
 		s.buf = s.buf[size:]
 		// fmt.Println("add chunk", b.Len(), size)
 		s.gzChunks = append(s.gzChunks, b)
 		s.gzOffset += size
-		s.mu.Unlock()
 	}
 }
 
