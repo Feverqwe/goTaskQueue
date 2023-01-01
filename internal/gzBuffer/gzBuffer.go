@@ -21,14 +21,14 @@ type GzBuffer struct {
 func (s *GzBuffer) Append(data []byte) {
 	s.mu.Lock()
 	s.buf = append(s.buf, data...)
-	s.mu.Unlock()
 	if len(s.buf) > ChunkSize+UncompressSize {
-		s.compress(UncompressSize)
+		s.compress(ChunkSize)
 	}
+	s.mu.Unlock()
 }
 
 func (s *GzBuffer) Read(offset int) []byte {
-	// fmt.Println("read", offset)
+	// fmt.Println("read", offset, s.offset)
 	buf := s.buf
 	off := s.offset
 	i := len(s.gzChunks) - 1
@@ -84,37 +84,38 @@ func (s *GzBuffer) Len() int {
 }
 
 func (s *GzBuffer) Finish() {
-	s.compress(0)
+	// fmt.Println("finish")
+	size := len(s.buf)
+	if size > 0 {
+		s.mu.Lock()
+		s.compress(size)
+		s.mu.Unlock()
+	}
 }
 
-func (s *GzBuffer) compress(minSize int) {
-	s.mu.Lock()
-	// fmt.Println("compress", minSize)
-	for len(s.buf) > minSize {
-		size := len(s.buf) - minSize
-		if size > ChunkSize {
-			size = ChunkSize
-		}
-
-		chunk := s.buf[0:size]
-
-		var b bytes.Buffer
-		gz := gzip.NewWriter(&b)
-		if _, err := gz.Write(chunk); err != nil {
-			fmt.Println("gz.Write error", err)
-			break
-		}
-		if err := gz.Close(); err != nil {
-			fmt.Println("gz.Close error", err)
-			break
-		}
-
+func (s *GzBuffer) compress(size int) {
+	chunk, err := compress(s.buf[0:size])
+	if err != nil {
+		fmt.Println("Compress error", err)
+	} else {
+		s.gzChunks = append(s.gzChunks, chunk)
 		s.buf = s.buf[size:]
 		s.offset += size
-		// fmt.Println("add chunk", b.Len(), size)
-		s.gzChunks = append(s.gzChunks, b)
 	}
-	s.mu.Unlock()
+}
+
+func compress(chunk []byte) (bytes.Buffer, error) {
+	// fmt.Println("compress")
+	var b bytes.Buffer
+	gz := gzip.NewWriter(&b)
+	if _, err := gz.Write(chunk); err != nil {
+		return b, err
+	}
+	if err := gz.Close(); err != nil {
+		return b, err
+	}
+
+	return b, nil
 }
 
 func NewGzBuffer() *GzBuffer {
