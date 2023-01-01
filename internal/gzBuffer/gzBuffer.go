@@ -72,8 +72,8 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 }
 
 func (s *GzBuffer) Trim(offset int) {
-	buf := s.Read(offset)
 	s.mu.Lock()
+	buf := s.Read(offset)
 	s.buf = buf
 	s.gzChunks = make([]bytes.Buffer, 0)
 	s.gzOffset = 0
