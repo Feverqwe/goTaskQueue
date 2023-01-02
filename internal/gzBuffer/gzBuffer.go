@@ -15,16 +15,19 @@ type GzBuffer struct {
 	buf      []byte
 	offset   int
 	mu       sync.Mutex
+	tmu      sync.Mutex
 	gzChunks []bytes.Buffer
+	ch       chan int
+	finished bool
 }
 
 func (s *GzBuffer) Append(data []byte) {
 	s.mu.Lock()
 	s.buf = append(s.buf, data...)
-	if len(s.buf) > ChunkSize+UncompressSize {
-		s.compress(ChunkSize)
-	}
 	s.mu.Unlock()
+	if len(s.ch) == 0 {
+		s.ch <- 1
+	}
 }
 
 func (s *GzBuffer) Read(offset int) []byte {
@@ -72,11 +75,13 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 }
 
 func (s *GzBuffer) Trim(offset int) {
+	s.tmu.Lock()
 	s.mu.Lock()
 	s.buf = s.Read(offset)
 	s.offset = 0
 	s.gzChunks = make([]bytes.Buffer, 0)
 	s.mu.Unlock()
+	s.tmu.Unlock()
 }
 
 func (s *GzBuffer) Len() int {
@@ -85,23 +90,25 @@ func (s *GzBuffer) Len() int {
 
 func (s *GzBuffer) Finish() {
 	// fmt.Println("finish")
-	size := len(s.buf)
-	if size > 0 {
-		s.mu.Lock()
-		s.compress(size)
-		s.mu.Unlock()
+	s.finished = true
+	if len(s.ch) == 0 {
+		s.ch <- 1
 	}
 }
 
 func (s *GzBuffer) compress(size int) {
+	s.tmu.Lock()
 	chunk, err := compress(s.buf[0:size])
 	if err != nil {
 		fmt.Println("Compress error", err)
 	} else {
+		s.mu.Lock()
 		s.gzChunks = append(s.gzChunks, chunk)
 		s.buf = s.buf[size:]
 		s.offset += size
+		s.mu.Unlock()
 	}
+	s.tmu.Unlock()
 }
 
 func compress(chunk []byte) (bytes.Buffer, error) {
@@ -114,11 +121,34 @@ func compress(chunk []byte) (bytes.Buffer, error) {
 	if err := gz.Close(); err != nil {
 		return b, err
 	}
-
 	return b, nil
 }
 
 func NewGzBuffer() *GzBuffer {
-	gzb := GzBuffer{}
+	gzb := GzBuffer{
+		ch: make(chan int, 1),
+	}
+
+	go func() {
+		for {
+			<-gzb.ch
+			finished := gzb.finished
+			size := 0
+			if finished {
+				size = len(gzb.buf)
+			} else {
+				if len(gzb.buf) > ChunkSize+UncompressSize {
+					size = ChunkSize
+				}
+			}
+			if size > 0 {
+				gzb.compress(size)
+			}
+			if finished {
+				break
+			}
+		}
+	}()
+
 	return &gzb
 }
