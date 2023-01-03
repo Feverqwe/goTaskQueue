@@ -53,11 +53,17 @@ func (s *GzBuffer) Read(offset int) []byte {
 			var bytes int
 			bytes, err = r.Read(data)
 			if bytes > 0 {
-				chunk = append(chunk, data[0:bytes]...)
-				// fmt.Println("chunk", len(chunk))
-				if len(chunk) > chunkSize {
-					// fmt.Println("Trim chunk", idx, len(chunk), len(chunk)-chunkSize)
-					chunk = chunk[len(chunk)-chunkSize:]
+				if len(chunk)+bytes > chunkSize {
+					if bytes > chunkSize {
+						// fmt.Println("r.Read replace chunk", bytes)
+						chunk = data[bytes-chunkSize : bytes]
+					} else {
+						// fmt.Println("r.Read cut left and add", len(chunk), bytes)
+						chunk = append(chunk[len(chunk)-(chunkSize-bytes):], data[0:bytes]...)
+					}
+				} else {
+					// fmt.Println("r.Read append", bytes)
+					chunk = append(chunk, data[0:bytes]...)
 				}
 			}
 			if err != nil {
@@ -71,6 +77,7 @@ func (s *GzBuffer) Read(offset int) []byte {
 			fmt.Println("r.Read chunk error", idx, err)
 			break
 		}
+		// fmt.Println("Prepand chunk", len(chunk))
 		buf = append(chunk, buf...)
 		off -= len(chunk)
 	}
