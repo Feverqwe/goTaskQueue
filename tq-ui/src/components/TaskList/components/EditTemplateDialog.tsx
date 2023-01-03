@@ -206,7 +206,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
           )}
           <FormControlLabel
             sx={{my: 1}}
-            label="Only combined output"
+            label="Combined output"
             control={
               <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
             }

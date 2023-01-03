@@ -130,7 +130,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
             )}
             <FormControlLabel
               sx={{my: 1}}
-              label="Only combined output"
+              label="Combined output"
               control={
                 <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
               }
