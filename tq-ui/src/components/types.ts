@@ -23,6 +23,7 @@ export interface Task {
   startedAt: string;
   finishedAt: string;
   isPty: boolean;
+  isOnlyCombined: boolean;
   links: TaskLink[];
 }
 

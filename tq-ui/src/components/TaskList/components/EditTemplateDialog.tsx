@@ -28,7 +28,7 @@ type Variable = Template['variables'][number];
 const variableIdMap = new WeakMap<Variable, string>();
 
 const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
-  const {name, command, label, isPty} = template;
+  const {name, command, label, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
   const refCommand = useRef<HTMLInputElement>(null);
@@ -36,6 +36,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
   const refLabel = useRef<HTMLInputElement>(null);
   const refName = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
+  const refOnlyCombined = useRef<HTMLInputElement>(null);
 
   useMemo(() => {
     variables.forEach((variable) => {
@@ -130,6 +131,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
     const template: Template = {
       command: refCommand.current?.value || '',
       isPty: refPty.current?.checked || false,
+      isOnlyCombined: refOnlyCombined.current?.checked || false,
       label: refLabel.current?.value || '',
       name: refName.current?.value || '',
       variables: variables.map((item, index) => {
@@ -202,6 +204,13 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
               }
             />
           )}
+          <FormControlLabel
+            sx={{my: 1}}
+            label="Only combined output"
+            control={
+              <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
+            }
+          />
           <TextField
             sx={{my: 1}}
             size="small"

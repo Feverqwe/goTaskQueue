@@ -37,7 +37,7 @@ export const api = {
   task: action<TaskId, Task>({
     path: '/api/task',
   }),
-  add: action<{command: string, label: string, isPty: boolean}, Task>({
+  add: action<{command: string, label: string, isPty: boolean, isOnlyCombined: boolean}, Task>({
     method: 'POST',
     path: '/api/add',
   }),

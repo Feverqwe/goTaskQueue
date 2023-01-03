@@ -48,6 +48,7 @@ type Task struct {
 	StartedAt      time.Time          `json:"startedAt"`
 	FinishedAt     time.Time          `json:"finishedAt"`
 	IsPty          bool               `json:"isPty"`
+	IsOnlyCombined bool               `json:"isOnlyCombined"`
 	mu             sync.Mutex
 	combinedMu     sync.Mutex
 	qCh            []chan int
@@ -160,7 +161,10 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 
 	for _, pT := range pipes {
 		var pipe io.ReadCloser
-		buffer := gzbuffer.NewGzBuffer()
+		var buffer *gzbuffer.GzBuffer
+		if !s.IsOnlyCombined {
+			buffer = gzbuffer.NewGzBuffer()
+		}
 		if pT == Err {
 			pipe, _ = process.StderrPipe()
 			s.Stderr = buffer
@@ -176,7 +180,9 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 				if err == io.EOF || err != nil {
 					break
 				}
-				buffer.Append(chunk[0:bytes])
+				if buffer != nil {
+					buffer.Append(chunk[0:bytes])
+				}
 
 				s.combinedMu.Lock()
 				output.Append(chunk[0:bytes])
@@ -386,14 +392,15 @@ func (c *closeOnce) close() {
 	c.err = c.File.Close()
 }
 
-func NewTask(id string, command string, label string, isPty bool) *Task {
+func NewTask(id string, command string, label string, isPty bool, isOnlyCombined bool) *Task {
 	task := Task{
-		Id:        id,
-		Label:     label,
-		Command:   command,
-		CreatedAt: time.Now(),
-		IsPty:     isPty,
-		Links:     make([]*TaskLink, 0),
+		Id:             id,
+		Label:          label,
+		Command:        command,
+		CreatedAt:      time.Now(),
+		IsPty:          isPty,
+		IsOnlyCombined: isOnlyCombined,
+		Links:          make([]*TaskLink, 0),
 	}
 
 	task.syncStatus()

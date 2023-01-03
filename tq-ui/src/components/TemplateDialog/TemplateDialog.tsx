@@ -17,18 +17,19 @@ import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
   onClose: () => void;
-  onSubmit: (run: boolean, command: string, label: string, isPty: boolean) => Promise<void>;
+  onSubmit: (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => Promise<void>;
   template: Template;
   isNew?: boolean;
 }
 
 const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
-  const {name, variables, command, label, isPty} = template;
+  const {name, variables, command, label, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [isExtended, setExtended] = useState(() => isNew);
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
+  const refOnlyCombined = useRef<HTMLInputElement>(null);
   const refMap = useMemo(() => new Map(), []);
   variables.forEach(({value}) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -69,20 +70,21 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
     });
 
     const isPty = refPty.current?.checked || false;
+    const isOnlyCombined = refOnlyCombined.current?.checked || false;
 
-    return {command: commandResult, label: labelResult, isPty};
+    return {command: commandResult, label: labelResult, isPty, isOnlyCombined};
   }, [refMap]);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
-    const {command, label, isPty} = getCommand();
-    await onSubmit(true, command, label, isPty);
+    const {command, label, isPty, isOnlyCombined} = getCommand();
+    await onSubmit(true, command, label, isPty, isOnlyCombined);
     onClose();
   }, [onSubmit, onClose, getCommand]);
 
   const handleAdd = useCallback(async () => {
-    const {command, label, isPty} = getCommand();
-    await onSubmit(false, command, label, isPty);
+    const {command, label, isPty, isOnlyCombined} = getCommand();
+    await onSubmit(false, command, label, isPty, isOnlyCombined);
     onClose();
   }, [onClose, onSubmit, getCommand]);
 
@@ -126,6 +128,13 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
                 }
               />
             )}
+            <FormControlLabel
+              sx={{my: 1}}
+              label="Only combined output"
+              control={
+                <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
+              }
+            />
             <TextField
               size="small"
               sx={{my: 1}}

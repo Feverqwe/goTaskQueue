@@ -11,6 +11,7 @@ export interface Template {
   }[],
   command: string,
   isPty?: boolean,
+  isOnlyCombined?: boolean,
 }
 
 export interface RootStore {

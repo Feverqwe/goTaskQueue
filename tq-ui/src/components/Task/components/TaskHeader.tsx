@@ -27,7 +27,7 @@ interface TaskInfoProps {
 
 const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onToggleInfo, onUpdate}) => {
   const navigate = useNavigate();
-  const {id, state, label, command, error} = task;
+  const {id, state, label, command, error, isOnlyCombined} = task;
   const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | Template>(null);
   const [showMenu, setShowMenu] = React.useState(false);
 
@@ -59,13 +59,14 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
   }, [id, handleCloseMenu]);
 
   const handleRestart = useCallback(async () => {
-    const {label, command, isPty} = task;
+    const {label, command, isPty, isOnlyCombined} = task;
     setRestartDialogTemplate({
       name: 'New task',
       label,
       variables: [],
       command,
       isPty,
+      isOnlyCombined,
     });
   }, [task]);
 
@@ -73,12 +74,13 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
     onToggleInfo();
   }, [onToggleInfo]);
 
-  const handleRestartTask = useCallback(async (run: boolean, command: string, label: string, isPty: boolean) => {
+  const handleRestartTask = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
     try {
       const {id} = await api.add({
         command,
         label,
         isPty,
+        isOnlyCombined,
       });
       if (run) {
         await api.taskRun({id});
@@ -164,8 +166,12 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
                   <DialogMenuItem onClick={handleSigint}>SIGINT</DialogMenuItem>
                 )}
                 <Divider />
-                <DialogMenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank">stdout.log</DialogMenuItem>
-                <DialogMenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank">stderr.log</DialogMenuItem>
+                {!isOnlyCombined && (
+                  <>
+                    <DialogMenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank">stdout.log</DialogMenuItem>
+                    <DialogMenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank">stderr.log</DialogMenuItem>
+                  </>
+                )}
                 <DialogMenuItem component="a" href={`/api/task/combined?id=${id}`} target="_blank">combined.log</DialogMenuItem>
               </DialogMenu>
             </Box>

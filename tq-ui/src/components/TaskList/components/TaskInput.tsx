@@ -21,7 +21,7 @@ enum DialogType {
   Run = 'run',
 }
 
-const NEW_TEMPLATE = {name: 'Run', variables: [], command: '', isPty: false};
+const NEW_TEMPLATE = {name: 'Run', variables: [], command: '', isPty: false, isOnlyCombined: true};
 
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
@@ -31,12 +31,13 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const [dialogProps, setDialogProps] = useState<{template: Template, isNew?: boolean} | null>(null);
   const [dialogType, setDialogType] = useState<null | DialogType>(null);
 
-  const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean) => {
+  const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
     try {
       const {id} = await api.add({
         command,
         label,
         isPty,
+        isOnlyCombined,
       });
       if (run) {
         await api.taskRun({id});
@@ -72,8 +73,8 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
 
   const handleClickTemplate = useCallback((template: Template, as?: boolean) => {
     if (!as && !template.variables.length) {
-      const {command, label = '', isPty = false} = template;
-      handleAdd(true, command, label, isPty);
+      const {command, label = '', isPty = false, isOnlyCombined = false} = template;
+      handleAdd(true, command, label, isPty, isOnlyCombined);
     } else {
       setDialogProps({template});
       setDialogType(DialogType.Run);
