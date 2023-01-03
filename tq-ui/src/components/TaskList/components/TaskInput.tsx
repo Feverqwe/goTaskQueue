@@ -21,7 +21,7 @@ enum DialogType {
   Run = 'run',
 }
 
-const NEW_TEMPLATE = {name: 'Run', variables: [], command: '', isPty: false, isOnlyCombined: true};
+const NEW_TEMPLATE: Template = {name: 'Run', variables: [], command: '', isPty: false, isOnlyCombined: true};
 
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
