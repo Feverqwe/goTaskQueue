@@ -45,12 +45,27 @@ func (s *GzBuffer) Read(offset int) []byte {
 			fmt.Println("gzip.NewReader error", idx, err)
 			break
 		}
-		chunk, err := io.ReadAll(r)
-		if err != nil {
-			fmt.Println("io.ReadAll error", idx, err)
-			break
+		chunkSize := off - offset
+		// fmt.Printf("Need read from %d last %d bytes\n", idx, off-offset)
+		var chunk []byte
+		data := make([]byte, 16*1024)
+		for {
+			bytes, err := r.Read(data)
+			if bytes > 0 {
+				chunk = append(chunk, data[0:bytes]...)
+				// fmt.Println("chunk", len(chunk))
+				if len(chunk) > chunkSize {
+					// fmt.Println("Trim chunk", idx, len(chunk), len(chunk)-chunkSize)
+					chunk = chunk[len(chunk)-chunkSize:]
+				}
+			}
+			if err != nil {
+				if err != io.EOF {
+					fmt.Println("r.Read chunk error", idx, err)
+				}
+				break
+			}
 		}
-		// fmt.Println("append chunk", len(chunk))
 		buf = append(chunk, buf...)
 		off -= len(chunk)
 	}
