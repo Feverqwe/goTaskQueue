@@ -50,7 +50,8 @@ func (s *GzBuffer) Read(offset int) []byte {
 		var chunk []byte
 		data := make([]byte, 16*1024)
 		for {
-			bytes, err := r.Read(data)
+			var bytes int
+			bytes, err = r.Read(data)
 			if bytes > 0 {
 				chunk = append(chunk, data[0:bytes]...)
 				// fmt.Println("chunk", len(chunk))
@@ -60,11 +61,15 @@ func (s *GzBuffer) Read(offset int) []byte {
 				}
 			}
 			if err != nil {
-				if err != io.EOF {
-					fmt.Println("r.Read chunk error", idx, err)
+				if err == io.EOF {
+					err = nil
 				}
 				break
 			}
+		}
+		if err != nil {
+			fmt.Println("r.Read chunk error", idx, err)
+			break
 		}
 		buf = append(chunk, buf...)
 		off -= len(chunk)
