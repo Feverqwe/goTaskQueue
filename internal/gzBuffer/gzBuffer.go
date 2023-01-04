@@ -144,35 +144,29 @@ func compress(chunk []byte) (bytes.Buffer, error) {
 	return b, nil
 }
 
-func readLastBytes(r *gzip.Reader, lastLen int) ([]byte, error) {
+func readLastBytes(r *gzip.Reader, maxLen int) ([]byte, error) {
 	var err error
 	var fragLen int
-	var buf []byte
-	frag := make([]byte, 16*1024)
+	frag := make([]byte, 0, 512)
 	for {
-		fragLen, err = r.Read(frag)
-		if fragLen > 0 {
-			bufLen := len(buf)
-			if fragLen >= lastLen {
-				// fmt.Println("r.Read replace buf", fragLen)
-				buf = frag[fragLen-lastLen : fragLen]
-			} else if bufLen+fragLen >= lastLen {
-				// fmt.Println("r.Read cut left and add", bufLen, fragLen)
-				leftLen := lastLen - fragLen
-				buf = append(buf[bufLen-leftLen:bufLen], frag[0:fragLen]...)
-			} else {
-				// fmt.Println("r.Read append", fragLen)
-				buf = append(buf, frag[0:fragLen]...)
-			}
+		if len(frag) == cap(frag) {
+			// Add more capacity (let append pick how much).
+			frag = append(frag, 0)[:len(frag)]
 		}
+		fragLen, err = r.Read(frag[len(frag):cap(frag)])
+		newSize := len(frag) + fragLen
+		start := 0
+		if newSize > maxLen {
+			start = newSize - maxLen
+		}
+		frag = frag[start:newSize]
 		if err != nil {
 			if err == io.EOF {
 				err = nil
 			}
-			break
+			return frag, err
 		}
 	}
-	return buf, err
 }
 
 func NewGzBuffer() *GzBuffer {
