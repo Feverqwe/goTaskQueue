@@ -95,18 +95,20 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 		chunk := make([]byte, 16*1024)
 		for {
 			bytes, err := f.Read(chunk)
+			if bytes > 0 {
+				output.Append(chunk[0:bytes])
+
+				if output.Len() > PtyLogSize {
+					off := output.Len() - PtyLogSize
+					output.Trim(off)
+					s.combinedOffset += off
+				}
+
+				go s.pushChanges(1)
+			}
 			if err == io.EOF || err != nil {
 				break
 			}
-			output.Append(chunk[0:bytes])
-
-			if output.Len() > PtyLogSize {
-				off := output.Len() - PtyLogSize
-				output.Trim(off)
-				s.combinedOffset += off
-			}
-
-			go s.pushChanges(1)
 		}
 	}()
 
@@ -177,18 +179,20 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 			chunk := make([]byte, 16*1024)
 			for {
 				bytes, err := pipe.Read(chunk)
+				if bytes > 0 {
+					if buffer != nil {
+						buffer.Append(chunk[0:bytes])
+					}
+
+					s.combinedMu.Lock()
+					output.Append(chunk[0:bytes])
+					s.combinedMu.Unlock()
+
+					go s.pushChanges(1)
+				}
 				if err == io.EOF || err != nil {
 					break
 				}
-				if buffer != nil {
-					buffer.Append(chunk[0:bytes])
-				}
-
-				s.combinedMu.Lock()
-				output.Append(chunk[0:bytes])
-				s.combinedMu.Unlock()
-
-				go s.pushChanges(1)
 			}
 		}()
 	}
