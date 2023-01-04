@@ -45,36 +45,10 @@ func (s *GzBuffer) Read(offset int) []byte {
 			fmt.Println("gzip.NewReader error", idx, err)
 			break
 		}
-		chunkSize := off - offset
-		// fmt.Printf("Need read from %d last %d bytes\n", idx, off-offset)
-		var chunk []byte
-		data := make([]byte, 16*1024)
-		for {
-			var bytes int
-			bytes, err = r.Read(data)
-			if bytes > 0 {
-				if len(chunk)+bytes > chunkSize {
-					if bytes > chunkSize {
-						// fmt.Println("r.Read replace chunk", bytes)
-						chunk = data[bytes-chunkSize : bytes]
-					} else {
-						// fmt.Println("r.Read cut left and add", len(chunk), bytes)
-						chunk = append(chunk[len(chunk)-(chunkSize-bytes):], data[0:bytes]...)
-					}
-				} else {
-					// fmt.Println("r.Read append", bytes)
-					chunk = append(chunk, data[0:bytes]...)
-				}
-			}
-			if err != nil {
-				if err == io.EOF {
-					err = nil
-				}
-				break
-			}
-		}
+		// fmt.Println("readLastBytes", idx, off-offset)
+		chunk, err := readLastBytes(r, off-offset)
 		if err != nil {
-			fmt.Println("r.Read chunk error", idx, err)
+			fmt.Println("readLastBytes error", idx, err)
 			break
 		}
 		// fmt.Println("Prepand chunk", len(chunk))
@@ -168,6 +142,37 @@ func compress(chunk []byte) (bytes.Buffer, error) {
 		return b, err
 	}
 	return b, nil
+}
+
+func readLastBytes(r *gzip.Reader, lastLen int) ([]byte, error) {
+	var err error
+	var fragLen int
+	var buf []byte
+	frag := make([]byte, 16*1024)
+	for {
+		fragLen, err = r.Read(frag)
+		if fragLen > 0 {
+			bufLen := len(buf)
+			if fragLen >= lastLen {
+				// fmt.Println("r.Read replace buf", fragLen)
+				buf = frag[fragLen-lastLen : fragLen]
+			} else if bufLen+fragLen >= lastLen {
+				// fmt.Println("r.Read cut left and add", bufLen, fragLen)
+				leftLen := lastLen - fragLen
+				buf = append(buf[bufLen-leftLen:bufLen], frag[0:fragLen]...)
+			} else {
+				// fmt.Println("r.Read append", fragLen)
+				buf = append(buf, frag[0:fragLen]...)
+			}
+		}
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
+			break
+		}
+	}
+	return buf, err
 }
 
 func NewGzBuffer() *GzBuffer {
