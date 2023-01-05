@@ -97,14 +97,18 @@ func (s *GzBuffer) Finish() {
 func (s *GzBuffer) compress() error {
 	s.tmu.Lock()
 	defer s.tmu.Unlock()
-	zw, err := flate.NewWriter(nil, flate.BestCompression)
-	if err != nil {
-		return err
-	}
+	var zw *flate.Writer
 	for {
 		size := s.getCompressSize()
 		if size == 0 {
 			break
+		}
+		if zw == nil {
+			var err error
+			zw, err = flate.NewWriter(nil, flate.BestCompression)
+			if err != nil {
+				return err
+			}
 		}
 		zc, err := compress(zw, s.buf[0:size])
 		if err != nil {
