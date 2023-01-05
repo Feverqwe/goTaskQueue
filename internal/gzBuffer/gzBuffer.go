@@ -35,13 +35,14 @@ func (s *GzBuffer) Read(offset int) []byte {
 	buf := s.buf
 	off := s.offset
 	i := len(s.zChunks) - 1
+	zcR := bytes.NewReader(nil)
 	for off > offset && i >= 0 {
 		idx := i
 		i -= 1
 		zChunk := s.zChunks[idx]
-		zChunkR := bytes.NewReader(zChunk)
+		zcR.Reset(zChunk)
 		// fmt.Println("read chunk idx", idx, ch.Len())
-		zr := flate.NewReader(zChunkR)
+		zr := flate.NewReader(zcR)
 		// fmt.Println("readLastBytes", idx, off-offset)
 		chunk, err := readLastBytes(zr, off-offset)
 		if err != nil {
@@ -56,9 +57,10 @@ func (s *GzBuffer) Read(offset int) []byte {
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
+	zcR := bytes.NewReader(nil)
 	for _, zChunk := range s.zChunks {
-		zChunkR := bytes.NewReader(zChunk)
-		zr := flate.NewReader(zChunkR)
+		zcR.Reset(zChunk)
+		zr := flate.NewReader(zcR)
 		_, err := io.Copy(w, zr)
 		if err != nil {
 			return err

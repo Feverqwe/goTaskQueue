@@ -195,6 +195,8 @@ func handleWww(router *internal.Router, config *cfg.Config) {
 		}
 	}
 
+	reader := bytes.NewReader(nil)
+
 	type RootStore struct {
 		Templates      []interface{} `json:"templates"`
 		IsPtySupported bool          `json:"isPtySupported"`
@@ -241,7 +243,7 @@ func handleWww(router *internal.Router, config *cfg.Config) {
 			content = []byte(body)
 		}
 
-		reader := bytes.NewReader(content)
+		reader.Reset(content)
 		name := path.Base(assetPath)
 		http.ServeContent(w, r, name, mTime, reader)
 	}))

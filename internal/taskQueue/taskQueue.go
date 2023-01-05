@@ -96,8 +96,9 @@ func (s *Queue) Save() {
 }
 
 func (s *Queue) WriteQueue() error {
+	reader := bytes.NewReader(nil)
 	if data, err := json.Marshal(s); err == nil {
-		reader := bytes.NewReader(data)
+		reader.Reset(data)
 		path := getQueuePath()
 		err = atomic.WriteFile(path, reader)
 		return err
