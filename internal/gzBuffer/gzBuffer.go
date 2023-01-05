@@ -2,7 +2,7 @@ package gzbuffer
 
 import (
 	"bytes"
-	"compress/gzip"
+	"compress/flate"
 	"fmt"
 	"io"
 	"sync"
@@ -15,7 +15,7 @@ type GzBuffer struct {
 	offset     int
 	mu         sync.Mutex
 	tmu        sync.Mutex
-	gzChunks   [][]byte
+	zChunks    [][]byte
 	ch         chan int
 	finished   bool
 	maxBufSize int
@@ -34,20 +34,16 @@ func (s *GzBuffer) Read(offset int) []byte {
 	// fmt.Println("read", offset, s.offset)
 	buf := s.buf
 	off := s.offset
-	i := len(s.gzChunks) - 1
+	i := len(s.zChunks) - 1
 	for off > offset && i >= 0 {
 		idx := i
 		i -= 1
-		ch := s.gzChunks[idx]
-		chR := bytes.NewReader(ch)
+		zChunk := s.zChunks[idx]
+		zChunkR := bytes.NewReader(zChunk)
 		// fmt.Println("read chunk idx", idx, ch.Len())
-		r, err := gzip.NewReader(chR)
-		if err != nil {
-			fmt.Println("gzip.NewReader error", idx, err)
-			break
-		}
+		zr := flate.NewReader(zChunkR)
 		// fmt.Println("readLastBytes", idx, off-offset)
-		chunk, err := readLastBytes(r, off-offset)
+		chunk, err := readLastBytes(zr, off-offset)
 		if err != nil {
 			fmt.Println("readLastBytes error", idx, err)
 			break
@@ -60,13 +56,10 @@ func (s *GzBuffer) Read(offset int) []byte {
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
-	for _, ch := range s.gzChunks {
-		chR := bytes.NewReader(ch)
-		r, err := gzip.NewReader(chR)
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(w, r)
+	for _, zChunk := range s.zChunks {
+		zChunkR := bytes.NewReader(zChunk)
+		zr := flate.NewReader(zChunkR)
+		_, err := io.Copy(w, zr)
 		if err != nil {
 			return err
 		}
@@ -84,7 +77,7 @@ func (s *GzBuffer) Trim(offset int) {
 	defer s.tmu.Unlock()
 	s.buf = s.Read(offset)
 	s.offset = 0
-	s.gzChunks = make([][]byte, 0)
+	s.zChunks = make([][]byte, 0)
 }
 
 func (s *GzBuffer) Len() int {
@@ -102,17 +95,21 @@ func (s *GzBuffer) Finish() {
 func (s *GzBuffer) compress() error {
 	s.tmu.Lock()
 	defer s.tmu.Unlock()
+	zw, err := flate.NewWriter(nil, flate.BestCompression)
+	if err != nil {
+		return err
+	}
 	for {
 		size := s.getCompressSize()
 		if size == 0 {
 			break
 		}
-		ch, err := compress(s.buf[0:size])
+		zChunk, err := compress(zw, s.buf[0:size])
 		if err != nil {
 			return err
 		}
 		s.mu.Lock()
-		s.gzChunks = append(s.gzChunks, ch)
+		s.zChunks = append(s.zChunks, zChunk)
 		s.buf = s.buf[size:]
 		s.offset += size
 		s.mu.Unlock()
@@ -133,20 +130,20 @@ func (s *GzBuffer) getCompressSize() int {
 	return size
 }
 
-func compress(chunk []byte) ([]byte, error) {
+func compress(zw *flate.Writer, chunk []byte) ([]byte, error) {
 	// fmt.Println("compress")
 	var b bytes.Buffer
-	gz := gzip.NewWriter(&b)
-	if _, err := gz.Write(chunk); err != nil {
+	zw.Reset(&b)
+	if _, err := zw.Write(chunk); err != nil {
 		return nil, err
 	}
-	if err := gz.Close(); err != nil {
+	if err := zw.Close(); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
 }
 
-func readLastBytes(r *gzip.Reader, maxLen int) ([]byte, error) {
+func readLastBytes(r io.ReadCloser, maxLen int) ([]byte, error) {
 	var err error
 	var fragLen int
 	frag := make([]byte, 0, 512)
