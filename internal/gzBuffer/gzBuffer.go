@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-const ChunkSize = 1 * 1024 * 1024
+const ChunkSize = 256 * 1024
 
 type GzBuffer struct {
 	buf        []byte
