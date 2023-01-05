@@ -107,12 +107,12 @@ func (s *GzBuffer) compress() error {
 		if size == 0 {
 			break
 		}
-		chunk, err := compress(s.buf[0:size])
+		ch, err := compress(s.buf[0:size])
 		if err != nil {
 			return err
 		}
 		s.mu.Lock()
-		s.gzChunks = append(s.gzChunks, chunk)
+		s.gzChunks = append(s.gzChunks, ch)
 		s.buf = s.buf[size:]
 		s.offset += size
 		s.mu.Unlock()
