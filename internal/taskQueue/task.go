@@ -15,6 +15,7 @@ import (
 )
 
 const PtyLogSize = 4 * 1024 * 1024
+const CombinedBufSize = 128 * 1024
 
 type TaskLink struct {
 	Name  string `json:"name"`
@@ -85,7 +86,7 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 
 	s.pty = f
 
-	output := gzbuffer.NewGzBuffer()
+	output := gzbuffer.NewGzBuffer(CombinedBufSize)
 	s.Combined = output
 	s.Stdout = output
 
@@ -155,7 +156,7 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 
 	pipes := []string{Out, Err}
 
-	output := gzbuffer.NewGzBuffer()
+	output := gzbuffer.NewGzBuffer(CombinedBufSize)
 	s.Combined = output
 
 	stdin, _ := process.StdinPipe()
@@ -165,7 +166,7 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 		var pipe io.ReadCloser
 		var buffer *gzbuffer.GzBuffer
 		if !s.IsOnlyCombined {
-			buffer = gzbuffer.NewGzBuffer()
+			buffer = gzbuffer.NewGzBuffer(0)
 		}
 		if pT == Err {
 			pipe, _ = process.StderrPipe()
@@ -242,8 +243,8 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 func (s *Task) ReadCombined(offset int) (int, []byte) {
 	if offset == -1 {
 		offset = s.combinedOffset
-		if s.Combined.Len() > 100*1024 {
-			offset += s.Combined.Len() - 100*1024
+		if s.Combined.Len() > CombinedBufSize {
+			offset += s.Combined.Len() - CombinedBufSize
 		}
 	}
 	if offset < s.combinedOffset {

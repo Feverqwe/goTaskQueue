@@ -8,17 +8,17 @@ import (
 	"sync"
 )
 
-const ChunkSize = 4 * 1024 * 1024
-const UncompressSize = 1 * 1024 * 1024
+const ChunkSize = 1 * 1024 * 1024
 
 type GzBuffer struct {
-	buf      []byte
-	offset   int
-	mu       sync.Mutex
-	tmu      sync.Mutex
-	gzChunks []bytes.Buffer
-	ch       chan int
-	finished bool
+	buf        []byte
+	offset     int
+	mu         sync.Mutex
+	tmu        sync.Mutex
+	gzChunks   []bytes.Buffer
+	ch         chan int
+	finished   bool
+	maxBufSize int
 }
 
 func (s *GzBuffer) Append(data []byte) {
@@ -122,7 +122,7 @@ func (s *GzBuffer) getCompressSize() int {
 	size := 0
 	if s.finished {
 		size = len(s.buf)
-	} else if len(s.buf) > ChunkSize+UncompressSize {
+	} else if len(s.buf) > ChunkSize+s.maxBufSize {
 		size = ChunkSize
 	}
 	if size > ChunkSize {
@@ -169,9 +169,10 @@ func readLastBytes(r *gzip.Reader, maxLen int) ([]byte, error) {
 	}
 }
 
-func NewGzBuffer() *GzBuffer {
+func NewGzBuffer(maxBufSize int) *GzBuffer {
 	gzb := GzBuffer{
-		ch: make(chan int, 1),
+		ch:         make(chan int, 1),
+		maxBufSize: maxBufSize,
 	}
 
 	go func() {
