@@ -15,7 +15,7 @@ require (
 )
 
 require (
-	github.com/creack/pty v1.1.18 // indirect
+	github.com/creack/pty v1.1.18
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 )
 
