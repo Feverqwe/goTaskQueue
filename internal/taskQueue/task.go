@@ -53,8 +53,7 @@ type Task struct {
 	mu             sync.Mutex
 	combinedMu     sync.Mutex
 	qCh            []chan int
-	stdin          io.WriteCloser
-	pty            *os.File
+	stdin          io.Writer
 	combinedOffset int
 	Links          []*TaskLink `json:"links"`
 	queue          *Queue
@@ -84,13 +83,11 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 		return err
 	}
 
-	s.pty = f
+	s.stdin = f
 
 	output := gzbuffer.NewGzBuffer(CombinedBufSize)
 	s.Combined = output
 	s.Stdout = output
-
-	s.stdin = &closeOnce{File: f}
 
 	go func() {
 		chunk := make([]byte, 16*1024)
@@ -276,7 +273,10 @@ func (s *Task) Resize(screenSize *PtyScreenSize) error {
 		X:    uint16(screenSize.X),
 		Y:    uint16(screenSize.Y),
 	}
-	return pty.Setsize(s.pty, &ws)
+	if f, ok := s.stdin.(*os.File); ok {
+		return pty.Setsize(f, &ws)
+	}
+	return nil
 }
 
 func (s *Task) Wait() int {
@@ -379,22 +379,6 @@ func (s *Task) Init(queue *Queue) {
 func (s *Task) SetLabel(label string) {
 	s.Label = label
 	s.queue.Save()
-}
-
-type closeOnce struct {
-	*os.File
-
-	once sync.Once
-	err  error
-}
-
-func (c *closeOnce) Close() error {
-	c.once.Do(c.close)
-	return c.err
-}
-
-func (c *closeOnce) close() {
-	c.err = c.File.Close()
 }
 
 func NewTask(id string, command string, label string, isPty bool, isOnlyCombined bool) *Task {
