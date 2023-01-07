@@ -67,8 +67,7 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 	for _, zc := range zChunks {
 		r.Reset(zc)
 		zr := flate.NewReader(r)
-		_, err := io.Copy(w, zr)
-		if err != nil {
+		if _, err := io.Copy(w, zr); err != nil {
 			return err
 		}
 	}
