@@ -34,12 +34,16 @@ func (s *GzBuffer) Read(offset int) []byte {
 	// fmt.Println("read", offset, s.offset)
 	buf := s.buf
 	off := s.offset
-	i := len(s.zChunks) - 1
-	zcR := bytes.NewReader(nil)
+	zChunks := s.zChunks
+	i := len(zChunks) - 1
+	var zcR *bytes.Reader
 	for off > offset && i >= 0 {
 		idx := i
 		i -= 1
-		zc := s.zChunks[idx]
+		zc := zChunks[idx]
+		if zcR == nil {
+			zcR = bytes.NewReader(nil)
+		}
 		zcR.Reset(zc)
 		// fmt.Println("read chunk idx", idx, ch.Len())
 		zr := flate.NewReader(zcR)
