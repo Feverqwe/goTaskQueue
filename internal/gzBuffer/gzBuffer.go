@@ -14,7 +14,6 @@ type GzBuffer struct {
 	buf        []byte
 	offset     int
 	mu         sync.Mutex
-	tmu        sync.Mutex
 	zChunks    [][]byte
 	ch         chan int
 	finished   bool
@@ -77,19 +76,14 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 	return nil
 }
 
-func (s *GzBuffer) Trim(offset int) error {
-	s.tmu.Lock()
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	defer s.tmu.Unlock()
+func (s *GzBuffer) Slice(offset int) (*GzBuffer, error) {
+	var zbuf *GzBuffer
 	buf, err := s.Read(offset)
-	if err != nil {
-		return err
+	if err == nil {
+		zbuf := NewGzBuffer(s.maxBufSize)
+		zbuf.Write(buf)
 	}
-	s.buf = buf
-	s.offset = 0
-	s.zChunks = make([][]byte, 0)
-	return nil
+	return zbuf, err
 }
 
 func (s *GzBuffer) Len() int {
@@ -105,8 +99,6 @@ func (s *GzBuffer) Finish() {
 }
 
 func (s *GzBuffer) compress() error {
-	s.tmu.Lock()
-	defer s.tmu.Unlock()
 	var zw *flate.Writer
 	for {
 		size := s.getCompressSize()
@@ -185,20 +177,20 @@ func readLastBytes(r io.ReadCloser, maxLen int) ([]byte, error) {
 }
 
 func NewGzBuffer(maxBufSize int) *GzBuffer {
-	gzb := GzBuffer{
+	zbuf := &GzBuffer{
 		ch:         make(chan int, 1),
 		maxBufSize: maxBufSize,
 	}
 
 	go func() {
-		for !gzb.finished {
-			<-gzb.ch
-			err := gzb.compress()
+		for zbuf != nil {
+			<-zbuf.ch
+			err := zbuf.compress()
 			if err != nil {
 				fmt.Println("Compress error", err)
 			}
 		}
 	}()
 
-	return &gzb
+	return zbuf
 }
