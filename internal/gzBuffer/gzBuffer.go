@@ -14,8 +14,8 @@ type GzBuffer struct {
 	buf        []byte
 	offset     int
 	mu         sync.Mutex
+	cmu        sync.Mutex
 	zChunks    [][]byte
-	ch         chan int
 	finished   bool
 	maxBufSize int
 }
@@ -24,9 +24,7 @@ func (s *GzBuffer) Write(data []byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.buf = append(s.buf, data...)
-	if len(s.ch) == 0 {
-		s.ch <- 1
-	}
+	go s.runCompress()
 }
 
 func (s *GzBuffer) Read(offset int) ([]byte, error) {
@@ -80,7 +78,7 @@ func (s *GzBuffer) Slice(offset int) (*GzBuffer, error) {
 	var zbuf *GzBuffer
 	buf, err := s.Read(offset)
 	if err == nil {
-		zbuf := NewGzBuffer(s.maxBufSize)
+		zbuf = NewGzBuffer(s.maxBufSize)
 		zbuf.Write(buf)
 	}
 	return zbuf, err
@@ -93,8 +91,19 @@ func (s *GzBuffer) Len() int {
 func (s *GzBuffer) Finish() {
 	// fmt.Println("finish")
 	s.finished = true
-	if len(s.ch) == 0 {
-		s.ch <- 1
+	go s.runCompress()
+}
+
+func (s *GzBuffer) runCompress() {
+	if s.getCompressSize() == 0 {
+		return
+	}
+	if ok := s.cmu.TryLock(); !ok {
+		return
+	}
+	defer s.cmu.Unlock()
+	if err := s.compress(); err != nil {
+		fmt.Println("Compress error", err)
 	}
 }
 
@@ -178,19 +187,7 @@ func readLastBytes(r io.ReadCloser, maxLen int) ([]byte, error) {
 
 func NewGzBuffer(maxBufSize int) *GzBuffer {
 	zbuf := &GzBuffer{
-		ch:         make(chan int, 1),
 		maxBufSize: maxBufSize,
 	}
-
-	go func() {
-		for zbuf != nil {
-			<-zbuf.ch
-			err := zbuf.compress()
-			if err != nil {
-				fmt.Println("Compress error", err)
-			}
-		}
-	}()
-
 	return zbuf
 }
