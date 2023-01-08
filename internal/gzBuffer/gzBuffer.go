@@ -95,9 +95,6 @@ func (s *GzBuffer) Finish() {
 }
 
 func (s *GzBuffer) runCompress() {
-	if s.getCompressSize() == 0 {
-		return
-	}
 	if ok := s.cmu.TryLock(); !ok {
 		return
 	}
