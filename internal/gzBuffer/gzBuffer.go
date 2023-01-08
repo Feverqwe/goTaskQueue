@@ -24,7 +24,7 @@ func (s *GzBuffer) Write(data []byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.buf = append(s.buf, data...)
-	go s.runCompress()
+	s.runCompress()
 }
 
 func (s *GzBuffer) Read(offset int) ([]byte, error) {
@@ -91,17 +91,22 @@ func (s *GzBuffer) Len() int {
 func (s *GzBuffer) Finish() {
 	// fmt.Println("finish")
 	s.finished = true
-	go s.runCompress()
+	s.runCompress()
 }
 
 func (s *GzBuffer) runCompress() {
+	if s.getCompressSize() == 0 {
+		return
+	}
 	if ok := s.cmu.TryLock(); !ok {
 		return
 	}
-	defer s.cmu.Unlock()
-	if err := s.compress(); err != nil {
-		fmt.Println("Compress error", err)
-	}
+	go func() {
+		defer s.cmu.Unlock()
+		if err := s.compress(); err != nil {
+			fmt.Println("Compress error", err)
+		}
+	}()
 }
 
 func (s *GzBuffer) compress() error {
