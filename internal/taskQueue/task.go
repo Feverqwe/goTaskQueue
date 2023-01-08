@@ -94,12 +94,13 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 		for {
 			bytes, err := f.Read(chunk)
 			if bytes > 0 {
-				output.Append(chunk[0:bytes])
+				output.Write(chunk[0:bytes])
 
 				if output.Len() > PtyLogSize {
 					off := output.Len() - PtyLogSize
-					output.Trim(off)
-					s.combinedOffset += off
+					if err := output.Trim(off); err == nil {
+						s.combinedOffset += off
+					}
 				}
 
 				go s.pushChanges(1)
@@ -179,11 +180,11 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 				bytes, err := pipe.Read(chunk)
 				if bytes > 0 {
 					if buffer != nil {
-						buffer.Append(chunk[0:bytes])
+						buffer.Write(chunk[0:bytes])
 					}
 
 					s.combinedMu.Lock()
-					output.Append(chunk[0:bytes])
+					output.Write(chunk[0:bytes])
 					s.combinedMu.Unlock()
 
 					go s.pushChanges(1)
@@ -237,7 +238,7 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 	return nil
 }
 
-func (s *Task) ReadCombined(offset int) (int, []byte) {
+func (s *Task) ReadCombined(offset int) (int, []byte, error) {
 	if offset == -1 {
 		offset = s.combinedOffset
 		if s.Combined.Len() > CombinedBufSize {
@@ -248,9 +249,12 @@ func (s *Task) ReadCombined(offset int) (int, []byte) {
 		fmt.Println("skip", s.combinedOffset-offset)
 		offset = s.combinedOffset
 	}
-	fragment := s.Combined.Read(offset - s.combinedOffset)
+	fragment, err := s.Combined.Read(offset - s.combinedOffset)
+	if err != nil {
+		return 0, nil, err
+	}
 	offset += len(fragment)
-	return offset, fragment
+	return offset, fragment, nil
 }
 
 func (s *Task) Send(data string) error {

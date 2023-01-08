@@ -21,7 +21,7 @@ type GzBuffer struct {
 	maxBufSize int
 }
 
-func (s *GzBuffer) Append(data []byte) {
+func (s *GzBuffer) Write(data []byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.buf = append(s.buf, data...)
@@ -30,7 +30,7 @@ func (s *GzBuffer) Append(data []byte) {
 	}
 }
 
-func (s *GzBuffer) Read(offset int) []byte {
+func (s *GzBuffer) Read(offset int) ([]byte, error) {
 	// fmt.Println("read", offset, s.offset)
 	buf := s.buf
 	off := s.offset
@@ -50,14 +50,13 @@ func (s *GzBuffer) Read(offset int) []byte {
 		// fmt.Println("readLastBytes", idx, off-offset)
 		chunk, err := readLastBytes(zr, off-offset)
 		if err != nil {
-			fmt.Println("readLastBytes error", idx, err)
-			break
+			return nil, err
 		}
 		// fmt.Println("Prepand chunk", len(chunk))
 		buf = append(chunk, buf...)
 		off -= len(chunk)
 	}
-	return buf[offset-off:]
+	return buf[offset-off:], nil
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
@@ -78,14 +77,19 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 	return nil
 }
 
-func (s *GzBuffer) Trim(offset int) {
+func (s *GzBuffer) Trim(offset int) error {
 	s.tmu.Lock()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	defer s.tmu.Unlock()
-	s.buf = s.Read(offset)
+	buf, err := s.Read(offset)
+	if err != nil {
+		return err
+	}
+	s.buf = buf
 	s.offset = 0
 	s.zChunks = make([][]byte, 0)
+	return nil
 }
 
 func (s *GzBuffer) Len() int {

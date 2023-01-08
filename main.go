@@ -166,8 +166,11 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		for {
 			if task.Combined != nil {
 				var fragment []byte
-				offset, fragment = task.ReadCombined(offset)
-				err := pushPart(fragment)
+				var err error
+				offset, fragment, err = task.ReadCombined(offset)
+				if err == nil {
+					err = pushPart(fragment)
+				}
 				if err != nil {
 					if err != io.EOF {
 						fmt.Println("ws send error", err)
