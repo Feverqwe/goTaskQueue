@@ -244,6 +244,9 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 }
 
 func (s *Task) ReadCombined(offset int) (int, []byte, error) {
+	if offset == s.Combined.Len()+s.combinedOffset {
+		return offset, make([]byte, 0), nil
+	}
 	if offset == -1 {
 		offset = s.combinedOffset
 		if s.Combined.Len() > CombinedBufSize {
