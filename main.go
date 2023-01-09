@@ -165,17 +165,23 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		lastValue := -1
 		for {
 			if task.Combined != nil {
-				var fragment []byte
-				var err error
-				offset, fragment, err = task.ReadCombined(offset)
-				if err == nil {
-					err = pushPart(fragment)
-				}
-				if err != nil {
-					if err != io.EOF {
-						fmt.Println("ws send error", err)
+				for {
+					var fragment []byte
+					var err error
+					offset, fragment, err = task.ReadCombined(offset)
+					if err != nil {
+						fmt.Println("read combined error", err)
+						return
 					}
-					return
+					if len(fragment) == 0 {
+						break
+					}
+					if err := pushPart(fragment); err != nil {
+						if err != io.EOF {
+							fmt.Println("ws send error", err)
+						}
+						return
+					}
 				}
 			}
 			if lastValue == 0 {
