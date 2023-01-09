@@ -14,8 +14,8 @@ import (
 	"github.com/creack/pty"
 )
 
-const PtyMaxLogSize = 4 * 1024 * 1024
-const PtyLogSize = 2 * 1024 * 1024
+const PtyMaxLogSize = 10 * 1024 * 1024
+const PtyTrimLogSize = 2 * 1024 * 1024
 const CombinedBufSize = 128 * 1024
 
 type TaskLink struct {
@@ -98,7 +98,7 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 				output.Write(chunk[0:bytes])
 
 				if output.Len() > PtyMaxLogSize {
-					if newOutput, err := output.Slice(output.Len()-PtyLogSize, true); err == nil {
+					if newOutput, err := output.Slice(PtyTrimLogSize, true); err == nil {
 						// fmt.Println("trim")
 						approxOff := output.Len() - newOutput.Len()
 						output = newOutput
