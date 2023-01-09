@@ -107,8 +107,8 @@ func (s *GzBuffer) Slice(offset int) (*GzBuffer, error) {
 			}
 		}
 
-		chunks = append(chunks, zc)
-		sizes = append(sizes, zcSize)
+		chunks = append([][]byte{zc}, chunks...)
+		sizes = append([]int{zcSize}, sizes...)
 		newOffset += zcSize
 		readSize -= zcSize
 	}
