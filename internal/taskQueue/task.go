@@ -99,12 +99,13 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 
 				if output.Len() > PtyMaxLogSize {
 					off := output.Len() - PtyLogSize
-					if newOutput, err := output.Slice(off); err == nil {
+					if newOutput, err := output.Slice(off, true); err == nil {
 						// fmt.Println("trim")
+						approxOff := output.Len() - newOutput.Len()
 						output = newOutput
 						s.Combined = newOutput
 						s.Stdout = newOutput
-						s.combinedOffset += off
+						s.combinedOffset += approxOff
 					}
 				}
 

@@ -75,7 +75,7 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 	return nil
 }
 
-func (s *GzBuffer) Slice(offset int) (*GzBuffer, error) {
+func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 	// fmt.Println("Slice", offset)
 	newSize := s.Len() - offset
 	buf := s.buf
@@ -98,7 +98,7 @@ func (s *GzBuffer) Slice(offset int) (*GzBuffer, error) {
 		zc := zChunks[idx]
 		zcSize := zSizes[idx]
 
-		if readSize < zcSize {
+		if !approx && readSize < zcSize {
 			zcSize = readSize
 			var err error
 			zc, err = truncateChunkR(zc, zcSize)
