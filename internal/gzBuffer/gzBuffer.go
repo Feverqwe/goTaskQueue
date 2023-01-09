@@ -16,6 +16,7 @@ type GzBuffer struct {
 	mu         sync.Mutex
 	cmu        sync.Mutex
 	zChunks    [][]byte
+	zSizes     []int
 	finished   bool
 	maxBufSize int
 }
@@ -75,13 +76,50 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 }
 
 func (s *GzBuffer) Slice(offset int) (*GzBuffer, error) {
-	var zbuf *GzBuffer
-	buf, err := s.Read(offset)
-	if err == nil {
-		zbuf = NewGzBuffer(s.maxBufSize)
-		zbuf.Write(buf)
+	// fmt.Println("Slice", offset)
+	newSize := s.Len() - offset
+	buf := s.buf
+	zChunks := s.zChunks
+	zSizes := s.zSizes
+
+	chunks := make([][]byte, 0)
+	sizes := make([]int, 0)
+	newOffset := 0
+
+	if newSize < len(buf) {
+		buf = buf[len(buf)-newSize:]
 	}
-	return zbuf, err
+
+	i := len(zChunks) - 1
+	readSize := newSize - len(buf)
+	for readSize > 0 && i >= 0 {
+		idx := i
+		i -= 1
+		zc := zChunks[idx]
+		zcSize := zSizes[idx]
+
+		if readSize < zcSize {
+			zcSize = readSize
+			var err error
+			zc, err = truncateChunkR(zc, zcSize)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		chunks = append(chunks, zc)
+		sizes = append(sizes, zcSize)
+		newOffset += zcSize
+		readSize -= zcSize
+	}
+
+	zbuf := NewGzBuffer(s.maxBufSize)
+	zbuf.buf = buf
+	zbuf.zChunks = chunks
+	zbuf.zSizes = sizes
+	zbuf.offset = newOffset
+
+	return zbuf, nil
 }
 
 func (s *GzBuffer) Len() int {
@@ -129,6 +167,7 @@ func (s *GzBuffer) compress() error {
 		}
 		s.mu.Lock()
 		s.zChunks = append(s.zChunks, zc)
+		s.zSizes = append(s.zSizes, size)
 		s.buf = s.buf[size:]
 		s.offset += size
 		s.mu.Unlock()
@@ -160,6 +199,24 @@ func compress(zw *flate.Writer, chunk []byte) ([]byte, error) {
 		return nil, err
 	}
 	return b.Bytes(), nil
+}
+
+func truncateChunkR(zc []byte, size int) ([]byte, error) {
+	zcR := bytes.NewReader(zc)
+	zr := flate.NewReader(zcR)
+	zw, err := flate.NewWriter(nil, flate.BestCompression)
+	if err != nil {
+		return nil, err
+	}
+	chunk, err := readLastBytes(zr, size)
+	if err != nil {
+		return nil, err
+	}
+	zc, err = compress(zw, chunk)
+	if err != nil {
+		return nil, err
+	}
+	return zc, nil
 }
 
 func readLastBytes(r io.ReadCloser, maxLen int) ([]byte, error) {
