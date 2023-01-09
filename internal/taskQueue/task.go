@@ -98,7 +98,7 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 				output.Write(chunk[0:bytes])
 
 				if output.Len() > PtyMaxLogSize {
-					if newOutput, err := output.Slice(PtyLogSize, true); err == nil {
+					if newOutput, err := output.Slice(output.Len()-PtyLogSize, true); err == nil {
 						// fmt.Println("trim")
 						approxOff := output.Len() - newOutput.Len()
 						output = newOutput
