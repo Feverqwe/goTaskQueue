@@ -166,16 +166,15 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		for {
 			if task.Combined != nil {
 				for {
-					var fragment []byte
-					var err error
-					offset, fragment, err = task.ReadCombined(offset)
+					newOffset, fragment, err := task.ReadCombined(offset)
 					if err != nil {
 						fmt.Println("read combined error", err)
 						return
 					}
-					if len(fragment) == 0 {
+					if newOffset == offset {
 						break
 					}
+					offset = newOffset
 					if err := pushPart(fragment); err != nil {
 						if err != io.EOF {
 							fmt.Println("ws send error", err)
