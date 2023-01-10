@@ -251,9 +251,10 @@ func (s *Task) ReadCombined(offset int) (int, []byte, error) {
 		return offset, make([]byte, 0), nil
 	}
 	if offset == -1 {
-		offset = combinedOffset
 		if combined.Len() > CombinedBufSize {
-			offset += combined.Len() - CombinedBufSize
+			offset = combinedOffset + combined.Len() - CombinedBufSize
+		} else {
+			offset = combinedOffset
 		}
 	}
 	if offset < combinedOffset {
