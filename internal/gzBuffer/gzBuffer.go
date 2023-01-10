@@ -3,6 +3,7 @@ package gzbuffer
 import (
 	"bytes"
 	"compress/flate"
+	"errors"
 	"fmt"
 	"io"
 	"sync"
@@ -30,12 +31,27 @@ func (s *GzBuffer) Write(data []byte) {
 
 func (s *GzBuffer) Read(offset int) ([]byte, error) {
 	// fmt.Println("read", offset, s.offset)
+	size := s.Len()
 	buf := s.buf
-	off := s.offset
 	zChunks := s.zChunks
+
+	newSize := size - offset
+	if newSize < 0 {
+		fmt.Println("Read offset more than len", offset, size)
+		return nil, errors.New("read_icorrect_offset")
+	}
+
+	readLen := newSize
+
+	if len(buf) > readLen {
+		buf = buf[len(buf)-readLen:]
+	}
+
+	readLen -= len(buf)
+
 	i := len(zChunks) - 1
 	var zcR *bytes.Reader
-	for off > offset && i >= 0 {
+	for readLen > 0 && i >= 0 {
 		idx := i
 		i -= 1
 		zc := zChunks[idx]
@@ -46,15 +62,16 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 		// fmt.Println("read chunk idx", idx, ch.Len())
 		zr := flate.NewReader(zcR)
 		// fmt.Println("readLastBytes", idx, off-offset)
-		chunk, err := readLastBytes(zr, off-offset)
+		chunk, err := readLastBytes(zr, readLen)
 		if err != nil {
 			return nil, err
 		}
 		// fmt.Println("Prepand chunk", len(chunk))
 		buf = append(chunk, buf...)
-		off -= len(chunk)
+		readLen -= len(chunk)
 	}
-	return buf[offset-off:], nil
+
+	return buf, nil
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
