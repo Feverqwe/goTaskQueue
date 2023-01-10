@@ -53,6 +53,7 @@ type Task struct {
 	IsPty          bool               `json:"isPty"`
 	IsOnlyCombined bool               `json:"isOnlyCombined"`
 	mu             sync.Mutex
+	cmu            sync.RWMutex
 	combinedMu     sync.Mutex
 	qCh            []chan int
 	stdin          io.Writer
@@ -102,10 +103,12 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 					if newOutput, err := output.Slice(PtyTrimLogSize, true); err == nil {
 						// fmt.Println("trim")
 						approxOff := output.Len() - newOutput.Len()
+						s.cmu.Lock()
 						output = newOutput
-						s.Combined = newOutput
 						s.Stdout = newOutput
+						s.Combined = newOutput
 						s.combinedOffset += approxOff
+						s.cmu.Unlock()
 					}
 				}
 
@@ -245,8 +248,10 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 }
 
 func (s *Task) ReadCombined(offset int) (int, []byte, error) {
+	s.cmu.RLock()
 	combined := s.Combined
 	combinedOffset := s.combinedOffset
+	s.cmu.RUnlock()
 	if offset == combined.Len()+combinedOffset {
 		return offset, make([]byte, 0), nil
 	}
