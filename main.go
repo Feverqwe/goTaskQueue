@@ -146,15 +146,17 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		}()
 
 		pushPart := func(part []byte) error {
-			for len(part) > 0 {
-				chunkSize := CHUNK_SIZE
-				if len(part) < chunkSize {
-					chunkSize = len(part)
+			for {
+				chunkSize := len(part)
+				if chunkSize == 0 {
+					break
 				}
-				chunk := part[0:chunkSize]
+				if chunkSize > CHUNK_SIZE {
+					chunkSize = CHUNK_SIZE
+				}
+				chunk := part[:chunkSize]
 				part = part[chunkSize:]
-				err := websocket.Message.Send(ws, chunk)
-				if err != nil {
+				if err := websocket.Message.Send(ws, chunk); err != nil {
 					return err
 				}
 			}
