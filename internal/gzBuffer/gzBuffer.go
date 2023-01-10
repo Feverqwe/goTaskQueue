@@ -32,7 +32,7 @@ func (s *GzBuffer) Write(data []byte) {
 func (s *GzBuffer) Read(offset int) ([]byte, error) {
 	// fmt.Println("read", offset, s.offset)
 	s.mu.RLock()
-	size := s.Len()
+	size := s.len()
 	buf := s.buf
 	zChunks := s.zChunks
 	s.mu.RUnlock()
@@ -61,7 +61,7 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 			zcR = bytes.NewReader(nil)
 		}
 		zcR.Reset(zc)
-		// fmt.Println("read chunk idx", idx, ch.Len())
+		// fmt.Println("read chunk idx", idx, ch.len())
 		zr := flate.NewReader(zcR)
 		// fmt.Println("readLastBytes", idx, off-offset)
 		chunk, err := readLastBytes(zr, readLen)
@@ -97,7 +97,7 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 	// fmt.Println("Slice", offset)
 	s.mu.RLock()
-	newSize := s.Len() - offset
+	newSize := s.len() - offset
 	buf := s.buf
 	zChunks := s.zChunks
 	zSizes := s.zSizes
@@ -144,6 +144,12 @@ func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 }
 
 func (s *GzBuffer) Len() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.len()
+}
+
+func (s *GzBuffer) len() int {
 	return s.offset + len(s.buf)
 }
 
@@ -154,7 +160,7 @@ func (s *GzBuffer) Finish() {
 }
 
 func (s *GzBuffer) runCompress() {
-	if s.getCompressSize() == 0 {
+	if s.GetCompressSize() == 0 {
 		return
 	}
 	if ok := s.cmu.TryLock(); !ok {
@@ -171,7 +177,7 @@ func (s *GzBuffer) runCompress() {
 func (s *GzBuffer) compress() error {
 	var zw *flate.Writer
 	for {
-		size := s.getCompressSize()
+		size := s.GetCompressSize()
 		if size == 0 {
 			break
 		}
@@ -182,10 +188,16 @@ func (s *GzBuffer) compress() error {
 				return err
 			}
 		}
-		zc, err := compress(zw, s.buf[0:size])
+
+		s.mu.RLock()
+		buf := s.buf[0:size]
+		s.mu.RUnlock()
+
+		zc, err := compress(zw, buf)
 		if err != nil {
 			return err
 		}
+
 		s.mu.Lock()
 		s.zChunks = append(s.zChunks, zc)
 		s.zSizes = append(s.zSizes, size)
@@ -194,6 +206,12 @@ func (s *GzBuffer) compress() error {
 		s.mu.Unlock()
 	}
 	return nil
+}
+
+func (s *GzBuffer) GetCompressSize() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.getCompressSize()
 }
 
 func (s *GzBuffer) getCompressSize() int {

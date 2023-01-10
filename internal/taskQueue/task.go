@@ -54,7 +54,6 @@ type Task struct {
 	IsOnlyCombined bool               `json:"isOnlyCombined"`
 	mu             sync.Mutex
 	cmu            sync.RWMutex
-	combinedMu     sync.Mutex
 	qCh            []chan int
 	stdin          io.Writer
 	combinedOffset int
@@ -192,9 +191,7 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 						buffer.Write(chunk[0:bytes])
 					}
 
-					s.combinedMu.Lock()
 					output.Write(chunk[0:bytes])
-					s.combinedMu.Unlock()
 
 					go s.pushChanges(1)
 				}
@@ -232,12 +229,14 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 		if s.Stderr != nil {
 			s.Stderr.Finish()
 		}
+		s.cmu.RLock()
 		if s.Stdout != nil {
 			s.Stdout.Finish()
 		}
 		if s.Combined != nil {
 			s.Combined.Finish()
 		}
+		s.cmu.RUnlock()
 
 		s.syncStatusAndSave()
 
