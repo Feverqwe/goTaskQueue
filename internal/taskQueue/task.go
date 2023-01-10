@@ -244,20 +244,22 @@ func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
 }
 
 func (s *Task) ReadCombined(offset int) (int, []byte, error) {
-	if offset == s.Combined.Len()+s.combinedOffset {
+	combined := s.Combined
+	combinedOffset := s.combinedOffset
+	if offset == combined.Len()+combinedOffset {
 		return offset, make([]byte, 0), nil
 	}
 	if offset == -1 {
-		offset = s.combinedOffset
-		if s.Combined.Len() > CombinedBufSize {
-			offset += s.Combined.Len() - CombinedBufSize
+		offset = combinedOffset
+		if combined.Len() > CombinedBufSize {
+			offset += combined.Len() - CombinedBufSize
 		}
 	}
-	if offset < s.combinedOffset {
-		fmt.Println("skip", s.combinedOffset-offset)
-		offset = s.combinedOffset
+	if offset < combinedOffset {
+		fmt.Println("skip", combinedOffset-offset)
+		offset = combinedOffset
 	}
-	fragment, err := s.Combined.Read(offset - s.combinedOffset)
+	fragment, err := combined.Read(offset - combinedOffset)
 	if err != nil {
 		return 0, nil, err
 	}
