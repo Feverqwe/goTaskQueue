@@ -14,7 +14,7 @@ const ChunkSize = 256 * 1024
 type GzBuffer struct {
 	buf        []byte
 	offset     int
-	mu         sync.Mutex
+	mu         sync.RWMutex
 	cmu        sync.Mutex
 	zChunks    [][]byte
 	zSizes     []int
@@ -24,16 +24,18 @@ type GzBuffer struct {
 
 func (s *GzBuffer) Write(data []byte) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.buf = append(s.buf, data...)
+	s.mu.Unlock()
 	s.runCompress()
 }
 
 func (s *GzBuffer) Read(offset int) ([]byte, error) {
 	// fmt.Println("read", offset, s.offset)
+	s.mu.RLock()
 	size := s.Len()
 	buf := s.buf
 	zChunks := s.zChunks
+	s.mu.RUnlock()
 
 	newSize := size - offset
 	if newSize < 0 {
@@ -94,10 +96,12 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 
 func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 	// fmt.Println("Slice", offset)
+	s.mu.RLock()
 	newSize := s.Len() - offset
 	buf := s.buf
 	zChunks := s.zChunks
 	zSizes := s.zSizes
+	s.mu.RUnlock()
 
 	chunks := make([][]byte, 0)
 	sizes := make([]int, 0)
