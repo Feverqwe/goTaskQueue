@@ -14,8 +14,8 @@ import (
 	"github.com/creack/pty"
 )
 
-const PtyMaxLogSize = 10 * 1024 * 1024
-const PtyTrimLogSize = 2 * 1024 * 1024
+const PtyMaxLogSize = gzbuffer.ChunkSize * 4 * 4
+const PtyTrimLogSize = PtyMaxLogSize / 4
 const CombinedBufSize = 128 * 1024
 
 type TaskLink struct {
