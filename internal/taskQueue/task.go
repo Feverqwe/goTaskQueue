@@ -1,6 +1,7 @@
 package taskQueue
 
 import (
+	"errors"
 	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
@@ -314,6 +315,9 @@ func (s *Task) Kill() error {
 }
 
 func (s *Task) Signal(sig syscall.Signal) error {
+	if s.IsFinished {
+		return errors.New("process_finished")
+	}
 	return s.process.Process.Signal(sig)
 }
 
