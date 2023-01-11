@@ -168,11 +168,11 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
                 <Divider />
                 {!isOnlyCombined && (
                   <>
-                    <DialogMenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank">stdout.log</DialogMenuItem>
-                    <DialogMenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank">stderr.log</DialogMenuItem>
+                    <DialogMenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank" onClick={handleCloseMenu}>stdout.log</DialogMenuItem>
+                    <DialogMenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank" onClick={handleCloseMenu}>stderr.log</DialogMenuItem>
                   </>
                 )}
-                <DialogMenuItem component="a" href={`/api/task/combined?id=${id}`} target="_blank">combined.log</DialogMenuItem>
+                <DialogMenuItem component="a" href={`/api/task/combined?id=${id}`} target="_blank" onClick={handleCloseMenu}>combined.log</DialogMenuItem>
               </DialogMenu>
             </Box>
           </Box>
