@@ -77,17 +77,34 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
+	var buf []byte
 	r := bytes.NewReader(nil)
 	i := 0
-	for i < len(s.zChunks) {
-		r.Reset(s.zChunks[i])
+	for {
+		s.mu.RLock()
+		ok := i < len(s.zChunks)
+		s.mu.RUnlock()
+		if !ok {
+			break
+		}
+
+		s.mu.RLock()
+		buf = s.zChunks[i]
+		s.mu.RUnlock()
+
+		r.Reset(buf)
 		i++
 		zr := flate.NewReader(r)
 		if _, err := io.Copy(w, zr); err != nil {
 			return err
 		}
 	}
-	r.Reset(s.buf)
+
+	s.mu.RLock()
+	buf = s.buf
+	s.mu.RUnlock()
+
+	r.Reset(buf)
 	if _, err := io.Copy(w, r); err != nil {
 		return err
 	}
