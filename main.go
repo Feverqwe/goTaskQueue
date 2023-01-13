@@ -105,7 +105,7 @@ func powerLock(router *internal.Router, powerControl *powerCtr.PowerControl) {
 }
 
 func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
-	const CHUNK_SIZE = 1 * 1024 * 1024
+	const CHUNK_SIZE = 128 * 1024
 
 	ws := func(ws *websocket.Conn) {
 		defer ws.Close()
