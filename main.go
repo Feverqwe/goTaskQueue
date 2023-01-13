@@ -42,9 +42,37 @@ func main() {
 	go func() {
 		var httpServer *http.Server
 
-		go func() {
-			callChan <- "reload"
-		}()
+		init := func() {
+			config = cfg.LoadConfig()
+
+			if httpServer != nil {
+				httpServer.Close()
+			}
+
+			router := internal.NewRouter()
+
+			powerLock(router, powerControl)
+			handleWebsocket(router, taskQueue)
+			internal.HandleApi(router, taskQueue, &config, callChan)
+			handleWww(router, &config)
+
+			address := config.GetAddress()
+
+			log.Printf("Listening on %s...", address)
+			httpServer = &http.Server{
+				Addr:    address,
+				Handler: router,
+			}
+
+			go func() {
+				err := httpServer.ListenAndServe()
+				if err != nil {
+					log.Println("Server error", err)
+				}
+			}()
+		}
+
+		init()
 
 		for {
 			v := <-callChan
@@ -52,33 +80,7 @@ func main() {
 
 			switch v {
 			case "reload":
-				config = cfg.LoadConfig()
-
-				if httpServer != nil {
-					httpServer.Close()
-				}
-
-				router := internal.NewRouter()
-
-				powerLock(router, powerControl)
-				handleWebsocket(router, taskQueue)
-				internal.HandleApi(router, taskQueue, &config, callChan)
-				handleWww(router, &config)
-
-				address := config.GetAddress()
-
-				log.Printf("Listening on %s...", address)
-				httpServer = &http.Server{
-					Addr:    address,
-					Handler: router,
-				}
-
-				go func() {
-					err := httpServer.ListenAndServe()
-					if err != nil {
-						log.Println("Server error", err)
-					}
-				}()
+				init()
 			}
 		}
 	}()
