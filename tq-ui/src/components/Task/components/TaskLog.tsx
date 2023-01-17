@@ -38,6 +38,16 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     terminal.loadAddon(fitAddon);
 
+    terminal.attachCustomKeyEventHandler((event) => {
+      if (event.type === 'keydown') {
+        if (event.code === 'KeyK' && (event.metaKey || event.ctrlKey)) {
+          terminal.clear();
+          return false;
+        }
+      }
+      return true;
+    });
+
     const resizeObserver = new ResizeObserver(throttle(() => {
       fitAddon.fit();
     }, 100));
