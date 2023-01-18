@@ -40,7 +40,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     terminal.attachCustomKeyEventHandler((event) => {
       if (event.type === 'keydown') {
-        if (event.code === 'KeyK' && (event.metaKey || event.ctrlKey)) {
+        if (event.code === 'KeyK' && event.metaKey) {
           terminal.clear();
           return false;
         }
