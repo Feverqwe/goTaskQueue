@@ -1,15 +1,15 @@
 import React, {FC, useCallback} from 'react';
 import {Button} from '@mui/material';
-import {Template} from '../../RootStore/RootStoreProvider';
+import {TemplateButton} from '../../RootStore/RootStoreProvider';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 
-interface TemplateBtnProps {
-  template: Template;
-  onClick: (template: Template, as?: boolean) => void;
-  onEdit: (template: Template) => void;
-  onDelete: (template: Template) => void;
-  onClone: (template: Template) => void;
+export interface TemplateBtnProps {
+  template: TemplateButton;
+  onClick: (template: TemplateButton, as?: boolean) => void;
+  onEdit: (template: TemplateButton) => void;
+  onDelete: (template: TemplateButton) => void;
+  onClone: (template: TemplateButton) => void;
 }
 
 const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete, onClone}) => {

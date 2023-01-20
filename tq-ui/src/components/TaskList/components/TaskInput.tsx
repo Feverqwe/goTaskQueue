@@ -3,14 +3,14 @@ import {Box, Button, ButtonGroup} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
-import {Template} from '../../RootStore/RootStoreProvider';
+import {Template, TemplateButton} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 import EditTemplateDialog from './EditTemplateDialog';
-import TemplateBtn from './TemplateBtn';
 import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
 import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
+import TemplatesBtns from './TemplatesBtns';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -28,7 +28,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const templates = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
   const [showRunMenu, setShowRunMenu] = React.useState(false);
-  const [dialogProps, setDialogProps] = useState<{template: Template, isNew?: boolean} | null>(null);
+  const [dialogProps, setDialogProps] = useState<{template: TemplateButton, isNew?: boolean} | null>(null);
   const [dialogType, setDialogType] = useState<null | DialogType>(null);
 
   const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
@@ -71,7 +71,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseMenu();
   }, [handleCloseMenu]);
 
-  const handleClickTemplate = useCallback((template: Template, as?: boolean) => {
+  const handleClickTemplate = useCallback((template: TemplateButton, as?: boolean) => {
     if (!as && !template.variables.length) {
       const {command, label = '', isPty = false, isOnlyCombined = false} = template;
       handleAdd(true, command, label, isPty, isOnlyCombined);
@@ -81,7 +81,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     }
   }, [handleAdd]);
 
-  const handleEditTemplate = useCallback((template: Template) => {
+  const handleEditTemplate = useCallback((template: TemplateButton) => {
     setDialogProps({template});
     setDialogType(DialogType.Edit);
   }, []);
@@ -134,18 +134,13 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           </Button>
           <Button onClick={handleRun}>Run</Button>
         </ButtonGroup>
-        {templates.map((template, index) => {
-          return (
-            <TemplateBtn
-              key={index}
-              template={template}
-              onClick={handleClickTemplate}
-              onEdit={handleEditTemplate}
-              onDelete={handleDeleteTemplate}
-              onClone={handleCloneTemplate}
-            />
-          );
-        })}
+        <TemplatesBtns
+          templates={templates}
+          onClick={handleClickTemplate}
+          onEdit={handleEditTemplate}
+          onDelete={handleDeleteTemplate}
+          onClone={handleCloneTemplate}
+        />
       </Box>
       {showRunMenu && (
         <DialogMenu onClose={handleCloseMenu} open={true}>

@@ -13,17 +13,17 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import {Template} from '../../RootStore/RootStoreProvider';
+import {Template, TemplateButton} from '../../RootStore/RootStoreProvider';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
   onClose: () => void;
   onSubmit: (prevTemplate: Template | null, template: Template) => Promise<void>;
-  template: Template;
+  template: TemplateButton;
   isNew?: boolean;
 }
 
-type Variable = Template['variables'][number];
+type Variable = TemplateButton['variables'][number];
 
 const variableIdMap = new WeakMap<Variable, string>();
 

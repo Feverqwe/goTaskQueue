@@ -1,7 +1,21 @@
 import React, {FC, ReactNode} from 'react';
 import {RootStoreCtx} from './RootStoreCtx';
 
-export interface Template {
+export type Template = TemplateButton | TemplateFolder;
+
+export enum TemplateType {
+  Folder = 'folder',
+  Button = 'button'
+}
+
+export interface TemplateFolder {
+  type: TemplateType.Folder;
+  name: string;
+  templates: Template[];
+}
+
+export interface TemplateButton {
+  type?: TemplateType.Button;
   label?: string;
   name: string,
   variables: {

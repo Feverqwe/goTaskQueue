@@ -14,7 +14,7 @@ import {Task, TaskState} from '../../types';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
-import {Template} from '../../RootStore/RootStoreProvider';
+import {TemplateButton} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 
 interface TaskInfoProps {
@@ -28,7 +28,7 @@ interface TaskInfoProps {
 const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onToggleInfo, onUpdate}) => {
   const navigate = useNavigate();
   const {id, state, label, command, error, isOnlyCombined} = task;
-  const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | Template>(null);
+  const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | TemplateButton>(null);
   const [showMenu, setShowMenu] = React.useState(false);
 
   useMemo(() => {

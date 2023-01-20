@@ -12,13 +12,13 @@ import {
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import {Template} from '../RootStore/RootStoreProvider';
+import {TemplateButton} from '../RootStore/RootStoreProvider';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
   onClose: () => void;
   onSubmit: (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => Promise<void>;
-  template: Template;
+  template: TemplateButton;
   isNew?: boolean;
 }
 
