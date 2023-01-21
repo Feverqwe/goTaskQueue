@@ -1,13 +1,15 @@
 import React, {FC} from 'react';
-import {TemplateFolder, TemplateType} from '../../RootStore/RootStoreProvider';
+import {TemplateType} from '../../RootStore/RootStoreProvider';
 import TemplateBtn, {TemplateBtnProps} from './TemplateBtn';
-import TemplateFolderBtn from './TemplateFolderBtn';
+import TemplateFolderBtn, {TemplateFolderBtnProps} from './TemplateFolderBtn';
 
-interface TemplatesBtnsProps extends Omit<TemplateBtnProps, 'template'> {
-  folder: Pick<TemplateFolder, 'templates'>;
+interface TemplatesBtnsProps extends Omit<TemplateBtnProps, 'template'>, TemplateFolderBtnProps {
+
 }
 
-const TemplatesBtns: FC<TemplatesBtnsProps> = ({folder: {templates}, onDelete, onEdit, onClone, onClick}) => {
+const TemplatesBtns: FC<TemplatesBtnsProps> = ({folder, ...props}) => {
+  const {templates} = folder;
+
   return (
     <>
       {templates.map((template, index) => {
@@ -16,21 +18,16 @@ const TemplatesBtns: FC<TemplatesBtnsProps> = ({folder: {templates}, onDelete, o
             <TemplateFolderBtn
               key={index}
               folder={template}
-              onClick={onClick}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onClone={onClone}
+              {...props}
             />
           );
         }
         return (
           <TemplateBtn
             key={index}
+            folder={folder}
             template={template}
-            onClick={onClick}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onClone={onClone}
+            {...props}
           />
         );
       })}

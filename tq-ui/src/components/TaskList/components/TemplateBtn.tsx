@@ -1,18 +1,19 @@
 import React, {FC, useCallback, useState} from 'react';
 import {Button} from '@mui/material';
-import {TemplateButton} from '../../RootStore/RootStoreProvider';
+import {TemplateButton, TemplateFolder} from '../../RootStore/RootStoreProvider';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 
 export interface TemplateBtnProps {
+  folder: TemplateFolder;
   template: TemplateButton;
   onClick: (template: TemplateButton, as?: boolean) => void;
-  onEdit: (template: TemplateButton) => void;
-  onDelete: (template: TemplateButton) => void;
-  onClone: (template: TemplateButton) => void;
+  onEdit: (folder: TemplateFolder, template: TemplateButton) => void;
+  onDelete: (folder: TemplateFolder, template: TemplateButton) => void;
+  onClone: (folder: TemplateFolder, template: TemplateButton) => void;
 }
 
-const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete, onClone}) => {
+const TemplateBtn: FC<TemplateBtnProps> = ({folder, template, onClick, onEdit, onDelete, onClone}) => {
   const {name} = template;
   const [showMenu, setShowMenu] = useState(false);
 
@@ -30,19 +31,19 @@ const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete,
   }, [template, onClick, handleCloseMenu]);
 
   const handleEdit = useCallback(() => {
-    onEdit(template);
+    onEdit(folder, template);
     handleCloseMenu();
-  }, [template, onEdit, handleCloseMenu]);
+  }, [folder, template, onEdit, handleCloseMenu]);
 
   const handleDelete = useCallback(() => {
-    onDelete(template);
+    onDelete(folder, template);
     handleCloseMenu();
-  }, [template, onDelete, handleCloseMenu]);
+  }, [folder, template, onDelete, handleCloseMenu]);
 
   const handleClone = useCallback(() => {
-    onClone(template);
+    onClone(folder, template);
     handleCloseMenu();
-  }, [template, onClone, handleCloseMenu]);
+  }, [folder, template, onClone, handleCloseMenu]);
 
   const handleCtxMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();

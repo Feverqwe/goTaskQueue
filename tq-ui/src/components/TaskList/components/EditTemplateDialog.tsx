@@ -13,12 +13,13 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import {Template, TemplateButton} from '../../RootStore/RootStoreProvider';
+import {Template, TemplateButton, TemplateFolder} from '../../RootStore/RootStoreProvider';
 import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
+  folder: TemplateFolder;
   onClose: () => void;
-  onSubmit: (prevTemplate: Template | null, template: Template) => Promise<void>;
+  onSubmit: (folder: TemplateFolder, prevTemplate: Template | null, template: Template) => Promise<void>;
   template: TemplateButton;
   isNew?: boolean;
 }
@@ -27,7 +28,7 @@ type Variable = TemplateButton['variables'][number];
 
 const variableIdMap = new WeakMap<Variable, string>();
 
-const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
+const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, onSubmit, onClose, isNew}) => {
   const {name, command, label, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
@@ -151,9 +152,9 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClos
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
     const newTemplate = getTemplate();
-    await onSubmit(isNew ? null : template, newTemplate);
+    await onSubmit(folder, isNew ? null : template, newTemplate);
     onClose();
-  }, [isNew, getTemplate, onSubmit, onClose, template]);
+  }, [isNew, getTemplate, onSubmit, onClose, folder, template]);
 
   return (
     <Dialog open={true} onClose={handleClose} fullWidth>

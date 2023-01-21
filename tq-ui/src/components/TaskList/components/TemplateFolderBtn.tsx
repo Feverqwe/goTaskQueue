@@ -8,11 +8,11 @@ import OrderTemplatesDialog from './OrderTemplatesDialog';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 
-interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template'> {
-  folder: TemplateFolder;
+export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template'> {
+  onNew: (folder: TemplateFolder) => void;
 }
 
-const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, onClick, onClone, onDelete, onEdit }) => {
+const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, onClick, onClone, onDelete, onNew, onEdit }) => {
   const { name } = folder;
   const [showMenu, setShowMenu] = useState(false);
   const [showCtxMenu, setShowCtxMenu] = useState(false);
@@ -50,6 +50,11 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, onClick, onClon
     setOrderDialog(true);
   }, [handleCloseCtxMenu]);
 
+  const handleNew = useCallback(() => {
+    onNew(folder);
+    handleCloseCtxMenu();
+  }, [folder, onNew, handleCloseCtxMenu]);
+
   return (
     <>
       <Button
@@ -62,6 +67,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, onClick, onClon
         {name}
       </Button>
       <DialogMenu open={showCtxMenu} onClose={handleCloseCtxMenu} title={name}>
+        <DialogMenuItem onClick={handleNew}>New</DialogMenuItem>
         <DialogMenuItem onClick={handleOrder}>Order</DialogMenuItem>
       </DialogMenu>
       <Dialog open={showMenu} onClose={handleCloseMenu} title={name}>
@@ -75,6 +81,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, onClick, onClon
             onEdit={proxyAction.bind(null, onEdit)}
             onDelete={onDelete}
             onClone={onClone}
+            onNew={onNew}
           />
         </DialogContent>
       </Dialog>

@@ -3,7 +3,7 @@ import {Box, Button, ButtonGroup} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
-import {Template, TemplateButton, TemplateType} from '../../RootStore/RootStoreProvider';
+import {Template, TemplateButton, TemplateFolder} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 import EditTemplateDialog from './EditTemplateDialog';
 import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
@@ -17,12 +17,6 @@ interface TaskInputProps {
   onUpdate: () => void;
 }
 
-enum DialogType {
-  Edit = 'edit',
-  Run = 'run',
-  Order = 'order',
-}
-
 const NEW_TEMPLATE: Template = {name: 'Run', variables: [], command: '', isPty: false, isOnlyCombined: true};
 
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
@@ -30,8 +24,9 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const rootFolder = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
   const [showRunMenu, setShowRunMenu] = useState(false);
-  const [dialogProps, setDialogProps] = useState<{template: TemplateButton, isNew?: boolean} | null>(null);
-  const [dialogType, setDialogType] = useState<null | DialogType>(null);
+  const [runDialog, setRunDialog] = useState<{template: TemplateButton, isNew?: boolean} | null>(null);
+  const [editDialog, setEditDialog] = useState<{template: TemplateButton, isNew?: boolean, folder: TemplateFolder} | null>(null);
+  const [orderDialog, setOrderDialog] = useState(false);
 
   const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
     try {
@@ -68,13 +63,12 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   }, [handleCloseMenu]);
 
   const handleOrder = useCallback(() => {
-    setDialogType(DialogType.Order);
+    setOrderDialog(true);
     handleCloseMenu();
   }, [handleCloseMenu]);
 
-  const handleNewTemplate = useCallback(() => {
-    setDialogProps({template: {...NEW_TEMPLATE, name: ''}, isNew: true});
-    setDialogType(DialogType.Edit);
+  const handleNewTemplate = useCallback((folder: TemplateFolder) => {
+    setEditDialog({folder, template: {...NEW_TEMPLATE, name: ''}, isNew: true});
     handleCloseMenu();
   }, [handleCloseMenu]);
 
@@ -83,61 +77,54 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
       const {command, label = '', isPty = false, isOnlyCombined = false} = template;
       handleAdd(true, command, label, isPty, isOnlyCombined);
     } else {
-      setDialogProps({template});
-      setDialogType(DialogType.Run);
+      setRunDialog({template});
     }
   }, [handleAdd]);
 
-  const handleEditTemplate = useCallback((template: TemplateButton) => {
-    setDialogProps({template});
-    setDialogType(DialogType.Edit);
+  const handleEditTemplate = useCallback((folder: TemplateFolder, template: TemplateButton) => {
+    setEditDialog({folder, template});
   }, []);
 
   const handleCloseTemplateDlg = useCallback(() => {
-    setDialogProps(null);
-    setDialogType(null);
+    setRunDialog(null);
+    setOrderDialog(false);
+    setEditDialog(null);
   }, []);
 
   const handleRun = useCallback(() => {
-    setDialogProps({template: NEW_TEMPLATE, isNew: true});
-    setDialogType(DialogType.Run);
+    setRunDialog({template: NEW_TEMPLATE, isNew: true});
   }, []);
 
-  const handleDeleteTemplate = useCallback(async (template: Template) => {
-    const newTemplates = cloneTemplates(rootFolder.templates);
-    const subTemplates = getSubTemplates(newTemplates, template) || [];
-    const pos = subTemplates.indexOf(template);
+  const handleDeleteTemplate = useCallback(async (folder: TemplateFolder, template: Template) => {
+    const newTemplates = [...folder.templates];
+    const pos = newTemplates.indexOf(template);
     if (pos === -1) {
       throw new Error('prev template not found');
     }
-    subTemplates.splice(pos, 1);
-    await updateTemplates({templates: newTemplates});
+    newTemplates.splice(pos, 1);
+    folder.templates = newTemplates;
+    await updateTemplates(rootFolder);
   }, [rootFolder, updateTemplates]);
 
-  const handleCloneTemplate = useCallback(async (template: Template) => {
-    const newTemplates = cloneTemplates(rootFolder.templates);
-    const subTemplates = getSubTemplates(newTemplates, template);
-    if (subTemplates) {
-      subTemplates.push(template);
-    } else {
-      newTemplates.push(template);
-    }
-    await updateTemplates({templates: newTemplates});
+  const handleCloneTemplate = useCallback(async (folder: TemplateFolder, template: Template) => {
+    const newTemplates = [...folder.templates, template];
+    folder.templates = newTemplates;
+    await updateTemplates(rootFolder);
   }, [rootFolder, updateTemplates]);
 
-  const handleEdit = useCallback(async (prevTemplate: null | Template, newTemplate: Template) => {
-    const newTemplates = cloneTemplates(rootFolder.templates);
+  const handleEdit = useCallback(async (folder: TemplateFolder, prevTemplate: null | Template, newTemplate: Template) => {
+    const newTemplates = [...folder.templates];
     if (prevTemplate) {
-      const subTemplates = getSubTemplates(newTemplates, prevTemplate) || [];
-      const pos = subTemplates.indexOf(prevTemplate);
+      const pos = newTemplates.indexOf(prevTemplate);
       if (pos === -1) {
         throw new Error('prev template not found');
       }
-      subTemplates.splice(pos, 1, newTemplate);
+      newTemplates.splice(pos, 1, newTemplate);
     } else {
       newTemplates.push(newTemplate);
     }
-    await updateTemplates({templates: newTemplates});
+    folder.templates = newTemplates;
+    await updateTemplates(rootFolder);
   }, [rootFolder, updateTemplates]);
 
   return (
@@ -152,6 +139,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <TemplatesBtns
           folder={rootFolder}
           onClick={handleClickTemplate}
+          onNew={handleNewTemplate}
           onEdit={handleEditTemplate}
           onDelete={handleDeleteTemplate}
           onClone={handleCloneTemplate}
@@ -159,54 +147,22 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
       </Box>
       {showRunMenu && (
         <DialogMenu onClose={handleCloseMenu} open={true}>
-          <DialogMenuItem onClick={handleNewTemplate}>New template</DialogMenuItem>
-          <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
+          <DialogMenuItem onClick={handleNewTemplate.bind(null, rootFolder)}>New template</DialogMenuItem>
           <DialogMenuItem onClick={handleOrder}>Order</DialogMenuItem>
+          <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
         </DialogMenu>
       )}
-      {dialogType === DialogType.Run && dialogProps && (
-        <TemplateDialog {...dialogProps} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
+      {runDialog && (
+        <TemplateDialog {...runDialog} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
       )}
-      {dialogType === DialogType.Edit && dialogProps && (
-        <EditTemplateDialog {...dialogProps} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
+      {editDialog && (
+        <EditTemplateDialog {...editDialog} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
       )}
-      {dialogType === DialogType.Order && (
+      {orderDialog && (
         <OrderTemplatesDialog open={true} folder={rootFolder} onClose={handleCloseTemplateDlg} />
       )}
     </>
   );
 };
-
-function cloneTemplates(items: Template[]) {
-  const cloneFloat = (items: Template[]): Template[] => {
-    return items.map((item) => {
-      if (item.type === TemplateType.Folder) {
-        item.templates = cloneTemplates(item.templates);
-      }
-      return item;
-    });
-  };
-  return cloneFloat(items);
-}
-
-function getSubTemplates(templates: Template[], template: Template) {
-  const find = (items: Template[], template: Template): Template[] | null => {
-    const pos = items.indexOf(template);
-    if (pos !== -1) {
-      return items;
-    }
-    // eslint-disable-next-line no-cond-assign
-    for (let i = 0, item; item = items[i]; i++) {
-      if (item.type === TemplateType.Folder) {
-        const result = find(item.templates, template);
-        if (result) {
-          return result;
-        }
-      }
-    }
-    return null;
-  };
-  return find(templates, template);
-}
 
 export default TaskInput;
