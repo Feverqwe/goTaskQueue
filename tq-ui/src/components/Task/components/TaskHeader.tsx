@@ -180,6 +180,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
       </Box>
       {restartDialogTemplate && (
         <TemplateDialog
+          open={true}
           template={restartDialogTemplate}
           isNew={true}
           onClose={handleCloseRestartDlg}
