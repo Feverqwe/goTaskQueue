@@ -3,7 +3,7 @@ import {Box, Button, ButtonGroup} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
-import {Template, TemplateButton, TemplateFolder} from '../../RootStore/RootStoreProvider';
+import {Template, TemplateButton, TemplateFolder, TemplateType} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 import EditTemplateDialog from './EditTemplateDialog';
 import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
@@ -12,12 +12,14 @@ import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TemplatesBtns from './TemplatesBtns';
 import OrderTemplatesDialog from './OrderTemplatesDialog';
+import EditFolderDialog from './EditFolderDialog';
 
 interface TaskInputProps {
   onUpdate: () => void;
 }
 
-const NEW_TEMPLATE: Template = {name: 'Run', variables: [], command: '', isPty: false, isOnlyCombined: true};
+const NEW_TEMPLATE: TemplateButton = {name: 'Run', variables: [], command: '', isPty: false, isOnlyCombined: true};
+const NEW_FOLDER: TemplateFolder = {type: TemplateType.Folder, name: '', templates: []};
 
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const [runDialog, setRunDialog] = useState<{template: TemplateButton, isNew?: boolean} | null>(null);
   const [editDialog, setEditDialog] = useState<{template: TemplateButton, isNew?: boolean, folder: TemplateFolder} | null>(null);
   const [orderDialog, setOrderDialog] = useState(false);
+  const [editFolderDialog, setEditFolderDialog] = useState<{folder: TemplateFolder, template: TemplateFolder, isNew?: boolean} | null>(null);
 
   const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
     try {
@@ -72,6 +75,11 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseMenu();
   }, [handleCloseMenu]);
 
+  const handleNewTemplateFolder = useCallback((folder: TemplateFolder) => {
+    setEditFolderDialog({folder, template: {...NEW_FOLDER}, isNew: true});
+    handleCloseMenu();
+  }, [handleCloseMenu]);
+
   const handleClickTemplate = useCallback((template: TemplateButton, as?: boolean) => {
     if (!as && !template.variables.length) {
       const {command, label = '', isPty = false, isOnlyCombined = false} = template;
@@ -85,10 +93,15 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     setEditDialog({folder, template});
   }, []);
 
+  const handleEditTemplateFolder = useCallback((folder: TemplateFolder, template: TemplateFolder) => {
+    setEditFolderDialog({folder, template});
+  }, []);
+
   const handleCloseTemplateDlg = useCallback(() => {
     setRunDialog(null);
     setOrderDialog(false);
     setEditDialog(null);
+    setEditFolderDialog(null);
   }, []);
 
   const handleRun = useCallback(() => {
@@ -140,7 +153,9 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           folder={rootFolder}
           onClick={handleClickTemplate}
           onNew={handleNewTemplate}
+          onNewFolder={handleNewTemplateFolder}
           onEdit={handleEditTemplate}
+          onEditFolder={handleEditTemplateFolder}
           onDelete={handleDeleteTemplate}
           onClone={handleCloneTemplate}
         />
@@ -148,15 +163,19 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
       {showRunMenu && (
         <DialogMenu onClose={handleCloseMenu} open={true}>
           <DialogMenuItem onClick={handleNewTemplate.bind(null, rootFolder)}>New template</DialogMenuItem>
+          <DialogMenuItem onClick={handleNewTemplateFolder.bind(null, rootFolder)}>New folder</DialogMenuItem>
           <DialogMenuItem onClick={handleOrder}>Order</DialogMenuItem>
           <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
         </DialogMenu>
       )}
       {runDialog && (
-        <TemplateDialog {...runDialog} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
+        <TemplateDialog open={true} {...runDialog} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
       )}
       {editDialog && (
-        <EditTemplateDialog {...editDialog} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
+        <EditTemplateDialog open={true} {...editDialog} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
+      )}
+      {editFolderDialog && (
+        <EditFolderDialog open={true} {...editFolderDialog} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
       )}
       {orderDialog && (
         <OrderTemplatesDialog open={true} folder={rootFolder} onClose={handleCloseTemplateDlg} />

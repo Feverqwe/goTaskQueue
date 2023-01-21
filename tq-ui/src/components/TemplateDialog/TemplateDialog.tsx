@@ -16,13 +16,14 @@ import {TemplateButton} from '../RootStore/RootStoreProvider';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
+  open: boolean;
   onClose: () => void;
   onSubmit: (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => Promise<void>;
   template: TemplateButton;
   isNew?: boolean;
 }
 
-const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, isNew}) => {
+const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onClose, isNew}) => {
   const {name, variables, command, label, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [isExtended, setExtended] = useState(() => isNew);
@@ -98,7 +99,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({template, onSubmit, onClose, i
   }, [onClose]);
 
   return (
-    <Dialog open={true} onClose={handleClose} fullWidth>
+    <Dialog open={open} onClose={handleClose} fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>{name}</DialogTitle>
         <DialogContent>

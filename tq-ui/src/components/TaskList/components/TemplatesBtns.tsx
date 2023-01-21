@@ -3,7 +3,7 @@ import {TemplateType} from '../../RootStore/RootStoreProvider';
 import TemplateBtn, {TemplateBtnProps} from './TemplateBtn';
 import TemplateFolderBtn, {TemplateFolderBtnProps} from './TemplateFolderBtn';
 
-interface TemplatesBtnsProps extends Omit<TemplateBtnProps, 'template'>, TemplateFolderBtnProps {
+interface TemplatesBtnsProps extends Omit<TemplateBtnProps, 'template'>, Omit<TemplateFolderBtnProps, 'template'> {
 
 }
 
@@ -17,7 +17,8 @@ const TemplatesBtns: FC<TemplatesBtnsProps> = ({folder, ...props}) => {
           return (
             <TemplateFolderBtn
               key={index}
-              folder={template}
+              folder={folder}
+              template={template}
               {...props}
             />
           );
