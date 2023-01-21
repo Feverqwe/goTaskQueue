@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useContext, useEffect, useState} from 'react';
+import React, {FC, useCallback, useContext, useState} from 'react';
 import {Box, Button, ButtonGroup} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
@@ -11,7 +11,7 @@ import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TemplatesBtns from './TemplatesBtns';
-import OrderTemplatesDialog from "./OrderTemplatesDialog";
+import OrderTemplatesDialog from './OrderTemplatesDialog';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -171,7 +171,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <EditTemplateDialog {...dialogProps} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
       )}
       {dialogType === DialogType.Order && (
-        <OrderTemplatesDialog onClose={handleCloseTemplateDlg}/>
+        <OrderTemplatesDialog onClose={handleCloseTemplateDlg} />
       )}
     </>
   );

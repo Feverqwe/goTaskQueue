@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useContext, useMemo, useState} from "react";
+import React, {FC, SyntheticEvent, useCallback, useContext, useState} from 'react';
 import {
   Box,
   Button,
@@ -8,13 +8,13 @@ import {
   DialogTitle,
   IconButton,
   List,
-  ListItem
-} from "@mui/material";
-import {TemplatesCtx} from "../../TemplateProvider/TemplatesCtx";
+  ListItem,
+} from '@mui/material';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import {Template} from "../../RootStore/RootStoreProvider";
-import {TemplatesUpdateCtx} from "../../TemplateProvider/TemplatesUpdateCtx";
+import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
+import {Template} from '../../RootStore/RootStoreProvider';
+import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
 
 interface OrderTemplatesDialogProps {
   onClose: () => void;
@@ -29,7 +29,7 @@ const OrderTemplatesDialog: FC<OrderTemplatesDialogProps> = ({onClose}) => {
     e.preventDefault();
     await updateTemplates(templates);
     onClose();
-  }, [templates]);
+  }, [onClose, updateTemplates, templates]);
 
   const handleClose = useCallback((e: Event, reason: string) => {
     if (reason === 'backdropClick') return;
@@ -73,22 +73,22 @@ const OrderTemplatesDialog: FC<OrderTemplatesDialogProps> = ({onClose}) => {
               return (
                 <ListItem
                   key={index}
-                  secondaryAction={
+                  secondaryAction={(
                     <>
                       <IconButton
-                        title={'Up'}
+                        title="Up"
                         onClick={handleUp.bind(null, template)}
                       >
-                        <ArrowDropUpIcon/>
+                        <ArrowDropUpIcon />
                       </IconButton>
                       <IconButton
-                        title={'Down'}
+                        title="Down"
                         onClick={handleDown.bind(null, template)}
                       >
-                        <ArrowDropDownIcon/>
+                        <ArrowDropDownIcon />
                       </IconButton>
                     </>
-                  }
+                  )}
                 >
                   {name}
                 </ListItem>
@@ -103,6 +103,6 @@ const OrderTemplatesDialog: FC<OrderTemplatesDialogProps> = ({onClose}) => {
       </Box>
     </Dialog>
   );
-}
+};
 
 export default OrderTemplatesDialog;
