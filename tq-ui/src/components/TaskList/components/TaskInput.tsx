@@ -3,7 +3,7 @@ import {Box, Button, ButtonGroup} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
-import {Template, TemplateButton} from '../../RootStore/RootStoreProvider';
+import {Template, TemplateButton, TemplateType} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 import EditTemplateDialog from './EditTemplateDialog';
 import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
@@ -97,28 +97,36 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   }, []);
 
   const handleDeleteTemplate = useCallback(async (template: Template) => {
-    const newTemplates = [...templates];
-    const pos = newTemplates.indexOf(template);
+    const newTemplates = cloneTemplates(templates);
+    const subTemplates = getSubTemplates(newTemplates, template) || [];
+    const pos = subTemplates.indexOf(template);
     if (pos === -1) {
       throw new Error('prev template not found');
     }
-    newTemplates.splice(pos, 1);
+    subTemplates.splice(pos, 1);
     await updateTemplates(newTemplates);
   }, [templates, updateTemplates]);
 
   const handleCloneTemplate = useCallback(async (template: Template) => {
-    const newTemplates = [...templates, template];
+    const newTemplates = cloneTemplates(templates);
+    const subTemplates = getSubTemplates(newTemplates, template);
+    if (subTemplates) {
+      subTemplates.push(template);
+    } else {
+      newTemplates.push(template);
+    }
     await updateTemplates(newTemplates);
   }, [templates, updateTemplates]);
 
   const handleEdit = useCallback(async (prevTemplate: null | Template, newTemplate: Template) => {
-    const newTemplates = [...templates];
+    const newTemplates = cloneTemplates(templates);
     if (prevTemplate) {
-      const pos = newTemplates.indexOf(prevTemplate);
+      const subTemplates = getSubTemplates(newTemplates, prevTemplate) || [];
+      const pos = subTemplates.indexOf(prevTemplate);
       if (pos === -1) {
         throw new Error('prev template not found');
       }
-      newTemplates.splice(pos, 1, newTemplate);
+      subTemplates.splice(pos, 1, newTemplate);
     } else {
       newTemplates.push(newTemplate);
     }
@@ -157,5 +165,37 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     </>
   );
 };
+
+function cloneTemplates(items: Template[]) {
+  const cloneFloat = (items: Template[]): Template[] => {
+    return items.map((item) => {
+      if (item.type === TemplateType.Folder) {
+        item.templates = cloneTemplates(item.templates);
+      }
+      return item;
+    });
+  };
+  return cloneFloat(items);
+}
+
+function getSubTemplates(templates: Template[], template: Template) {
+  const find = (items: Template[], template: Template): Template[] | null => {
+    const pos = items.indexOf(template);
+    if (pos !== -1) {
+      return items;
+    }
+    // eslint-disable-next-line no-cond-assign
+    for (let i = 0, item; item = items[i]; i++) {
+      if (item.type === TemplateType.Folder) {
+        const result = find(item.templates, template);
+        if (result) {
+          return result;
+        }
+      }
+    }
+    return null;
+  };
+  return find(templates, template);
+}
 
 export default TaskInput;

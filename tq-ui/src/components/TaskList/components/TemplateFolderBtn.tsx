@@ -46,8 +46,8 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ template, onClick, onCl
             templates={templates}
             onClick={proxyAction.bind(null, onClick)}
             onEdit={proxyAction.bind(null, onEdit)}
-            onDelete={proxyAction.bind(null, onDelete)}
-            onClone={proxyAction.bind(null, onClone)}
+            onDelete={onDelete}
+            onClone={onClone}
           />
         </DialogContent>
       </Dialog>
