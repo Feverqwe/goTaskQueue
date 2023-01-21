@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useContext, useState} from 'react';
+import React, {FC, useCallback, useContext, useEffect, useState} from 'react';
 import {Box, Button, ButtonGroup} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
@@ -11,6 +11,7 @@ import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TemplatesBtns from './TemplatesBtns';
+import OrderTemplatesDialog from "./OrderTemplatesDialog";
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -19,6 +20,7 @@ interface TaskInputProps {
 enum DialogType {
   Edit = 'edit',
   Run = 'run',
+  Order = 'order',
 }
 
 const NEW_TEMPLATE: Template = {name: 'Run', variables: [], command: '', isPty: false, isOnlyCombined: true};
@@ -62,6 +64,11 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
 
   const handleReloadConfig = useCallback(async () => {
     await api.reloadConfig();
+    handleCloseMenu();
+  }, [handleCloseMenu]);
+
+  const handleOrder = useCallback(() => {
+    setDialogType(DialogType.Order);
     handleCloseMenu();
   }, [handleCloseMenu]);
 
@@ -154,7 +161,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <DialogMenu onClose={handleCloseMenu} open={true}>
           <DialogMenuItem onClick={handleNewTemplate}>New template</DialogMenuItem>
           <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
-          <DialogMenuItem onClick={handleReorder}>Reorder</DialogMenuItem>
+          <DialogMenuItem onClick={handleOrder}>Order</DialogMenuItem>
         </DialogMenu>
       )}
       {dialogType === DialogType.Run && dialogProps && (
@@ -162,6 +169,9 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
       )}
       {dialogType === DialogType.Edit && dialogProps && (
         <EditTemplateDialog {...dialogProps} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
+      )}
+      {dialogType === DialogType.Order && (
+        <OrderTemplatesDialog onClose={handleCloseTemplateDlg}/>
       )}
     </>
   );
