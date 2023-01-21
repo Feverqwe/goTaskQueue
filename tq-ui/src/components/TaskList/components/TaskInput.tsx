@@ -27,7 +27,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
   const templates = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
-  const [showRunMenu, setShowRunMenu] = React.useState(false);
+  const [showRunMenu, setShowRunMenu] = useState(false);
   const [dialogProps, setDialogProps] = useState<{template: TemplateButton, isNew?: boolean} | null>(null);
   const [dialogType, setDialogType] = useState<null | DialogType>(null);
 
@@ -154,6 +154,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <DialogMenu onClose={handleCloseMenu} open={true}>
           <DialogMenuItem onClick={handleNewTemplate}>New template</DialogMenuItem>
           <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
+          <DialogMenuItem onClick={handleReorder}>Reorder</DialogMenuItem>
         </DialogMenu>
       )}
       {dialogType === DialogType.Run && dialogProps && (

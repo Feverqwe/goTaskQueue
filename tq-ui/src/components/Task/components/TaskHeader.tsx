@@ -29,7 +29,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
   const navigate = useNavigate();
   const {id, state, label, command, error, isOnlyCombined} = task;
   const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | TemplateButton>(null);
-  const [showMenu, setShowMenu] = React.useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   useMemo(() => {
     document.title = `Task ${label || command} — TaskQueue`;

@@ -1,5 +1,5 @@
 import {Button, Dialog, DialogContent, DialogTitle} from '@mui/material';
-import React, {FC, useCallback} from 'react';
+import React, {FC, useCallback, useState} from 'react';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {TemplateFolder} from '../../RootStore/RootStoreProvider';
 import {TemplateBtnProps} from './TemplateBtn';
@@ -11,7 +11,7 @@ interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template'> {
 
 const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ template, onClick, onClone, onDelete, onEdit }) => {
   const { name, templates } = template;
-  const [showMenu, setShowMenu] = React.useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   const handleClick = useCallback(() => {
     setShowMenu(true);

@@ -1,4 +1,4 @@
-import React, {FC, useCallback} from 'react';
+import React, {FC, useCallback, useState} from 'react';
 import {Button} from '@mui/material';
 import {TemplateButton} from '../../RootStore/RootStoreProvider';
 import DialogMenu from '../../DialogMenu/DialogMenu';
@@ -14,7 +14,7 @@ export interface TemplateBtnProps {
 
 const TemplateBtn: FC<TemplateBtnProps> = ({template, onClick, onEdit, onDelete, onClone}) => {
   const {name} = template;
-  const [showMenu, setShowMenu] = React.useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   const handleClick = useCallback(() => {
     onClick(template);
