@@ -1,4 +1,4 @@
 import {createContext} from 'react';
-import {Template} from '../RootStore/RootStoreProvider';
+import {TemplateFolder} from '../RootStore/RootStoreProvider';
 
-export const TemplatesUpdateCtx = createContext<(templates: Template[]) => Promise<void>>(async () => {});
+export const TemplatesUpdateCtx = createContext<(folder: Pick<TemplateFolder, 'templates'>) => Promise<void>>(async () => {});

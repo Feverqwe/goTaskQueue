@@ -1,13 +1,13 @@
 import React, {FC} from 'react';
-import {Template, TemplateType} from '../../RootStore/RootStoreProvider';
+import {TemplateFolder, TemplateType} from '../../RootStore/RootStoreProvider';
 import TemplateBtn, {TemplateBtnProps} from './TemplateBtn';
 import TemplateFolderBtn from './TemplateFolderBtn';
 
 interface TemplatesBtnsProps extends Omit<TemplateBtnProps, 'template'> {
-  templates: Template[];
+  folder: Pick<TemplateFolder, 'templates'>;
 }
 
-const TemplatesBtns: FC<TemplatesBtnsProps> = ({templates, onDelete, onEdit, onClone, onClick}) => {
+const TemplatesBtns: FC<TemplatesBtnsProps> = ({folder: {templates}, onDelete, onEdit, onClone, onClick}) => {
   return (
     <>
       {templates.map((template, index) => {
@@ -15,7 +15,7 @@ const TemplatesBtns: FC<TemplatesBtnsProps> = ({templates, onDelete, onEdit, onC
           return (
             <TemplateFolderBtn
               key={index}
-              template={template}
+              folder={template}
               onClick={onClick}
               onEdit={onEdit}
               onDelete={onDelete}

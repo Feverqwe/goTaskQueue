@@ -13,23 +13,26 @@ import {
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
-import {Template} from '../../RootStore/RootStoreProvider';
+import {Template, TemplateFolder} from '../../RootStore/RootStoreProvider';
 import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
 
 interface OrderTemplatesDialogProps {
+  folder: TemplateFolder;
+  open: boolean;
   onClose: () => void;
 }
 
-const OrderTemplatesDialog: FC<OrderTemplatesDialogProps> = ({onClose}) => {
-  const initTemplates = useContext(TemplatesCtx);
+const OrderTemplatesDialog: FC<OrderTemplatesDialogProps> = ({folder, open, onClose}) => {
+  const rootFolder = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
-  const [templates, setTemplates] = useState(() => [...initTemplates]);
+  const [templates, setTemplates] = useState(() => [...folder.templates]);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
-    await updateTemplates(templates);
+    folder.templates = templates;
+    await updateTemplates(rootFolder);
     onClose();
-  }, [onClose, updateTemplates, templates]);
+  }, [onClose, updateTemplates, templates, rootFolder, folder]);
 
   const handleClose = useCallback((e: Event, reason: string) => {
     if (reason === 'backdropClick') return;
@@ -61,7 +64,7 @@ const OrderTemplatesDialog: FC<OrderTemplatesDialogProps> = ({onClose}) => {
   }, [templates]);
 
   return (
-    <Dialog open={true} onClose={handleClose} fullWidth>
+    <Dialog open={open} onClose={handleClose} fullWidth>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogTitle>
           Order

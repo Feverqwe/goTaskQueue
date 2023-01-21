@@ -27,7 +27,7 @@ const NEW_TEMPLATE: Template = {name: 'Run', variables: [], command: '', isPty: 
 
 const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
-  const templates = useContext(TemplatesCtx);
+  const rootFolder = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
   const [showRunMenu, setShowRunMenu] = useState(false);
   const [dialogProps, setDialogProps] = useState<{template: TemplateButton, isNew?: boolean} | null>(null);
@@ -104,29 +104,29 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   }, []);
 
   const handleDeleteTemplate = useCallback(async (template: Template) => {
-    const newTemplates = cloneTemplates(templates);
+    const newTemplates = cloneTemplates(rootFolder.templates);
     const subTemplates = getSubTemplates(newTemplates, template) || [];
     const pos = subTemplates.indexOf(template);
     if (pos === -1) {
       throw new Error('prev template not found');
     }
     subTemplates.splice(pos, 1);
-    await updateTemplates(newTemplates);
-  }, [templates, updateTemplates]);
+    await updateTemplates({templates: newTemplates});
+  }, [rootFolder, updateTemplates]);
 
   const handleCloneTemplate = useCallback(async (template: Template) => {
-    const newTemplates = cloneTemplates(templates);
+    const newTemplates = cloneTemplates(rootFolder.templates);
     const subTemplates = getSubTemplates(newTemplates, template);
     if (subTemplates) {
       subTemplates.push(template);
     } else {
       newTemplates.push(template);
     }
-    await updateTemplates(newTemplates);
-  }, [templates, updateTemplates]);
+    await updateTemplates({templates: newTemplates});
+  }, [rootFolder, updateTemplates]);
 
   const handleEdit = useCallback(async (prevTemplate: null | Template, newTemplate: Template) => {
-    const newTemplates = cloneTemplates(templates);
+    const newTemplates = cloneTemplates(rootFolder.templates);
     if (prevTemplate) {
       const subTemplates = getSubTemplates(newTemplates, prevTemplate) || [];
       const pos = subTemplates.indexOf(prevTemplate);
@@ -137,8 +137,8 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     } else {
       newTemplates.push(newTemplate);
     }
-    await updateTemplates(newTemplates);
-  }, [templates, updateTemplates]);
+    await updateTemplates({templates: newTemplates});
+  }, [rootFolder, updateTemplates]);
 
   return (
     <>
@@ -150,7 +150,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           <Button onClick={handleRun}>Run</Button>
         </ButtonGroup>
         <TemplatesBtns
-          templates={templates}
+          folder={rootFolder}
           onClick={handleClickTemplate}
           onEdit={handleEditTemplate}
           onDelete={handleDeleteTemplate}
@@ -171,7 +171,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <EditTemplateDialog {...dialogProps} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
       )}
       {dialogType === DialogType.Order && (
-        <OrderTemplatesDialog onClose={handleCloseTemplateDlg} />
+        <OrderTemplatesDialog open={true} folder={rootFolder} onClose={handleCloseTemplateDlg} />
       )}
     </>
   );
