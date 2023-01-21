@@ -1,5 +1,5 @@
 import React, {FC, ReactNode} from 'react';
-import {Box, Dialog, DialogTitle, List} from '@mui/material';
+import {Box, Dialog, List, ListSubheader} from '@mui/material';
 
 interface DialogMenuProps {
   open: boolean;
@@ -13,11 +13,15 @@ const DialogMenu: FC<DialogMenuProps> = ({children, title, open, onClose}) => {
 
   return (
     <Dialog onClose={onClose} open={open}>
-      {Boolean(title) && (
-        <DialogTitle>{title}</DialogTitle>
-      )}
       <Box minWidth="150px">
-        <List sx={{ py: 0, width: '100%' }}>
+        <List
+          sx={{ py: 0, width: '100%' }}
+          subheader={
+            Boolean(title) && (
+              <ListSubheader>{title}</ListSubheader>
+            )
+          }
+        >
           {children}
         </List>
       </Box>
