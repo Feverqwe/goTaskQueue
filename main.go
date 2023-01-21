@@ -41,7 +41,6 @@ func main() {
 
 	go func() {
 		var httpServer *http.Server
-		closeChan := make(chan bool)
 
 		init := func() {
 			config = cfg.LoadConfig()
@@ -51,7 +50,6 @@ func main() {
 				if err != nil {
 					log.Println("Server close error", err)
 				}
-				<-closeChan
 			}
 
 			router := internal.NewRouter()
@@ -74,7 +72,6 @@ func main() {
 				if err != nil {
 					log.Println("Server error", err)
 				}
-				closeChan <- true
 			}()
 		}
 
