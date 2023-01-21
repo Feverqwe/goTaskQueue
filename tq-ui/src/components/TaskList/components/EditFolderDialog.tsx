@@ -12,7 +12,7 @@ interface EditFolderDialogProps {
 }
 
 const EditFolderDialog: FC<EditFolderDialogProps> = ({folder, onClose, isNew, template, onSubmit, open}) => {
-  const {name} = template;
+  const {name, templates} = template;
   const refName = useRef<HTMLInputElement>(null);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
@@ -20,11 +20,11 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({folder, onClose, isNew, te
     const newTemplate: TemplateFolder = {
       type: TemplateType.Folder,
       name: refName.current?.value || '',
-      templates: [],
+      templates,
     };
     await onSubmit(folder, isNew ? null : template, newTemplate);
     onClose();
-  }, [isNew, onSubmit, onClose, folder, template]);
+  }, [isNew, onSubmit, onClose, folder, template, templates]);
 
   const handleClose = useCallback((e: Event, reason: string) => {
     if (reason === 'backdropClick') return;
