@@ -1,8 +1,8 @@
 import React, {FC, useCallback, useContext} from 'react';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, List, ListItem} from '@mui/material';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
-import {Template, TemplateFolder, TemplateType} from '../../RootStore/RootStoreProvider';
-import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
+import {Template, TemplateFolder, TemplateType} from '../../../RootStore/RootStoreProvider';
+import {TemplatesCtx} from '../../../TemplateProvider/TemplatesCtx';
 
 interface MoveTemplateDialogProps {
   folder: TemplateFolder;

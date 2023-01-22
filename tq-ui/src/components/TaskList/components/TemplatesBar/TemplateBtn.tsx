@@ -1,8 +1,8 @@
 import React, {FC, useCallback, useState} from 'react';
 import {Button} from '@mui/material';
-import {Template, TemplateButton, TemplateFolder} from '../../RootStore/RootStoreProvider';
-import DialogMenu from '../../DialogMenu/DialogMenu';
-import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
+import {Template, TemplateButton, TemplateFolder} from '../../../RootStore/RootStoreProvider';
+import DialogMenu from '../../../DialogMenu/DialogMenu';
+import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
 
 export interface TemplateBtnProps {
   folder: TemplateFolder;

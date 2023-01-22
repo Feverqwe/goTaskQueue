@@ -2,14 +2,14 @@ import React, {FC, useCallback, useContext, useState} from 'react';
 import {Box, Button, ButtonGroup, Divider} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
-import {api} from '../../../tools/api';
-import {Template, TemplateButton, TemplateFolder, TemplateType} from '../../RootStore/RootStoreProvider';
-import TemplateDialog from '../../TemplateDialog/TemplateDialog';
+import {api} from '../../../../tools/api';
+import {Template, TemplateButton, TemplateFolder, TemplateType} from '../../../RootStore/RootStoreProvider';
+import TemplateDialog from '../../../TemplateDialog/TemplateDialog';
 import EditTemplateDialog from './EditTemplateDialog';
-import {TemplatesCtx} from '../../TemplateProvider/TemplatesCtx';
-import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
-import DialogMenu from '../../DialogMenu/DialogMenu';
-import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
+import {TemplatesCtx} from '../../../TemplateProvider/TemplatesCtx';
+import {TemplatesUpdateCtx} from '../../../TemplateProvider/TemplatesUpdateCtx';
+import DialogMenu from '../../../DialogMenu/DialogMenu';
+import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
 import TemplatesBtns from './TemplatesBtns';
 import EditFolderDialog from './EditFolderDialog';
 import MoveTemplateDialog from './MoveTemplateDialog';
@@ -21,7 +21,7 @@ interface TaskInputProps {
 const NEW_TEMPLATE: TemplateButton = {name: 'Run', variables: [], command: '', isPty: false, isOnlyCombined: true};
 const NEW_FOLDER: TemplateFolder = {type: TemplateType.Folder, name: '', templates: []};
 
-const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
+const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   const navigate = useNavigate();
   const rootFolder = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
@@ -201,4 +201,4 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   );
 };
 
-export default TaskInput;
+export default TemplatesBar;

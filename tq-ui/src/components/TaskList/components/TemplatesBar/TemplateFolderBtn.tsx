@@ -1,11 +1,11 @@
 import {Button, Dialog, DialogContent, DialogTitle} from '@mui/material';
 import React, {FC, useCallback, useMemo, useState} from 'react';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
-import {TemplateFolder} from '../../RootStore/RootStoreProvider';
+import {TemplateFolder} from '../../../RootStore/RootStoreProvider';
 import {TemplateBtnProps} from './TemplateBtn';
 import TemplatesBtns from './TemplatesBtns';
-import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
-import DialogMenu from '../../DialogMenu/DialogMenu';
+import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
+import DialogMenu from '../../../DialogMenu/DialogMenu';
 
 export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template'> {
   template: TemplateFolder;

@@ -13,8 +13,8 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import {Template, TemplateButton, TemplateFolder} from '../../RootStore/RootStoreProvider';
-import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
+import {Template, TemplateButton, TemplateFolder} from '../../../RootStore/RootStoreProvider';
+import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 
 interface TemplateDialogProps {
   folder: TemplateFolder;

@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import {Template, TemplateFolder, TemplateType} from '../../RootStore/RootStoreProvider';
+import {Template, TemplateFolder, TemplateType} from '../../../RootStore/RootStoreProvider';
 
 interface EditFolderDialogProps {
   folder: TemplateFolder,

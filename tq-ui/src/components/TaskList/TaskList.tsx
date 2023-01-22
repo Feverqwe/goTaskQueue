@@ -2,7 +2,7 @@ import React, {FC, useCallback, useEffect, useMemo, useRef} from 'react';
 import {Box, CircularProgress, Container} from '@mui/material';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import TaskItem from './components/TaskItem';
-import TaskInput from './components/TaskInput';
+import TemplatesBar from './components/TemplatesBar/TemplatesBar';
 import {Task} from '../types';
 import {api} from '../../tools/api';
 import {ApiError, HTTPError} from '../../tools/apiRequest';
@@ -69,7 +69,7 @@ const TaskList: FC<TaskListProps> = () => {
 
   return (
     <Container maxWidth={false} disableGutters={true}>
-      <TaskInput onUpdate={handleUpdate} />
+      <TemplatesBar onUpdate={handleUpdate} />
       <>
         {loading && (
           <Box display="flex" justifyContent="center">
