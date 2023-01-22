@@ -14,7 +14,7 @@ export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template
   onEditFolder: (folder: TemplateFolder, template: TemplateFolder) => void;
 }
 
-const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onClick, onClone, onDelete, onNew, onNewFolder, onEdit, onEditFolder }) => {
+const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onClick, onClone, onDelete, onNew, onNewFolder, onEdit, onEditFolder, onMove }) => {
   const { name } = template;
   const [showMenu, setShowMenu] = useState(false);
   const [showCtxMenu, setShowCtxMenu] = useState(false);
@@ -66,6 +66,11 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
     handleCloseCtxMenu();
   }, [folder, template, onDelete, handleCloseCtxMenu]);
 
+  const handleMove = useCallback(() => {
+    onMove(folder, template);
+    handleCloseCtxMenu();
+  }, [onMove, folder, template, handleCloseCtxMenu]);
+
   return (
     <>
       <Button
@@ -81,6 +86,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
         <DialogMenuItem onClick={handleNew}>New template</DialogMenuItem>
         <DialogMenuItem onClick={handleNewFolder}>New folder</DialogMenuItem>
         <DialogMenuItem onClick={handleEditFolder}>Edit</DialogMenuItem>
+        <DialogMenuItem onClick={handleMove}>Move</DialogMenuItem>
         <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
       </DialogMenu>
       <Dialog open={showMenu} onClose={handleCloseMenu} title={name}>
@@ -92,8 +98,9 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
             folder={template}
             onClick={withCloseMenu(onClick)}
             onEdit={withCloseMenu(onEdit)}
-            onDelete={onDelete}
+            onMove={withCloseMenu(onMove)}
             onClone={onClone}
+            onDelete={onDelete}
             onNew={onNew}
             onNewFolder={onNewFolder}
             onEditFolder={onEditFolder}

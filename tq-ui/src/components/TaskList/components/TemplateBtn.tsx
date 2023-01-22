@@ -11,9 +11,10 @@ export interface TemplateBtnProps {
   onEdit: (folder: TemplateFolder, template: TemplateButton) => void;
   onDelete: (folder: TemplateFolder, template: Template) => void;
   onClone: (folder: TemplateFolder, template: Template) => void;
+  onMove: (folder: TemplateFolder, template: Template) => void;
 }
 
-const TemplateBtn: FC<TemplateBtnProps> = ({folder, template, onClick, onEdit, onDelete, onClone}) => {
+const TemplateBtn: FC<TemplateBtnProps> = ({folder, template, onClick, onEdit, onDelete, onClone, onMove}) => {
   const {name} = template;
   const [showMenu, setShowMenu] = useState(false);
 
@@ -45,6 +46,11 @@ const TemplateBtn: FC<TemplateBtnProps> = ({folder, template, onClick, onEdit, o
     handleCloseMenu();
   }, [folder, template, onClone, handleCloseMenu]);
 
+  const handleMove = useCallback(() => {
+    onMove(folder, template);
+    handleCloseMenu();
+  }, [folder, template, onMove, handleCloseMenu]);
+
   const handleCtxMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     setShowMenu(true);
@@ -65,6 +71,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({folder, template, onClick, onEdit, o
           <DialogMenuItem onClick={handleRunAs}>Run as</DialogMenuItem>
         )}
         <DialogMenuItem onClick={handleEdit}>Edit</DialogMenuItem>
+        <DialogMenuItem onClick={handleMove}>Move</DialogMenuItem>
         <DialogMenuItem onClick={handleClone}>Clone</DialogMenuItem>
         <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
       </DialogMenu>

@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useContext, useState} from 'react';
-import {Box, Button, ButtonGroup} from '@mui/material';
+import {Box, Button, ButtonGroup, Divider} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
 import {api} from '../../../tools/api';
@@ -12,6 +12,7 @@ import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TemplatesBtns from './TemplatesBtns';
 import EditFolderDialog from './EditFolderDialog';
+import MoveTemplateDialog from './MoveTemplateDialog';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -27,6 +28,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const [showRunMenu, setShowRunMenu] = useState(false);
   const [runDialog, setRunDialog] = useState<{template: TemplateButton, isNew?: boolean} | null>(null);
   const [editDialog, setEditDialog] = useState<{template: TemplateButton, isNew?: boolean, folder: TemplateFolder} | null>(null);
+  const [moveDialog, setMoveDialog] = useState<{folder: TemplateFolder, template: Template} | null>(null);
   const [editFolderDialog, setEditFolderDialog] = useState<{folder: TemplateFolder, template: TemplateFolder, isNew?: boolean, isRoot?: boolean} | null>(null);
 
   const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
@@ -95,9 +97,14 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     setEditFolderDialog({folder, template});
   }, []);
 
+  const handleMoveTemplate = useCallback((folder: TemplateFolder, template: Template) => {
+    setMoveDialog({folder, template});
+  }, []);
+
   const handleCloseTemplateDlg = useCallback(() => {
     setRunDialog(null);
     setEditDialog(null);
+    setMoveDialog(null);
     setEditFolderDialog(null);
   }, []);
 
@@ -143,6 +150,11 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     await updateTemplates(rootFolder);
   }, [rootFolder, updateTemplates]);
 
+  const handleMove = useCallback(async (folder: TemplateFolder, template: Template, targetFolder: TemplateFolder) => {
+    targetFolder.templates = [...targetFolder.templates, template];
+    await handleDeleteTemplate(folder, template);
+  }, [handleDeleteTemplate]);
+
   return (
     <>
       <Box display="flex" flexWrap="wrap" mt={1}>
@@ -161,24 +173,29 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           onEditFolder={handleEditTemplateFolder}
           onDelete={handleDeleteTemplate}
           onClone={handleCloneTemplate}
+          onMove={handleMoveTemplate}
         />
       </Box>
       {showRunMenu && (
         <DialogMenu onClose={handleCloseMenu} open={true}>
           <DialogMenuItem onClick={handleNewTemplate.bind(null, rootFolder)}>New template</DialogMenuItem>
           <DialogMenuItem onClick={handleNewTemplateFolder.bind(null, rootFolder)}>New folder</DialogMenuItem>
-          <DialogMenuItem onClick={handleEditRootFolder}>Edit folder</DialogMenuItem>
+          <DialogMenuItem onClick={handleEditRootFolder}>Edit</DialogMenuItem>
+          <Divider />
           <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
         </DialogMenu>
       )}
       {runDialog && (
-        <TemplateDialog open={true} {...runDialog} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
+        <TemplateDialog {...runDialog} open={true} onSubmit={handleAdd} onClose={handleCloseTemplateDlg} />
       )}
       {editDialog && (
-        <EditTemplateDialog open={true} {...editDialog} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
+        <EditTemplateDialog {...editDialog} open={true} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
       )}
       {editFolderDialog && (
-        <EditFolderDialog open={true} {...editFolderDialog} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
+        <EditFolderDialog {...editFolderDialog} open={true} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
+      )}
+      {moveDialog && (
+        <MoveTemplateDialog {...moveDialog} open={true} onSubmit={handleMove} onClose={handleCloseTemplateDlg} />
       )}
     </>
   );
