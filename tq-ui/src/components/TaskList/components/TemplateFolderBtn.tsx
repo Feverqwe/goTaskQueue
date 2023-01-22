@@ -1,5 +1,5 @@
 import {Button, Dialog, DialogContent, DialogTitle} from '@mui/material';
-import React, {FC, useCallback, useState} from 'react';
+import React, {FC, useCallback, useMemo, useState} from 'react';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {TemplateFolder} from '../../RootStore/RootStoreProvider';
 import {TemplateBtnProps} from './TemplateBtn';
@@ -27,10 +27,14 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
     setShowMenu(false);
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const proxyAction = useCallback((fn: (...args: any[]) => any, ...args: any[]) => {
-    setShowMenu(false);
-    return fn(...args);
+  const withCloseMenu = useMemo(() => {
+    function proxy<T extends(...args: Parameters<T>) => void>(fn: T) {
+      return (...args: Parameters<T>) => {
+        fn(...args);
+        setShowMenu(false);
+      };
+    }
+    return proxy;
   }, []);
 
   const handleCtxMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
@@ -86,8 +90,8 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
         <DialogContent>
           <TemplatesBtns
             folder={template}
-            onClick={proxyAction.bind(null, onClick)}
-            onEdit={proxyAction.bind(null, onEdit)}
+            onClick={withCloseMenu(onClick)}
+            onEdit={withCloseMenu(onEdit)}
             onDelete={onDelete}
             onClone={onClone}
             onNew={onNew}
