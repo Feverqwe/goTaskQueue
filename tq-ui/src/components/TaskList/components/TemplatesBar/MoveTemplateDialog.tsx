@@ -1,6 +1,13 @@
 import React, {FC, useCallback, useContext} from 'react';
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, List, ListItem} from '@mui/material';
-import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  List,
+  ListItemButton, ListItemIcon, ListItemText,
+} from '@mui/material';
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {Template, TemplateFolder, TemplateType} from '../../../RootStore/RootStoreProvider';
 import {TemplatesCtx} from '../../../TemplateProvider/TemplatesCtx';
 
@@ -25,31 +32,27 @@ const MoveTemplateDialog: FC<MoveTemplateDialogProps> = ({folder, onSubmit, onCl
       <DialogTitle>
         Move
       </DialogTitle>
-      <DialogContent>
-        <List>
-          {getFolders(rootFolder, folder).map(({name, folder: subTemplate}, index) => {
-            if (subTemplate === template) {
-              return null;
-            }
-            return (
-              <ListItem
-                key={index}
-                secondaryAction={(
-                  <IconButton
-                    edge="end"
-                    title="Move"
-                    onClick={handleMove.bind(null, subTemplate)}
-                  >
-                    <DriveFileMoveIcon />
-                  </IconButton>
-                )}
-              >
+      <List>
+        {getFolders(rootFolder, folder).map(({name, folder: subTemplate}, index) => {
+          if (subTemplate === template) {
+            return null;
+          }
+          return (
+            <ListItemButton
+              key={index}
+              onClick={handleMove.bind(null, subTemplate)}
+              title="Move"
+            >
+              <ListItemIcon sx={{minWidth: 0, mr: 1}}>
+                <FolderOutlinedIcon />
+              </ListItemIcon>
+              <ListItemText>
                 {name}
-              </ListItem>
-            );
-          })}
-        </List>
-      </DialogContent>
+              </ListItemText>
+            </ListItemButton>
+          );
+        })}
+      </List>
       <DialogActions>
         <Button variant="outlined" onClick={onClose}>Cancel</Button>
       </DialogActions>
