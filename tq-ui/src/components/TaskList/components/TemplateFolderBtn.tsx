@@ -4,7 +4,6 @@ import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {TemplateFolder} from '../../RootStore/RootStoreProvider';
 import {TemplateBtnProps} from './TemplateBtn';
 import TemplatesBtns from './TemplatesBtns';
-import OrderTemplatesDialog from './OrderTemplatesDialog';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 
@@ -13,13 +12,13 @@ export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template
   onNew: (folder: TemplateFolder) => void;
   onNewFolder: (folder: TemplateFolder) => void;
   onEditFolder: (folder: TemplateFolder, template: TemplateFolder) => void;
+  onOrder: (template: TemplateFolder) => void;
 }
 
-const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onClick, onClone, onDelete, onNew, onNewFolder, onEdit, onEditFolder }) => {
+const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onClick, onClone, onDelete, onNew, onNewFolder, onEdit, onEditFolder, onOrder }) => {
   const { name } = template;
   const [showMenu, setShowMenu] = useState(false);
   const [showCtxMenu, setShowCtxMenu] = useState(false);
-  const [showOrderDialog, setOrderDialog] = useState(false);
 
   const handleClick = useCallback(() => {
     setShowMenu(true);
@@ -27,10 +26,6 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
 
   const handleCloseMenu = useCallback(() => {
     setShowMenu(false);
-  }, []);
-
-  const handleCloseTemplateDlg = useCallback(() => {
-    setOrderDialog(false);
   }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,9 +44,9 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
   }, []);
 
   const handleOrder = useCallback(() => {
+    onOrder(template);
     handleCloseCtxMenu();
-    setOrderDialog(true);
-  }, [handleCloseCtxMenu]);
+  }, [template, handleCloseCtxMenu, onOrder]);
 
   const handleNew = useCallback(() => {
     onNew(template);
@@ -88,8 +83,8 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
         <DialogMenuItem onClick={handleNew}>New template</DialogMenuItem>
         <DialogMenuItem onClick={handleNewFolder}>New folder</DialogMenuItem>
         <DialogMenuItem onClick={handleEditFolder}>Edit</DialogMenuItem>
-        <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
         <DialogMenuItem onClick={handleOrder}>Order</DialogMenuItem>
+        <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
       </DialogMenu>
       <Dialog open={showMenu} onClose={handleCloseMenu} title={name}>
         <DialogTitle>
@@ -105,12 +100,10 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
             onNew={onNew}
             onNewFolder={onNewFolder}
             onEditFolder={onEditFolder}
+            onOrder={onOrder}
           />
         </DialogContent>
       </Dialog>
-      {showOrderDialog && (
-        <OrderTemplatesDialog open={true} folder={template} onClose={handleCloseTemplateDlg} />
-      )}
     </>
   );
 };

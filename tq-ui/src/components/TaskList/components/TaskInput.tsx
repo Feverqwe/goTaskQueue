@@ -28,7 +28,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
   const [showRunMenu, setShowRunMenu] = useState(false);
   const [runDialog, setRunDialog] = useState<{template: TemplateButton, isNew?: boolean} | null>(null);
   const [editDialog, setEditDialog] = useState<{template: TemplateButton, isNew?: boolean, folder: TemplateFolder} | null>(null);
-  const [orderDialog, setOrderDialog] = useState(false);
+  const [orderDialog, setOrderDialog] = useState<{template: TemplateFolder} | null>(null);
   const [editFolderDialog, setEditFolderDialog] = useState<{folder: TemplateFolder, template: TemplateFolder, isNew?: boolean} | null>(null);
 
   const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
@@ -65,8 +65,8 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseMenu();
   }, [handleCloseMenu]);
 
-  const handleOrder = useCallback(() => {
-    setOrderDialog(true);
+  const handleOrderTemplate = useCallback((template: TemplateFolder) => {
+    setOrderDialog({template});
     handleCloseMenu();
   }, [handleCloseMenu]);
 
@@ -99,7 +99,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
 
   const handleCloseTemplateDlg = useCallback(() => {
     setRunDialog(null);
-    setOrderDialog(false);
+    setOrderDialog(null);
     setEditDialog(null);
     setEditFolderDialog(null);
   }, []);
@@ -158,13 +158,14 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
           onEditFolder={handleEditTemplateFolder}
           onDelete={handleDeleteTemplate}
           onClone={handleCloneTemplate}
+          onOrder={handleOrderTemplate}
         />
       </Box>
       {showRunMenu && (
         <DialogMenu onClose={handleCloseMenu} open={true}>
           <DialogMenuItem onClick={handleNewTemplate.bind(null, rootFolder)}>New template</DialogMenuItem>
           <DialogMenuItem onClick={handleNewTemplateFolder.bind(null, rootFolder)}>New folder</DialogMenuItem>
-          <DialogMenuItem onClick={handleOrder}>Order</DialogMenuItem>
+          <DialogMenuItem onClick={handleOrderTemplate.bind(null, rootFolder)}>Order</DialogMenuItem>
           <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
         </DialogMenu>
       )}
@@ -178,7 +179,7 @@ const TaskInput: FC<TaskInputProps> = ({onUpdate}) => {
         <EditFolderDialog open={true} {...editFolderDialog} onSubmit={handleEdit} onClose={handleCloseTemplateDlg} />
       )}
       {orderDialog && (
-        <OrderTemplatesDialog open={true} folder={rootFolder} onClose={handleCloseTemplateDlg} />
+        <OrderTemplatesDialog {...orderDialog} open={true} onClose={handleCloseTemplateDlg} />
       )}
     </>
   );

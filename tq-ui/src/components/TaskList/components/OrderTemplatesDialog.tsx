@@ -17,22 +17,22 @@ import {Template, TemplateFolder} from '../../RootStore/RootStoreProvider';
 import {TemplatesUpdateCtx} from '../../TemplateProvider/TemplatesUpdateCtx';
 
 interface OrderTemplatesDialogProps {
-  folder: TemplateFolder;
+  template: TemplateFolder;
   open: boolean;
   onClose: () => void;
 }
 
-const OrderTemplatesDialog: FC<OrderTemplatesDialogProps> = ({folder, open, onClose}) => {
+const OrderTemplatesDialog: FC<OrderTemplatesDialogProps> = ({template, open, onClose}) => {
   const rootFolder = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
-  const [templates, setTemplates] = useState(() => [...folder.templates]);
+  const [templates, setTemplates] = useState(() => [...template.templates]);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
-    folder.templates = templates;
+    template.templates = templates;
     await updateTemplates(rootFolder);
     onClose();
-  }, [onClose, updateTemplates, templates, rootFolder, folder]);
+  }, [onClose, updateTemplates, templates, rootFolder, template]);
 
   const handleClose = useCallback((e: Event, reason: string) => {
     if (reason === 'backdropClick') return;
