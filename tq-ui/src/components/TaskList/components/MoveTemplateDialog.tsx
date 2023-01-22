@@ -23,7 +23,7 @@ const MoveTemplateDialog: FC<MoveTemplateDialogProps> = ({folder, onSubmit, onCl
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
       <DialogTitle>
-        Order
+        Move
       </DialogTitle>
       <DialogContent>
         <List>
