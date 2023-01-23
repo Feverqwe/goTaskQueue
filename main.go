@@ -8,6 +8,7 @@ import (
 	"goTaskQueue/assets"
 	"goTaskQueue/internal"
 	"goTaskQueue/internal/cfg"
+	memstorage "goTaskQueue/internal/memStorage"
 	"goTaskQueue/internal/mutex"
 	"goTaskQueue/internal/powerCtr"
 	"goTaskQueue/internal/taskQueue"
@@ -36,6 +37,7 @@ func main() {
 
 	var powerControl = powerCtr.GetPowerControl()
 	var taskQueue = taskQueue.LoadQueue()
+	var memStorage = memstorage.GetMemStorage()
 
 	callChan := make(chan string)
 
@@ -56,8 +58,8 @@ func main() {
 
 			powerLock(router, powerControl)
 			handleWebsocket(router, taskQueue)
-			internal.HandleApi(router, taskQueue, &config, callChan)
-			handleWww(router, &config)
+			internal.HandleApi(router, taskQueue, memStorage, &config, callChan)
+			handleWww(router, memStorage, &config)
 
 			address := config.GetAddress()
 
@@ -202,7 +204,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 	})
 }
 
-func handleWww(router *internal.Router, config *cfg.Config) {
+func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, config *cfg.Config) {
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
 		if binStat, err := os.Stat(binPath); err == nil {
@@ -211,8 +213,9 @@ func handleWww(router *internal.Router, config *cfg.Config) {
 	}
 
 	type RootStore struct {
-		Templates      []interface{} `json:"templates"`
-		IsPtySupported bool          `json:"isPtySupported"`
+		Templates      []interface{}          `json:"templates"`
+		MemStorage     map[string]interface{} `json:"memStorage"`
+		IsPtySupported bool                   `json:"isPtySupported"`
 	}
 
 	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -244,6 +247,7 @@ func handleWww(router *internal.Router, config *cfg.Config) {
 
 			store := RootStore{
 				Templates:      config.Templates,
+				MemStorage:     memStorage.GetKeys(nil),
 				IsPtySupported: runtime.GOOS != "windows",
 			}
 			storeJson, err := json.Marshal(store)

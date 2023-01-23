@@ -5,6 +5,7 @@ import (
 	"errors"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
+	memstorage "goTaskQueue/internal/memStorage"
 	"goTaskQueue/internal/taskQueue"
 	"io"
 	"net/http"
@@ -21,11 +22,12 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, queue *taskQueue.Queue, config *cfg.Config, callChan chan string) {
+func HandleApi(router *Router, queue *taskQueue.Queue, memStorage *memstorage.MemStorage, config *cfg.Config, callChan chan string) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
 	handleAction(apiRouter, config, queue, callChan)
+	handleMemStorage(apiRouter, memStorage)
 	handleFobidden(apiRouter)
 
 	router.All("^/api/", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
@@ -308,6 +310,39 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			templates := config.Templates
 
 			return templates, err
+		})
+	})
+}
+
+func handleMemStorage(router *Router, memStorage *memstorage.MemStorage) {
+	router.Post("/api/memStorage/get", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (map[string]interface{}, error) {
+			keys, err := ParseJson[[]string](r.Body)
+			if err != nil {
+				return nil, err
+			}
+			result := memStorage.GetKeys(*keys)
+			return result, nil
+		})
+	})
+
+	router.Post("/api/memStorage/set", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			keyValue, err := ParseJson[map[string]interface{}](r.Body)
+			if err == nil {
+				err = memStorage.SetObject(*keyValue)
+			}
+			return "ok", err
+		})
+	})
+
+	router.Post("/api/memStorage/del", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			keys, err := ParseJson[[]string](r.Body)
+			if err == nil {
+				err = memStorage.DelKeys(*keys)
+			}
+			return "ok", err
 		})
 	})
 }
