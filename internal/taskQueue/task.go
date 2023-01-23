@@ -36,6 +36,7 @@ type PtyScreenSize struct {
 type Task struct {
 	Id             string `json:"id"`
 	Label          string `json:"label"`
+	Group          string `json:"group"`
 	Command        string `json:"command"`
 	process        *exec.Cmd
 	IsStarted      bool               `json:"isStarted"`
@@ -404,10 +405,11 @@ func (s *Task) SetLabel(label string) {
 	s.queue.Save()
 }
 
-func NewTask(id string, command string, label string, isPty bool, isOnlyCombined bool) *Task {
+func NewTask(id string, command string, label string, group string, isPty bool, isOnlyCombined bool) *Task {
 	task := Task{
 		Id:             id,
 		Label:          label,
+		Group:          group,
 		Command:        command,
 		CreatedAt:      time.Now(),
 		IsPty:          isPty,

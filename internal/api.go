@@ -54,6 +54,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	type AddTaskPayload struct {
 		Command        string `json:"command"`
 		Label          string `json:"label"`
+		Group          string `json:"group"`
 		IsPty          bool   `json:"isPty"`
 		IsOnlyCombined bool   `json:"isOnlyCombined"`
 	}
@@ -103,7 +104,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return nil, err
 			}
 
-			task := queue.Add(payload.Command, payload.Label, payload.IsPty, payload.IsOnlyCombined)
+			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined)
 
 			return task, err
 		})
