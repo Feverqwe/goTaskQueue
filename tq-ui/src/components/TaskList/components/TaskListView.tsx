@@ -3,12 +3,12 @@ import {TaskOrGroup} from '../../types';
 import TaskGroupItem from './TaskGroupItem';
 import TaskItem from './TaskItem';
 
-interface RenderTaskListProps {
+interface TaskListViewProps {
   taskList: TaskOrGroup[];
   onUpdate: () => void;
 }
 
-const RenderTaskList: FC<RenderTaskListProps> = ({taskList, onUpdate}) => {
+const TaskListView: FC<TaskListViewProps> = ({taskList, onUpdate}) => {
   return (
     <>
       {taskList.map((task) => {
@@ -25,4 +25,4 @@ const RenderTaskList: FC<RenderTaskListProps> = ({taskList, onUpdate}) => {
   );
 };
 
-export default RenderTaskList;
+export default TaskListView;

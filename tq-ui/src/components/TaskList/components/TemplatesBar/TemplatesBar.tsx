@@ -10,7 +10,7 @@ import {TemplatesCtx} from '../../../TemplateProvider/TemplatesCtx';
 import {TemplatesUpdateCtx} from '../../../TemplateProvider/TemplatesUpdateCtx';
 import DialogMenu from '../../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
-import TemplatesBtns from './TemplatesBtns';
+import TemplatesBarView from './TemplatesBarView';
 import EditFolderDialog from './EditFolderDialog';
 import MoveTemplateDialog from './MoveTemplateDialog';
 import {AddTaskReuest} from '../../../types';
@@ -162,7 +162,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
           </Button>
           <Button onClick={handleRun}>Run</Button>
         </ButtonGroup>
-        <TemplatesBtns
+        <TemplatesBarView
           folder={rootFolder}
           onClick={handleClickTemplate}
           onNew={handleNewTemplate}

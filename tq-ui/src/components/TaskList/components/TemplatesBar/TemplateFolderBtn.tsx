@@ -3,7 +3,7 @@ import React, {FC, useCallback, useMemo, useState} from 'react';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {TemplateFolder} from '../../../RootStore/RootStoreProvider';
 import {TemplateBtnProps} from './TemplateBtn';
-import TemplatesBtns from './TemplatesBtns';
+import TemplatesBarView from './TemplatesBarView';
 import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
 import DialogMenu from '../../../DialogMenu/DialogMenu';
 
@@ -96,7 +96,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
           {name}
         </DialogTitle>
         <DialogContent>
-          <TemplatesBtns
+          <TemplatesBarView
             folder={template}
             onClick={withCloseMenu(onClick)}
             onEdit={withCloseMenu(onEdit)}

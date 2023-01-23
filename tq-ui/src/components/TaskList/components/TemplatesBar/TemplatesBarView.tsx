@@ -3,11 +3,11 @@ import {TemplateType} from '../../../RootStore/RootStoreProvider';
 import TemplateBtn, {TemplateBtnProps} from './TemplateBtn';
 import TemplateFolderBtn, {TemplateFolderBtnProps} from './TemplateFolderBtn';
 
-interface TemplatesBtnsProps extends Omit<TemplateBtnProps, 'template'>, Omit<TemplateFolderBtnProps, 'template'> {
+interface TemplatesBarViewProps extends Omit<TemplateBtnProps, 'template'>, Omit<TemplateFolderBtnProps, 'template'> {
 
 }
 
-const TemplatesBtns: FC<TemplatesBtnsProps> = ({folder, ...props}) => {
+const TemplatesBarView: FC<TemplatesBarViewProps> = ({folder, ...props}) => {
   const {templates} = folder;
 
   return (
@@ -36,4 +36,4 @@ const TemplatesBtns: FC<TemplatesBtnsProps> = ({folder, ...props}) => {
   );
 };
 
-export default TemplatesBtns;
+export default TemplatesBarView;

@@ -4,7 +4,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { TaskGroup, TaskOrGroup, TaskState} from '../../types';
 import TaskStatusIcon from '../../Task/components/TaskStatusIcon';
-import RenderTaskList from './RenderTaskList';
+import TaskListView from './TaskListView';
 import {GroupStateCtx} from '../../GroupStorageProvider/GroupStateCtx';
 import {GroupStateSetCtx} from '../../GroupStorageProvider/GroupStateSetCtx';
 
@@ -78,7 +78,7 @@ const TaskGroupItem: FC<TaskGroupItemProps> = ({group, onUpdate}) => {
         </Card>
       </Box>
       {open && (
-        <RenderTaskList taskList={taskList} onUpdate={onUpdate} />
+        <TaskListView taskList={taskList} onUpdate={onUpdate} />
       )}
     </>
   );

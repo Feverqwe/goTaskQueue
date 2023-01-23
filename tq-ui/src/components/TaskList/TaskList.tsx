@@ -8,7 +8,7 @@ import {ApiError, HTTPError} from '../../tools/apiRequest';
 import DisplayError from '../DisplayError';
 import {useVisibility} from '../../hooks/useVisibility';
 import {groupTasks} from './utils';
-import RenderTaskList from './components/RenderTaskList';
+import TaskListView from './components/TaskListView';
 
 interface TaskListProps {
 
@@ -83,7 +83,7 @@ const TaskList: FC<TaskListProps> = () => {
           </Box>
         )}
         {taskList && !error && (
-          <RenderTaskList taskList={taskList} onUpdate={handleUpdate} />
+          <TaskListView taskList={taskList} onUpdate={handleUpdate} />
         )}
       </>
     </Container>
