@@ -1,10 +1,10 @@
 import React, {FC} from 'react';
-import {TaskListArr} from '../../types';
+import {TaskOrGroup} from '../../types';
 import TaskGroupItem from './TaskGroupItem';
 import TaskItem from './TaskItem';
 
 interface RenderTaskListProps {
-  taskList: TaskListArr;
+  taskList: TaskOrGroup[];
   onUpdate: () => void;
 }
 

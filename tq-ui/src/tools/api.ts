@@ -1,5 +1,5 @@
 import {handleApiResponse} from './apiRequest';
-import {Task} from '../components/types';
+import {AddTaskReuest, Task} from '../components/types';
 import {Template} from '../components/RootStore/RootStoreProvider';
 
 interface ActionParams {
@@ -36,7 +36,7 @@ export const api = {
   task: action<TaskId, Task>({
     path: '/api/task',
   }),
-  add: action<{command: string, label: string, isPty: boolean, isOnlyCombined: boolean}, Task>({
+  add: action<AddTaskReuest, Task>({
     method: 'POST',
     path: '/api/add',
   }),

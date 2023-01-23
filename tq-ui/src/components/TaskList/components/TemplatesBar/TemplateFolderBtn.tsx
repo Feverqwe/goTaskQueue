@@ -1,4 +1,4 @@
-import {Button, Dialog, DialogContent, DialogTitle} from '@mui/material';
+import {Button, Dialog, DialogContent, DialogTitle, Divider} from '@mui/material';
 import React, {FC, useCallback, useMemo, useState} from 'react';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {TemplateFolder} from '../../../RootStore/RootStoreProvider';
@@ -85,8 +85,10 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
       <DialogMenu open={showCtxMenu} onClose={handleCloseCtxMenu} title={name}>
         <DialogMenuItem onClick={handleNew}>New template</DialogMenuItem>
         <DialogMenuItem onClick={handleNewFolder}>New folder</DialogMenuItem>
+        <Divider />
         <DialogMenuItem onClick={handleEditFolder}>Edit</DialogMenuItem>
         <DialogMenuItem onClick={handleMove}>Move</DialogMenuItem>
+        <Divider />
         <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
       </DialogMenu>
       <Dialog open={showMenu} onClose={handleCloseMenu} title={name}>

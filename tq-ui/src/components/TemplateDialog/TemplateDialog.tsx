@@ -14,21 +14,23 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import {TemplateButton} from '../RootStore/RootStoreProvider';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
+import {AddTaskReuest} from '../types';
 
 interface TemplateDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => Promise<void>;
+  onSubmit: (run: boolean, runTask: AddTaskReuest) => Promise<void>;
   template: TemplateButton;
   isNew?: boolean;
 }
 
 const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onClose, isNew}) => {
-  const {name, variables, command, label, isPty, isOnlyCombined} = template;
+  const {name, variables, command, label, group, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [isExtended, setExtended] = useState(() => isNew);
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
+  const refGroup = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
   const refMap = useMemo(() => new Map(), []);
@@ -70,22 +72,23 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
       labelResult = labelResult.replace(`{${variable}}`, current.value);
     });
 
+    const group = refGroup.current?.value || '';
     const isPty = refPty.current?.checked || false;
     const isOnlyCombined = refOnlyCombined.current?.checked || false;
 
-    return {command: commandResult, label: labelResult, isPty, isOnlyCombined};
+    return {command: commandResult, label: labelResult, group, isPty, isOnlyCombined};
   }, [refMap]);
 
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
-    const {command, label, isPty, isOnlyCombined} = getCommand();
-    await onSubmit(true, command, label, isPty, isOnlyCombined);
+    const runTask = getCommand();
+    await onSubmit(true, runTask);
     onClose();
   }, [onSubmit, onClose, getCommand]);
 
   const handleAdd = useCallback(async () => {
-    const {command, label, isPty, isOnlyCombined} = getCommand();
-    await onSubmit(false, command, label, isPty, isOnlyCombined);
+    const runTask = getCommand();
+    await onSubmit(false, runTask);
     onClose();
   }, [onClose, onSubmit, getCommand]);
 
@@ -142,6 +145,19 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
               label="Label"
               defaultValue={label || ''}
               inputProps={{ref: refLabel}}
+              fullWidth
+              type="text"
+              variant="outlined"
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+            <TextField
+              size="small"
+              sx={{my: 1}}
+              label="Group"
+              defaultValue={group || ''}
+              inputProps={{ref: refGroup}}
               fullWidth
               type="text"
               variant="outlined"

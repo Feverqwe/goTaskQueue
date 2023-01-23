@@ -1,8 +1,8 @@
-import React, {FC, useCallback, useContext, useMemo} from 'react';
+import React, {FC, useCallback, useContext, useMemo, useState} from 'react';
 import {Box, Card, CardActionArea, Typography} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import {Task, TaskGroup, TaskState} from '../../types';
+import { TaskGroup, TaskOrGroup, TaskState} from '../../types';
 import TaskStatusIcon from '../../Task/components/TaskStatusIcon';
 import RenderTaskList from './RenderTaskList';
 import {GroupStateCtx} from '../../GroupStorageProvider/GroupStateCtx';
@@ -18,15 +18,18 @@ const TaskGroupItem: FC<TaskGroupItemProps> = ({group, onUpdate}) => {
   const groupState = useContext(GroupStateCtx);
   const setGroupState = useContext(GroupStateSetCtx);
 
-  const open = useMemo(() => groupState[name] || false, [groupState, name]);
+  const [open, setOpen] = useState(() => groupState[name] || false);
 
-  const handleExpand = useCallback(() => {
-    setGroupState(name, !groupState[name]);
-  }, [setGroupState, groupState, name]);
+  const handleExpand = useCallback(async () => {
+    setOpen((v) => {
+      setGroupState(name, !v);
+      return !v;
+    });
+  }, [setGroupState, name]);
 
   const status = useMemo(() => {
     const typeCount = new Map<TaskState, number>();
-    const next = (task: TaskGroup | Task) => {
+    const next = (task: TaskOrGroup) => {
       if ('taskList' in task) {
         task.taskList.forEach(next);
       } else {

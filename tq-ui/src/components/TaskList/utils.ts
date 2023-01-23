@@ -1,19 +1,18 @@
-import {Task, TaskGroup, TaskListArr} from '../types';
+import {Task, TaskGroup, TaskOrGroup} from '../types';
 
 export function groupTasks(tasks: Task[]) {
-  const taskList: TaskListArr = [];
+  const taskList: TaskOrGroup[] = [];
   const groupTaskList = new Map<string, TaskGroup>();
   tasks.forEach((task) => {
-    const m = /^([^/]+)\//.exec(task.label);
-    if (m) {
-      const name = m && m[1];
-      let group = groupTaskList.get(name);
+    const groupName = task.group;
+    if (groupName) {
+      let group = groupTaskList.get(groupName);
       if (!group) {
         const newGroup: TaskGroup = {
-          name,
+          name: groupName,
           taskList: [],
         };
-        groupTaskList.set(name, group = newGroup);
+        groupTaskList.set(groupName, group = newGroup);
         taskList.push(group);
       }
       group.taskList.push(task);

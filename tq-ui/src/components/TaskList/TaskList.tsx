@@ -2,7 +2,7 @@ import React, {FC, useCallback, useEffect, useMemo, useRef} from 'react';
 import {Box, CircularProgress, Container} from '@mui/material';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import TemplatesBar from './components/TemplatesBar/TemplatesBar';
-import {TaskListArr} from '../types';
+import {TaskOrGroup} from '../types';
 import {api} from '../../tools/api';
 import {ApiError, HTTPError} from '../../tools/apiRequest';
 import DisplayError from '../DisplayError';
@@ -21,7 +21,7 @@ const TaskList: FC<TaskListProps> = () => {
   const {loading, error, taskList, fetchTaskList} = useLocalObservable(() => ({
     loading: true,
     error: null as null | HTTPError | ApiError | TypeError,
-    taskList: null as null | TaskListArr,
+    taskList: null as null | TaskOrGroup[],
     async fetchTaskList(silent = false) {
       if (!silent) {
         this.loading = true;

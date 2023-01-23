@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useState} from 'react';
-import {Button} from '@mui/material';
+import {Button, Divider} from '@mui/material';
 import {Template, TemplateButton, TemplateFolder} from '../../../RootStore/RootStoreProvider';
 import DialogMenu from '../../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
@@ -68,11 +68,15 @@ const TemplateBtn: FC<TemplateBtnProps> = ({folder, template, onClick, onEdit, o
       </Button>
       <DialogMenu open={showMenu} onClose={handleCloseMenu} title={name}>
         {!template.variables.length && (
-          <DialogMenuItem onClick={handleRunAs}>Run as</DialogMenuItem>
+          <>
+            <DialogMenuItem onClick={handleRunAs}>Run as</DialogMenuItem>
+            <Divider />
+          </>
         )}
         <DialogMenuItem onClick={handleEdit}>Edit</DialogMenuItem>
         <DialogMenuItem onClick={handleMove}>Move</DialogMenuItem>
         <DialogMenuItem onClick={handleClone}>Clone</DialogMenuItem>
+        <Divider />
         <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
       </DialogMenu>
     </>

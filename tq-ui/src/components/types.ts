@@ -17,6 +17,7 @@ export interface Task {
   id: string;
   command: string;
   label: string;
+  group: string;
   state: TaskState;
   error: string;
   createdAt: string;
@@ -36,7 +37,15 @@ export interface PtyScreenSize {
 
 export interface TaskGroup {
   name: string;
-  taskList: TaskListArr;
+  taskList: Task[];
 }
 
-export type TaskListArr = (Task | TaskGroup)[];
+export type TaskOrGroup = Task | TaskGroup;
+
+export interface AddTaskReuest {
+  command: string,
+  label: string,
+  group: string,
+  isPty: boolean,
+  isOnlyCombined: boolean,
+}

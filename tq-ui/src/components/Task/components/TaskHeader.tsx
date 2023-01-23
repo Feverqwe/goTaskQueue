@@ -10,7 +10,7 @@ import CircleIcon from '@mui/icons-material/Circle';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
-import {Task, TaskState} from '../../types';
+import {AddTaskReuest, Task, TaskState} from '../../types';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
@@ -59,10 +59,11 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
   }, [id, handleCloseMenu]);
 
   const handleRestart = useCallback(async () => {
-    const {label, command, isPty, isOnlyCombined} = task;
+    const {label, group, command, isPty, isOnlyCombined} = task;
     setRestartDialogTemplate({
       name: 'New task',
       label,
+      group,
       variables: [],
       command,
       isPty,
@@ -74,14 +75,9 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
     onToggleInfo();
   }, [onToggleInfo]);
 
-  const handleRestartTask = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
+  const handleRestartTask = useCallback(async (run: boolean, runTask: AddTaskReuest) => {
     try {
-      const {id} = await api.add({
-        command,
-        label,
-        isPty,
-        isOnlyCombined,
-      });
+      const {id} = await api.add(runTask);
       if (run) {
         await api.taskRun({id});
       }

@@ -13,6 +13,7 @@ import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
 import TemplatesBtns from './TemplatesBtns';
 import EditFolderDialog from './EditFolderDialog';
 import MoveTemplateDialog from './MoveTemplateDialog';
+import {AddTaskReuest} from '../../../types';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -31,14 +32,9 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   const [moveDialog, setMoveDialog] = useState<{folder: TemplateFolder, template: Template} | null>(null);
   const [editFolderDialog, setEditFolderDialog] = useState<{folder: TemplateFolder, template: TemplateFolder, isNew?: boolean, isRoot?: boolean} | null>(null);
 
-  const handleAdd = useCallback(async (run: boolean, command: string, label: string, isPty: boolean, isOnlyCombined: boolean) => {
+  const handleAdd = useCallback(async (run: boolean, runTask: AddTaskReuest) => {
     try {
-      const {id} = await api.add({
-        command,
-        label,
-        isPty,
-        isOnlyCombined,
-      });
+      const {id} = await api.add(runTask);
       if (run) {
         await api.taskRun({id});
       }
@@ -82,8 +78,10 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
 
   const handleClickTemplate = useCallback((template: TemplateButton, as?: boolean) => {
     if (!as && !template.variables.length) {
-      const {command, label = '', isPty = false, isOnlyCombined = false} = template;
-      handleAdd(true, command, label, isPty, isOnlyCombined);
+      const {command, label = '', group = '', isPty = false, isOnlyCombined = false} = template;
+      handleAdd(true, {
+        command, label, group, isPty, isOnlyCombined,
+      });
     } else {
       setRunDialog({template});
     }

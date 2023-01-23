@@ -17,6 +17,7 @@ export interface TemplateFolder {
 export interface TemplateButton {
   type?: TemplateType.Button;
   label?: string;
+  group?: string;
   name: string,
   variables: {
     name: string,

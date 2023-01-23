@@ -30,12 +30,13 @@ type Variable = TemplateButton['variables'][number];
 const variableIdMap = new WeakMap<Variable, string>();
 
 const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, onSubmit, onClose, isNew}) => {
-  const {name, command, label, isPty, isOnlyCombined} = template;
+  const {name, command, label, group, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
   const refCommand = useRef<HTMLInputElement>(null);
   const refMap = useRef(new Map<string, HTMLInputElement>());
   const refLabel = useRef<HTMLInputElement>(null);
+  const refGroup = useRef<HTMLInputElement>(null);
   const refName = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
@@ -135,6 +136,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
       isPty: refPty.current?.checked || false,
       isOnlyCombined: refOnlyCombined.current?.checked || false,
       label: refLabel.current?.value || '',
+      group: refGroup.current?.value || '',
       name: refName.current?.value || '',
       variables: variables.map((item, index) => {
         return Object.keys(item).reduce((acc, key) => {
@@ -219,6 +221,19 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
             label="Label"
             defaultValue={label || ''}
             inputProps={{ref: refLabel}}
+            fullWidth
+            type="text"
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            sx={{my: 1}}
+            size="small"
+            label="Group"
+            defaultValue={group || ''}
+            inputProps={{ref: refGroup}}
             fullWidth
             type="text"
             variant="outlined"
