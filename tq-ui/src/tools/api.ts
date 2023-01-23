@@ -11,12 +11,11 @@ function action<RequestParams = unknown, ResponseData = unknown>({method = 'GET'
   return async (params: RequestParams): Promise<ResponseData> => {
     let query = '';
     let body;
+    if (method === 'POST') {
+      body = JSON.stringify(params);
+    } else
     if (params) {
-      if (method === 'POST') {
-        body = JSON.stringify(params);
-      } else {
-        query = new URLSearchParams(params).toString();
-      }
+      query = new URLSearchParams(params).toString();
     }
 
     return fetch(path + (query ? `?${query}` : ''), {
@@ -84,5 +83,17 @@ export const api = {
   templates: action<void, Template[]>({
     method: 'GET',
     path: '/api/templates',
+  }),
+  memStorageGet: action<string[] | null, Record<string, unknown>>({
+    method: 'POST',
+    path: '/api/memStorage/get',
+  }),
+  memStorageSet: action<unknown, string>({
+    method: 'POST',
+    path: '/api/memStorage/set',
+  }),
+  memStorageDel: action<string[], string>({
+    method: 'POST',
+    path: '/api/memStorage/del',
   }),
 };

@@ -25,10 +25,9 @@ const typeColor: Record<TaskState, SvgIconProps['color']> = {
 
 interface TaskStatusProps {
   task: Pick<Task, 'state'>;
-  twoTone?: boolean;
 }
 
-const TaskStatusIcon: FC<TaskStatusProps> = ({task: {state}, twoTone}) => {
+const TaskStatusIcon: FC<TaskStatusProps> = ({task: {state}}) => {
   const Icon = typeIcon[state];
   return <Icon color={typeColor[state]} />;
 };

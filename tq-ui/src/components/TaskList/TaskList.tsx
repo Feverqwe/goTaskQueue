@@ -1,13 +1,14 @@
 import React, {FC, useCallback, useEffect, useMemo, useRef} from 'react';
 import {Box, CircularProgress, Container} from '@mui/material';
 import {observer, useLocalObservable} from 'mobx-react-lite';
-import TaskItem from './components/TaskItem';
 import TemplatesBar from './components/TemplatesBar/TemplatesBar';
-import {Task} from '../types';
+import {TaskListArr} from '../types';
 import {api} from '../../tools/api';
 import {ApiError, HTTPError} from '../../tools/apiRequest';
 import DisplayError from '../DisplayError';
 import {useVisibility} from '../../hooks/useVisibility';
+import {groupTasks} from './utils';
+import RenderTaskList from './components/RenderTaskList';
 
 interface TaskListProps {
 
@@ -20,7 +21,7 @@ const TaskList: FC<TaskListProps> = () => {
   const {loading, error, taskList, fetchTaskList} = useLocalObservable(() => ({
     loading: true,
     error: null as null | HTTPError | ApiError | TypeError,
-    taskList: null as null | Task[],
+    taskList: null as null | TaskListArr,
     async fetchTaskList(silent = false) {
       if (!silent) {
         this.loading = true;
@@ -29,7 +30,7 @@ const TaskList: FC<TaskListProps> = () => {
       try {
         const taskList = await api.tasks();
         taskList.reverse();
-        this.taskList = taskList;
+        this.taskList = groupTasks(taskList);
       } catch (err) {
         console.error('fetchTaskList error: %O', err);
         this.error = err as ApiError;
@@ -82,7 +83,7 @@ const TaskList: FC<TaskListProps> = () => {
           </Box>
         )}
         {taskList && !error && (
-          taskList.map((task) => <TaskItem key={task.id} task={task} onUpdate={handleUpdate} />)
+          <RenderTaskList taskList={taskList} onUpdate={handleUpdate} />
         )}
       </>
     </Container>

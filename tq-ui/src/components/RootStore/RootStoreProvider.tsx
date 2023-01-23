@@ -30,6 +30,7 @@ export interface TemplateButton {
 
 export interface RootStore {
   templates: Template[];
+  memStorage: Record<string, unknown>;
   isPtySupported: boolean;
 }
 

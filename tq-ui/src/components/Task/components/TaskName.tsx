@@ -3,7 +3,7 @@ import {Typography} from '@mui/material';
 import {Task} from '../../types';
 
 interface TaskNameProp {
-  task: Task;
+  task: Pick<Task, 'label' | 'command'>;
 }
 
 const TaskName: FC<TaskNameProp> = ({task: {label, command}}) => {

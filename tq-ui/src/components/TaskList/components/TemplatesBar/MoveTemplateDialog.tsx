@@ -5,7 +5,9 @@ import {
   DialogActions,
   DialogTitle,
   List,
-  ListItemButton, ListItemIcon, ListItemText,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {Template, TemplateFolder, TemplateType} from '../../../RootStore/RootStoreProvider';

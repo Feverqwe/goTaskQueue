@@ -33,3 +33,10 @@ export interface PtyScreenSize {
   cols: number;
   rows: number;
 }
+
+export interface TaskGroup {
+  name: string;
+  taskList: TaskListArr;
+}
+
+export type TaskListArr = (Task | TaskGroup)[];
