@@ -15,6 +15,12 @@ require (
 )
 
 require (
+	github.com/JackMordaunt/icns v1.0.0 // indirect
+	github.com/Strosel/appify v0.0.0-20190622132957-08b76e1e20fc // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
+)
+
+require (
 	github.com/creack/pty v1.1.18
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 )
