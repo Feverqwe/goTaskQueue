@@ -1,29 +1,24 @@
 export const theme = {
-  foreground: '#a5a2a2',
-  background: '#090300',
-  cursor: '#a5a2a2',
-
-  black: '#090300',
-  brightBlack: '#5c5855',
-
-  red: '#db2d20',
-  brightRed: '#e8bbd0',
-
-  green: '#01a252',
-  brightGreen: '#3a3432',
-
-  yellow: '#fded02',
-  brightYellow: '#4a4543',
-
-  blue: '#01a0e4',
-  brightBlue: '#807d7c',
-
-  magenta: '#a16a94',
-  brightMagenta: '#d6d5d4',
-
-  cyan: '#b5e4f4',
-  brightCyan: '#cdab53',
-
-  white: '#a5a2a2',
-  brightWhite: '#f7f7f7',
+  background: '#181818',
+  foreground: 'rgba(255, 255, 255, 0.77)',
+  cursor: 'rgba(255, 255, 255, 0.77)',
+  cursorAccent: '#181818',
+  selectionBackground: '#264f78',
+  selectionInactiveBackground: '#3a3d41',
+  black: '#000000',
+  red: '#cd3131',
+  green: '#0dbc79',
+  yellow: '#e5e510',
+  blue: '#2472c8',
+  magenta: '#bc3fbc',
+  cyan: '#11a8cd',
+  white: '#e5e5e5',
+  brightBlack: '#666666',
+  brightRed: '#f14c4c',
+  brightGreen: '#23d18b',
+  brightYellow: '#f5f543',
+  brightBlue: '#3b8eea',
+  brightMagenta: '#d670d6',
+  brightCyan: '#29b8db',
+  brightWhite: '#e5e5e5',
 };
