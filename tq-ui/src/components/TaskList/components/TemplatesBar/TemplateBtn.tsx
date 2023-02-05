@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useState} from 'react';
 import {Button, Divider} from '@mui/material';
 import {Template, TemplateButton, TemplateFolder} from '../../../RootStore/RootStoreProvider';
 import DialogMenu from '../../../DialogMenu/DialogMenu';
@@ -7,7 +7,7 @@ import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
 export interface TemplateBtnProps {
   folder: TemplateFolder;
   template: TemplateButton;
-  onClick: (template: TemplateButton, as?: boolean) => void;
+  onClick: (e: SyntheticEvent, template: TemplateButton, as?: boolean) => void;
   onEdit: (folder: TemplateFolder, template: TemplateButton) => void;
   onDelete: (folder: TemplateFolder, template: Template) => void;
   onClone: (folder: TemplateFolder, template: Template) => void;
@@ -18,16 +18,16 @@ const TemplateBtn: FC<TemplateBtnProps> = ({folder, template, onClick, onEdit, o
   const {name} = template;
   const [showMenu, setShowMenu] = useState(false);
 
-  const handleClick = useCallback(() => {
-    onClick(template);
+  const handleClick = useCallback((e: SyntheticEvent) => {
+    onClick(e, template);
   }, [template, onClick]);
 
   const handleCloseMenu = useCallback(() => {
     setShowMenu(false);
   }, []);
 
-  const handleRunAs = useCallback(() => {
-    onClick(template, true);
+  const handleRunAs = useCallback((e: SyntheticEvent) => {
+    onClick(e, template, true);
     handleCloseMenu();
   }, [template, onClick, handleCloseMenu]);
 

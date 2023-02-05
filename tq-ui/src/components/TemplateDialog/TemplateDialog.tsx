@@ -19,7 +19,7 @@ import {AddTaskReuest} from '../types';
 interface TemplateDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (run: boolean, runTask: AddTaskReuest) => Promise<void>;
+  onSubmit: (run: boolean, runTask: AddTaskReuest, isNewTab?: boolean) => Promise<void>;
   template: TemplateButton;
   isNew?: boolean;
 }
@@ -82,7 +82,8 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
   const handleSubmit = useCallback(async (e: SyntheticEvent) => {
     e.preventDefault();
     const runTask = getCommand();
-    await onSubmit(true, runTask);
+    const isNewTab = ('metaKey' in e) && Boolean(e.metaKey);
+    await onSubmit(true, runTask, isNewTab);
     onClose();
   }, [onSubmit, onClose, getCommand]);
 
@@ -91,6 +92,13 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
     await onSubmit(false, runTask);
     onClose();
   }, [onClose, onSubmit, getCommand]);
+
+  const handleAddAndRun = useCallback((e: SyntheticEvent) => {
+    const isNewTab = ('metaKey' in e) && Boolean(e.metaKey);
+    if (!isNewTab) return;
+    e.preventDefault();
+    handleSubmit(e);
+  }, [handleSubmit]);
 
   const handleAdvancedClick = useCallback(() => {
     setExtended((v) => !v);
@@ -182,7 +190,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>Cancel</Button>
           <Button variant="outlined" onClick={handleAdd}>Add</Button>
-          <Button variant="contained" type="submit" autoFocus={!isNew && variables.length === 0}>Add & Run</Button>
+          <Button variant="contained" type="submit" autoFocus={!isNew && variables.length === 0} onClick={handleAddAndRun}>Add & Run</Button>
         </DialogActions>
       </form>
     </Dialog>

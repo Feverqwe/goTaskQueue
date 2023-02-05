@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useContext, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useContext, useState} from 'react';
 import {Box, Button, ButtonGroup, Divider} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
@@ -32,7 +32,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   const [moveDialog, setMoveDialog] = useState<{folder: TemplateFolder, template: Template} | null>(null);
   const [editFolderDialog, setEditFolderDialog] = useState<{folder: TemplateFolder, template: TemplateFolder, isNew?: boolean, isRoot?: boolean} | null>(null);
 
-  const handleAdd = useCallback(async (run: boolean, runTask: AddTaskReuest) => {
+  const handleAdd = useCallback(async (run: boolean, runTask: AddTaskReuest, isNewTab = false) => {
     try {
       const {id} = await api.add(runTask);
       if (run) {
@@ -41,7 +41,12 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
       onUpdate();
 
       if (run) {
-        navigate(`/task?id=${id}`);
+        const url = `/task?id=${id}`;
+        if (isNewTab) {
+          window.open(url)?.focus();
+        } else {
+          navigate(url);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -76,12 +81,13 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseMenu();
   }, [rootFolder, handleCloseMenu]);
 
-  const handleClickTemplate = useCallback((template: TemplateButton, as?: boolean) => {
+  const handleClickTemplate = useCallback((e: SyntheticEvent, template: TemplateButton, as?: boolean) => {
     if (!as && !template.variables.length) {
       const {command, label = '', group = '', isPty = false, isOnlyCombined = false} = template;
+      const isNewTab = ('metaKey' in e) && Boolean(e.metaKey);
       handleAdd(true, {
         command, label, group, isPty, isOnlyCombined,
-      });
+      }, isNewTab);
     } else {
       setRunDialog({template});
     }

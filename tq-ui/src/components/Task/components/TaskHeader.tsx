@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useMemo, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useEffect, useMemo, useState} from 'react';
 import {Box, CardActionArea, Divider, IconButton, Paper, Typography} from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
@@ -95,8 +95,28 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
   }, []);
 
   const handleBack = useCallback((e: SyntheticEvent) => {
+    if (('metaKey' in e) && e.metaKey) return;
     e.preventDefault();
     navigate('/');
+  }, [navigate]);
+
+  useEffect(() => {
+    let metaKey = false;
+    const handler = (e: KeyboardEvent) => {
+      const isDown = e.type === 'keydown';
+      if (isDown && metaKey && e.key === 'Escape') {
+        navigate('/');
+      }
+      if (e.key === 'Meta') {
+        metaKey = isDown;
+      }
+    };
+    document.body.addEventListener('keyup', handler);
+    document.body.addEventListener('keydown', handler);
+    return () => {
+      document.body.removeEventListener('keyup', handler);
+      document.body.removeEventListener('keydown', handler);
+    };
   }, [navigate]);
 
   return (

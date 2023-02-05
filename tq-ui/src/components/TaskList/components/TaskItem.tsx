@@ -40,6 +40,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   }, [id, onUpdate]);
 
   const handleOpen = useCallback((e: SyntheticEvent) => {
+    if (('metaKey' in e) && e.metaKey) return;
     e.preventDefault();
     navigate(`task?id=${id}`);
   }, [navigate, id]);

@@ -44,6 +44,9 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
           terminal.clear();
           return false;
         }
+        if (event.code === 'Escape' && event.metaKey) {
+          return false;
+        }
       }
       return true;
     });
