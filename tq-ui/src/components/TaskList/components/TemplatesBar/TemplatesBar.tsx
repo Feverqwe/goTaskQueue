@@ -43,7 +43,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
       if (run) {
         const url = `/task?id=${id}`;
         if (isNewTab) {
-          window.open(url)?.focus();
+          window.open(url);
         } else {
           navigate(url);
         }
