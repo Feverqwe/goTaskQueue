@@ -5,25 +5,26 @@ package powerCtr
 import (
 	"fmt"
 	"golang.org/x/sys/windows"
+	"sync/atomic"
 	"syscall"
 	"unsafe"
 )
 
 type PowerControl struct {
-	count int
+	count int32
 	ch    chan int
 }
 
 func (self *PowerControl) Inc() {
-	if self.count == 0 {
+	if atomic.LoadInt32(&self.count) == 0 {
 		self.ch <- 1
 	}
-	self.count++
+	atomic.AddInt32(&self.count, 1)
 }
 
 func (self *PowerControl) Dec() {
-	self.count--
-	if self.count == 0 {
+	count := atomic.AddInt32(&self.count, -1)
+	if count == 0 {
 		self.ch <- 0
 	}
 }
