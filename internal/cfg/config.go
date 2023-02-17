@@ -63,12 +63,23 @@ func (s *Config) GetTemplate(id string) *TemplateBase {
 		json.Unmarshal(j, &templates)
 	}
 
-	for _, temaplate := range templates {
-		if temaplate.Id == id {
-			return &temaplate
+	var next func(templates []TemplateBase) *TemplateBase
+
+	next = func(templates []TemplateBase) *TemplateBase {
+		for _, tempalate := range templates {
+			if tempalate.Type == "folder" {
+				if t := next(tempalate.Templates); t != nil {
+					return t
+				}
+			}
+			if tempalate.Id == id {
+				return &tempalate
+			}
 		}
+		return nil
 	}
-	return nil
+
+	return next(templates)
 }
 
 func getNewConfig() Config {
