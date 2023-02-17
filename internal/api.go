@@ -54,12 +54,14 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	}
 
 	type AddTaskPayload struct {
-		Command        string `json:"command"`
-		Label          string `json:"label"`
-		Group          string `json:"group"`
-		IsPty          bool   `json:"isPty"`
-		IsOnlyCombined bool   `json:"isOnlyCombined"`
-		IsRun          bool   `json:"isRun"`
+		TemplateId     string            `json:"templateId"`
+		Variables      map[string]string `json:"variables"`
+		Command        string            `json:"command"`
+		Label          string            `json:"label"`
+		Group          string            `json:"group"`
+		IsPty          bool              `json:"isPty"`
+		IsOnlyCombined bool              `json:"isOnlyCombined"`
+		IsRun          bool              `json:"isRun"`
 	}
 
 	type SetLabelPayload struct {
@@ -107,69 +109,40 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return nil, err
 			}
 
-			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined)
-
-			if payload.IsRun {
-				task.Run(config)
-			}
-
-			return task, err
-		})
-	})
-
-	type RunTemplatePayload struct {
-		Id             string            `json:"id"`
-		Variables      map[string]string `json:"variables"`
-		IsRun          bool              `json:"isRun"`
-		Command        string            `json:"command"`
-		Label          string            `json:"label"`
-		Group          string            `json:"group"`
-		IsPty          bool              `json:"isPty"`
-		IsOnlyCombined bool              `json:"isOnlyCombined"`
-	}
-
-	router.Post("/api/addAsTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (*taskQueue.Task, error) {
-			payload, err := ParseJson[RunTemplatePayload](r.Body)
-			if err != nil {
-				return nil, err
-			}
-
-			template := config.GetTemplate(payload.Id)
-			if template == nil {
-				return nil, fmt.Errorf("template not found %v", payload.Id)
-			}
-
-			if payload.Command == "" {
-				payload.Command = template.Command
-			}
-			if payload.Label == "" {
-				payload.Label = template.Label
-			}
-			if payload.Group == "" {
-				payload.Group = template.Group
-			}
-			if !payload.IsPty {
-				payload.IsPty = template.IsPty
-			}
-			if !payload.IsOnlyCombined {
-				payload.IsOnlyCombined = template.IsOnlyCombined
-			}
-
-			command := payload.Command
-			label := payload.Label
-
-			for _, variable := range template.Variables {
-				old := fmt.Sprintf("{%v}", variable.Value)
-				value, ok := payload.Variables[variable.Value]
-				if !ok {
-					value = variable.DefaultValue
+			if payload.TemplateId != "" {
+				template := config.GetTemplate(payload.TemplateId)
+				if template == nil {
+					return nil, fmt.Errorf("template not found %v", payload.TemplateId)
 				}
-				command = strings.ReplaceAll(command, old, value)
-				label = strings.ReplaceAll(label, old, value)
+
+				if payload.Command == "" {
+					payload.Command = template.Command
+				}
+				if payload.Label == "" {
+					payload.Label = template.Label
+				}
+				if payload.Group == "" {
+					payload.Group = template.Group
+				}
+				if !payload.IsPty {
+					payload.IsPty = template.IsPty
+				}
+				if !payload.IsOnlyCombined {
+					payload.IsOnlyCombined = template.IsOnlyCombined
+				}
+
+				for _, variable := range template.Variables {
+					old := fmt.Sprintf("{%v}", variable.Value)
+					value, ok := payload.Variables[variable.Value]
+					if !ok {
+						value = variable.DefaultValue
+					}
+					payload.Command = strings.ReplaceAll(payload.Command, old, value)
+					payload.Label = strings.ReplaceAll(payload.Label, old, value)
+				}
 			}
 
-			task := queue.Add(command, label, payload.Group, payload.IsPty, payload.IsOnlyCombined)
+			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined)
 
 			if payload.IsRun {
 				task.Run(config)
