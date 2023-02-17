@@ -30,7 +30,7 @@ type Variable = TemplateButton['variables'][number];
 const variableIdMap = new WeakMap<Variable, string>();
 
 const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, onSubmit, onClose, isNew}) => {
-  const {name, command, label, group, isPty, isOnlyCombined} = template;
+  const {id, name, command, label, group, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
   const refCommand = useRef<HTMLInputElement>(null);
@@ -39,6 +39,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
   const refGroup = useRef<HTMLInputElement>(null);
   const refName = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
+  const refId = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
 
   useMemo(() => {
@@ -138,6 +139,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
       label: refLabel.current?.value || '',
       group: refGroup.current?.value || '',
       name: refName.current?.value || '',
+      id: refId.current?.value || '',
       variables: variables.map((item, index) => {
         return Object.keys(item).reduce((acc, key) => {
           const value = map.get(`${key}_${index}`)?.value;
@@ -234,6 +236,19 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
             label="Group"
             defaultValue={group || ''}
             inputProps={{ref: refGroup}}
+            fullWidth
+            type="text"
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            sx={{my: 1}}
+            size="small"
+            label="Id"
+            defaultValue={id || ''}
+            inputProps={{ref: refId}}
             fullWidth
             type="text"
             variant="outlined"
