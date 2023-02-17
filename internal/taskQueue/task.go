@@ -62,15 +62,16 @@ type Task struct {
 	queue          *Queue
 }
 
-func (s *Task) Run(runAs []string, config *cfg.Config) error {
+func (s *Task) Run(config *cfg.Config) error {
 	if s.IsPty {
-		return s.RunPty(runAs, config)
+		return s.RunPty(config)
 	} else {
-		return s.RunDirect(runAs, config)
+		return s.RunDirect(config)
 	}
 }
 
-func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
+func (s *Task) RunPty(config *cfg.Config) error {
+	runAs := config.PtyRun
 	runCommand := runAs[0]
 	runArgs := make([]string, 0)
 	if len(runAs) > 1 {
@@ -147,7 +148,8 @@ func (s *Task) RunPty(runAs []string, config *cfg.Config) error {
 	return nil
 }
 
-func (s *Task) RunDirect(runAs []string, config *cfg.Config) error {
+func (s *Task) RunDirect(config *cfg.Config) error {
+	runAs := config.Run
 	runCommand := runAs[0]
 	runArgs := make([]string, 0)
 	if len(runAs) > 1 {

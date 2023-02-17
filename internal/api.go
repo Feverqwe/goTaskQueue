@@ -57,6 +57,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		Group          string `json:"group"`
 		IsPty          bool   `json:"isPty"`
 		IsOnlyCombined bool   `json:"isOnlyCombined"`
+		IsRun          bool   `json:"isRun"`
 	}
 
 	type SetLabelPayload struct {
@@ -106,6 +107,10 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined)
 
+			if payload.IsRun {
+				task.Run(config)
+			}
+
 			return task, err
 		})
 	})
@@ -144,11 +149,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			if task.IsPty {
-				err = task.Run(config.PtyRun, config)
-			} else {
-				err = task.Run(config.Run, config)
-			}
+			err = task.Run(config)
 
 			return "ok", err
 		})
