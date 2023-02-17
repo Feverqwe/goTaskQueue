@@ -3,12 +3,14 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
 	memstorage "goTaskQueue/internal/memStorage"
 	"goTaskQueue/internal/taskQueue"
 	"io"
 	"net/http"
+	"strings"
 	"syscall"
 
 	"github.com/NYTimes/gziphandler"
@@ -106,6 +108,47 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			}
 
 			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined)
+
+			if payload.IsRun {
+				task.Run(config)
+			}
+
+			return task, err
+		})
+	})
+
+	type RunTemplatePayload struct {
+		Id        string            `json:"id"`
+		Variables map[string]string `json:"variables"`
+		IsRun     bool              `json:"isRun"`
+	}
+
+	router.Post("/api/addAsTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (*taskQueue.Task, error) {
+			payload, err := ParseJson[RunTemplatePayload](r.Body)
+			if err != nil {
+				return nil, err
+			}
+
+			template := config.GetTemplate(payload.Id)
+			if template == nil {
+				return nil, fmt.Errorf("template not found %v", payload.Id)
+			}
+
+			command := template.Command
+			label := template.Label
+
+			for _, variable := range template.Variables {
+				old := fmt.Sprintf("{%v}", variable.Value)
+				value, ok := payload.Variables[variable.Value]
+				if !ok {
+					value = variable.DefaultValue
+				}
+				command = strings.ReplaceAll(command, old, value)
+				label = strings.ReplaceAll(label, old, value)
+			}
+
+			task := queue.Add(command, label, template.Group, template.IsPty, template.IsOnlyCombined)
 
 			if payload.IsRun {
 				task.Run(config)

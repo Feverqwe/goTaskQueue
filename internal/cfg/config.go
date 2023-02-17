@@ -13,6 +13,25 @@ import (
 	"github.com/natefinch/atomic"
 )
 
+type TemplateVariable struct {
+	Name         string `json:"name"`
+	Value        string `json:"value"`
+	DefaultValue string `json:"defaultValue"`
+}
+
+type TemplateBase struct {
+	Type           string             `json:"type"`
+	Name           string             `json:"name"`
+	Templates      []TemplateBase     `json:"templates"`
+	Id             string             `json:"id"`
+	Label          string             `json:"label"`
+	Group          string             `json:"group"`
+	Variables      []TemplateVariable `json:"variables"`
+	Command        string             `json:"command"`
+	IsPty          bool               `json:"isPty"`
+	IsOnlyCombined bool               `json:"isOnlyCombined"`
+}
+
 type Config struct {
 	Port      int
 	Address   string
@@ -36,6 +55,20 @@ func (s *Config) GetBrowserAddress() string {
 		addr = "127.0.0.1"
 	}
 	return "http://" + addr + ":" + strconv.Itoa(s.Port)
+}
+
+func (s *Config) GetTemplate(id string) *TemplateBase {
+	var templates []TemplateBase
+	if j, err := json.Marshal(s.Templates); err == nil {
+		json.Unmarshal(j, &templates)
+	}
+
+	for _, temaplate := range templates {
+		if temaplate.Id == id {
+			return &temaplate
+		}
+	}
+	return nil
 }
 
 func getNewConfig() Config {
