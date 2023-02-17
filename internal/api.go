@@ -118,9 +118,14 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	})
 
 	type RunTemplatePayload struct {
-		Id        string            `json:"id"`
-		Variables map[string]string `json:"variables"`
-		IsRun     bool              `json:"isRun"`
+		Id             string            `json:"id"`
+		Variables      map[string]string `json:"variables"`
+		IsRun          bool              `json:"isRun"`
+		Command        string            `json:"command"`
+		Label          string            `json:"label"`
+		Group          string            `json:"group"`
+		IsPty          bool              `json:"isPty"`
+		IsOnlyCombined bool              `json:"isOnlyCombined"`
 	}
 
 	router.Post("/api/addAsTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
@@ -135,8 +140,24 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return nil, fmt.Errorf("template not found %v", payload.Id)
 			}
 
-			command := template.Command
-			label := template.Label
+			if payload.Command == "" {
+				payload.Command = template.Command
+			}
+			if payload.Label == "" {
+				payload.Label = template.Label
+			}
+			if payload.Group == "" {
+				payload.Group = template.Group
+			}
+			if !payload.IsPty {
+				payload.IsPty = template.IsPty
+			}
+			if !payload.IsOnlyCombined {
+				payload.IsOnlyCombined = template.IsOnlyCombined
+			}
+
+			command := payload.Command
+			label := payload.Label
 
 			for _, variable := range template.Variables {
 				old := fmt.Sprintf("{%v}", variable.Value)
@@ -148,7 +169,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				label = strings.ReplaceAll(label, old, value)
 			}
 
-			task := queue.Add(command, label, template.Group, template.IsPty, template.IsOnlyCombined)
+			task := queue.Add(command, label, payload.Group, payload.IsPty, payload.IsOnlyCombined)
 
 			if payload.IsRun {
 				task.Run(config)
