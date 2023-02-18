@@ -62,13 +62,13 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     const history: Uint8Array[] = [];
     const queue: Uint8Array[] = [];
     let running = false;
-    const nextData = async (): Promise<void> => {
+    const nextData = () => {
       if (running) return;
       running = true;
 
       if (history.length) {
         isHistory = true;
-        await new Promise<void>((done) => {
+        new Promise<void>((done) => {
           let wait = 0;
           const ready = () => {
             if (--wait === 0) done();
@@ -78,10 +78,12 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
             const data = history.shift()!;
             terminal.write(data, ready);
           }
+        }).then(() => {
+          isHistory = false;
+          running = false;
+          nextData();
         });
-        isHistory = false;
-        running = false;
-        return nextData();
+        return;
       }
 
       while (queue.length) {
