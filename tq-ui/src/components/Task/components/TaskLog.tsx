@@ -57,9 +57,51 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     let ws: WebSocket;
     let isOpen = false;
+    let isHistory = true;
+
+    const history: Uint8Array[] = [];
+    const queue: Uint8Array[] = [];
+    let running = false;
+    const nextData = async () => {
+      if (running) return;
+      running = true;
+
+      if (history.length) {
+        isHistory = true;
+        await new Promise<void>((done) => {
+          let wait = 0;
+          const ready = () => {
+            if (--wait === 0) done();
+          };
+          while (history.length) {
+            wait++;
+            const data = history.shift()!;
+            terminal.write(data, ready);
+          }
+        });
+        isHistory = false;
+      }
+
+      while (queue.length) {
+        const data = queue.shift()!;
+        terminal.write(data);
+      }
+
+      running = false;
+    };
+
+    const writeData = (dataType: string, data: Uint8Array) => {
+      if (dataType === 'h') {
+        history.push(data);
+      } else
+      if (dataType === 'a') {
+        queue.push(data);
+      }
+      nextData();
+    };
 
     const sendCommand = (type: 'ping' | 'in' | 'resize', data: unknown = '') => {
-      if (!isOpen) return;
+      if (!isOpen || isHistory) return;
       let payload = '';
       switch (type) {
         case 'ping': {
@@ -119,7 +161,10 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
         };
         ws.onmessage = async (e: MessageEvent<Blob>) => {
           const buffer = await e.data.arrayBuffer();
-          terminal.write(new Uint8Array(buffer));
+          const u8a = new Uint8Array(buffer);
+          const data = u8a.slice(1);
+          const dataType = String.fromCharCode(u8a[0]);
+          writeData(dataType, data);
         };
       },
       wsClose: () => {
