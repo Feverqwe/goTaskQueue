@@ -5,6 +5,7 @@ import {FitAddon} from 'xterm-addon-fit';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
 import {PtyScreenSize, Task, TaskState} from '../../types';
+import {waitGroup} from '../utils';
 
 import 'xterm/css/xterm.css';
 import './XTerm.css';
@@ -68,17 +69,13 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
       if (history.length) {
         isHistory = true;
-        new Promise<void>((done) => {
-          let wait = 0;
-          const ready = () => {
-            if (--wait === 0) done();
-          };
-          while (history.length) {
-            wait++;
-            const data = history.shift()!;
-            terminal.write(data, ready);
-          }
-        }).then(() => {
+        const wg = waitGroup();
+        while (history.length) {
+          wg.add(1);
+          const data = history.shift()!;
+          terminal.write(data, wg.done);
+        }
+        wg.wait().then(() => {
           isHistory = false;
           running = false;
           nextData();
