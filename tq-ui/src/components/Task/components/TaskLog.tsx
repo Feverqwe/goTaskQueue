@@ -57,12 +57,12 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
     let ws: WebSocket;
     let isOpen = false;
-    let isHistory = true;
+    let isHistory = false;
 
     const history: Uint8Array[] = [];
     const queue: Uint8Array[] = [];
     let running = false;
-    const nextData = async () => {
+    const nextData = async (): Promise<void> => {
       if (running) return;
       running = true;
 
@@ -80,6 +80,8 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
           }
         });
         isHistory = false;
+        running = false;
+        return nextData();
       }
 
       while (queue.length) {
@@ -101,7 +103,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     };
 
     const sendCommand = (type: 'ping' | 'in' | 'resize', data: unknown = '') => {
-      if (!isOpen || isHistory) return;
+      if (!isOpen) return;
       let payload = '';
       switch (type) {
         case 'ping': {
@@ -120,6 +122,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     };
 
     terminal.onData((char) => {
+      if (isHistory) return;
       if (refRemapNewLine.current) {
         if (char === '\r') {
           char = '\n';
