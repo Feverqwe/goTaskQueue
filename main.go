@@ -152,7 +152,8 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 			}
 		}()
 
-		pushPart := func(part []byte) error {
+		pushPart := func(part []byte, dataType string) error {
+			d := []byte(dataType)
 			for {
 				chunkSize := len(part)
 				if chunkSize == 0 {
@@ -163,7 +164,8 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				}
 				chunk := part[:chunkSize]
 				part = part[chunkSize:]
-				if err := websocket.Message.Send(ws, chunk); err != nil {
+				payload := append(d[0:1], chunk...)
+				if err := websocket.Message.Send(ws, payload); err != nil {
 					return err
 				}
 			}
@@ -172,6 +174,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 
 		offset := -1
 		lastValue := -1
+		dataType := "h"
 		for {
 			if task.Combined != nil {
 				for {
@@ -184,7 +187,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 						break
 					}
 					offset = newOffset
-					if err := pushPart(fragment); err != nil {
+					if err := pushPart(fragment, dataType); err != nil {
 						if err != io.EOF {
 							fmt.Println("ws send error", err)
 						}
@@ -192,6 +195,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 					}
 				}
 			}
+			dataType = "a"
 			if lastValue == 0 {
 				break
 			}
