@@ -2,7 +2,6 @@ package internal
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
@@ -50,7 +49,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	type SignalTaskPayload struct {
 		Id     string `json:"id"`
-		Signal string `json:"signal"`
+		Signal int    `json:"signal"`
 	}
 
 	type AddTaskPayload struct {
@@ -222,12 +221,9 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			switch payload.Signal {
-			case "SIGINT":
-				err = task.Signal(syscall.SIGINT)
-			default:
-				err = errors.New("unsupported_signal")
-			}
+			sig := syscall.Signal(payload.Signal)
+
+			err = task.Signal(sig)
 
 			return "ok", err
 		})

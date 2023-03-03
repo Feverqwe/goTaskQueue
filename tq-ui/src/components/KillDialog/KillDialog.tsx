@@ -43,7 +43,7 @@ const KillDialog: FC<KillDialogProps> = ({open, task, onClose, onSubmit}) => {
             >
               {Object.entries(signals).map(([name, sig]) => {
                 return (
-                  <MenuItem value={sig}>{name}</MenuItem>
+                  <MenuItem key={sig} value={sig}>{name}</MenuItem>
                 );
               })}
             </Select>

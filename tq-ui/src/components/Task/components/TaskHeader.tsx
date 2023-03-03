@@ -59,11 +59,6 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
     setShowMenu(false);
   }, []);
 
-  const handleSigint = useCallback(() => {
-    api.taskSignal({id, signal: 2});
-    handleCloseMenu();
-  }, [id, handleCloseMenu]);
-
   const handleRestart = useCallback(async () => {
     const {label, group, command, isPty, isOnlyCombined} = task;
     setRestartDialogTemplate({
@@ -188,9 +183,6 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
                     </Box>
                   )}
                 </DialogMenuItem>
-                {state === TaskState.Started && (
-                  <DialogMenuItem onClick={handleSigint}>SIGINT</DialogMenuItem>
-                )}
                 <Divider />
                 {!isOnlyCombined && (
                   <>
