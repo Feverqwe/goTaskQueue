@@ -2,6 +2,7 @@ import {Task, TaskGroup, TaskOrGroup} from '../types';
 
 export function groupTasks(tasks: Task[]) {
   const taskList: TaskOrGroup[] = [];
+  const groupList: TaskGroup[] = [];
   const groupTaskList = new Map<string, TaskGroup>();
   tasks.forEach((task) => {
     const groupName = task.group;
@@ -13,12 +14,12 @@ export function groupTasks(tasks: Task[]) {
           taskList: [],
         };
         groupTaskList.set(groupName, group = newGroup);
-        taskList.push(group);
+        groupList.push(group);
       }
       group.taskList.push(task);
     } else {
       taskList.push(task);
     }
   });
-  return taskList;
+  return [...taskList, ...groupList];
 }
