@@ -15,10 +15,10 @@ interface TaskGroupItemProps {
 
 const TaskGroupItem: FC<TaskGroupItemProps> = ({group, onUpdate}) => {
   const {name, taskList} = group;
-  const groupState = useContext(GroupStateCtx);
+  const {[name]: initOpen = false} = useContext(GroupStateCtx);
   const setGroupState = useContext(GroupStateSetCtx);
 
-  const [open, setOpen] = useState(() => groupState[name] || false);
+  const [open, setOpen] = useState(() => initOpen);
 
   const handleExpand = useCallback(async () => {
     setOpen((v) => {

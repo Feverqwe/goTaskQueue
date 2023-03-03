@@ -1,3 +1,5 @@
+import { Task } from '../types';
+
 export function waitGroup() {
   let count = 0;
   let r: () => void;
@@ -15,4 +17,8 @@ export function waitGroup() {
       return p;
     },
   };
+}
+
+export function getTaskName({label, command}: Pick<Task, 'label' | 'command'>) {
+  return label || command;
 }

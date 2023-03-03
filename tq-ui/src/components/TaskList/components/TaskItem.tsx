@@ -13,6 +13,8 @@ import TaskName from '../../Task/components/TaskName';
 import TaskLinks from '../../Task/components/TaskLinks';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import LinkIcon from '../../Task/components/LinkIcon';
+import ConfirmDialog from '../../ConfirmDialog';
+import { getTaskName } from '../../Task/utils';
 
 interface TaskItemProps {
   task: Task,
@@ -23,6 +25,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   const {id, state} = task;
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
+  const [showConfirm, setShowConfirm] = useState<{type: string} | undefined>();
 
   const handleDelete = useCallback(async () => {
     await api.delete({id});
@@ -35,9 +38,8 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   }, [id, onUpdate]);
 
   const handleStop = useCallback(async () => {
-    await api.taskKill({id});
-    onUpdate();
-  }, [id, onUpdate]);
+    setShowConfirm({type: 'stop'});
+  }, []);
 
   const handleOpen = useCallback((e: SyntheticEvent) => {
     if (('metaKey' in e) && e.metaKey) return;
@@ -51,6 +53,15 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
 
   const handleCloseMenu = useCallback(() => {
     setOpenMenu(false);
+  }, []);
+
+  const handleStopConfirmSubmit = useCallback(async () => {
+    await api.taskKill({id});
+    onUpdate();
+  }, [id, onUpdate]);
+
+  const handleConfirmClose = useCallback(async () => {
+    setShowConfirm(undefined);
   }, []);
 
   const extraButtons = useMemo(() => {
@@ -125,6 +136,15 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
         <DialogMenu open={openMenu} onClose={handleCloseMenu}>
           <TaskLinks task={task} onClick={handleCloseMenu} />
         </DialogMenu>
+      )}
+      {showConfirm && showConfirm.type === 'stop' && (
+        <ConfirmDialog
+          title={getTaskName(task)}
+          message="Stop task?"
+          open={true}
+          onSubmit={handleStopConfirmSubmit}
+          onClose={handleConfirmClose}
+        />
       )}
     </Box>
   );
