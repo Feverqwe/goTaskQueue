@@ -7,7 +7,7 @@ interface ConfirmDialogProps {
   title: ReactNode;
   message?: ReactNode;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: () => void | Promise<void>;
 }
 
 const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, onClose}) => {

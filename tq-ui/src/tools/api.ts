@@ -56,7 +56,7 @@ export const api = {
     method: 'POST',
     path: '/api/task/kill',
   }),
-  taskSignal: action<{id: string, signal: 'SIGINT'}, string>({
+  taskSignal: action<{id: string, signal: number}, string>({
     method: 'POST',
     path: '/api/task/signal',
   }),

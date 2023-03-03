@@ -13,8 +13,7 @@ import TaskName from '../../Task/components/TaskName';
 import TaskLinks from '../../Task/components/TaskLinks';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import LinkIcon from '../../Task/components/LinkIcon';
-import ConfirmDialog from '../../ConfirmDialog';
-import { getTaskName } from '../../Task/utils';
+import KillDialog from '../../KillDialog/KillDialog';
 
 interface TaskItemProps {
   task: Task,
@@ -55,8 +54,8 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     setOpenMenu(false);
   }, []);
 
-  const handleStopConfirmSubmit = useCallback(async () => {
-    await api.taskKill({id});
+  const handleStopConfirmSubmit = useCallback(async (signal: number) => {
+    await api.taskSignal({id, signal});
     onUpdate();
   }, [id, onUpdate]);
 
@@ -138,9 +137,8 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
         </DialogMenu>
       )}
       {showConfirm && showConfirm.type === 'stop' && (
-        <ConfirmDialog
-          title={getTaskName(task)}
-          message="Stop task?"
+        <KillDialog
+          task={task}
           open={true}
           onSubmit={handleStopConfirmSubmit}
           onClose={handleConfirmClose}
