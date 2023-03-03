@@ -16,6 +16,8 @@ import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
 import {TemplateButton} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
+import ConfirmDialog from '../../ConfirmDialog';
+import { getTaskName } from '../utils';
 
 interface TaskInfoProps {
   task: Task;
@@ -30,6 +32,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
   const {id, state, label, command, error, isOnlyCombined} = task;
   const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | TemplateButton>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [showConfirm, setShowConfirm] = useState<{type: string} | undefined>();
 
   useMemo(() => {
     document.title = `Task ${label || command} — TaskQueue`;
@@ -41,6 +44,10 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
   }, [id, onUpdate]);
 
   const handleStop = useCallback(async () => {
+    setShowConfirm({type: 'stop'});
+  }, []);
+
+  const handleStopConfirmSubmit = useCallback(async () => {
     await api.taskKill({id});
     onUpdate();
   }, [id, onUpdate]);
@@ -99,6 +106,10 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
     e.preventDefault();
     navigate('/');
   }, [navigate]);
+
+  const handleConfirmClose = useCallback(async () => {
+    setShowConfirm(undefined);
+  }, []);
 
   useEffect(() => {
     let metaKey = false;
@@ -201,6 +212,15 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
           isNew={true}
           onClose={handleCloseRestartDlg}
           onSubmit={handleRestartTask}
+        />
+      )}
+      {showConfirm && showConfirm.type === 'stop' && (
+        <ConfirmDialog
+          title={getTaskName(task)}
+          message="Stop task?"
+          open={true}
+          onSubmit={handleStopConfirmSubmit}
+          onClose={handleConfirmClose}
         />
       )}
     </>
