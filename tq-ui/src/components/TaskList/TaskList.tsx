@@ -1,6 +1,8 @@
 import React, {FC, useCallback, useEffect, useMemo, useRef} from 'react';
-import {Box, CircularProgress, Container} from '@mui/material';
+import {Box, CircularProgress, Container, IconButton} from '@mui/material';
 import {observer, useLocalObservable} from 'mobx-react-lite';
+import styled from '@emotion/styled';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import TemplatesBar from './components/TemplatesBar/TemplatesBar';
 import {TaskOrGroup} from '../types';
 import {api} from '../../tools/api';
@@ -10,33 +12,59 @@ import {useVisibility} from '../../hooks/useVisibility';
 import {groupTasks} from './utils';
 import TaskListView from './components/TaskListView';
 
+const SilenStatus = styled(Box)(() => {
+  return {
+    position: 'absolute',
+    right: '16px',
+    bottom: '16px',
+  };
+});
+
 interface TaskListProps {}
 
 const TaskList: FC<TaskListProps> = () => {
   const isVisible = useVisibility();
   const refInit = useRef(true);
 
-  const {loading, error, taskList, fetchTaskList} = useLocalObservable(() => ({
-    loading: true,
-    error: null as null | HTTPError | ApiError | TypeError,
-    taskList: null as null | TaskOrGroup[],
-    async fetchTaskList(silent = false) {
-      if (!silent) {
-        this.loading = true;
-      }
-      this.error = null;
-      try {
-        const taskList = await api.tasks();
-        taskList.reverse();
-        this.taskList = groupTasks(taskList);
-      } catch (err) {
-        console.error('fetchTaskList error: %O', err);
-        this.error = err as ApiError;
-      } finally {
-        this.loading = false;
-      }
-    },
-  }));
+  const {loading, silentLoading, error, silentError, taskList, fetchTaskList} = useLocalObservable(
+    () => ({
+      silentLoading: false,
+      silentError: null as null | HTTPError | ApiError | TypeError,
+      loading: true,
+      error: null as null | HTTPError | ApiError | TypeError,
+      taskList: null as null | TaskOrGroup[],
+      async fetchTaskList(isSilent = false) {
+        if (isSilent) {
+          this.silentLoading = true;
+        } else {
+          this.loading = true;
+        }
+
+        try {
+          const taskList = await api.tasks();
+          taskList.reverse();
+          this.taskList = groupTasks(taskList);
+
+          this.silentError = null;
+          this.error = null;
+        } catch (err) {
+          console.error('fetchTaskList error: %O', err);
+
+          if (isSilent) {
+            this.silentError = err as ApiError;
+          } else {
+            this.error = err as ApiError;
+          }
+        } finally {
+          if (isSilent) {
+            this.silentLoading = false;
+          } else {
+            this.loading = false;
+          }
+        }
+      },
+    }),
+  );
 
   useMemo(() => {
     document.title = 'TaskQueue';
@@ -75,13 +103,29 @@ const TaskList: FC<TaskListProps> = () => {
             <CircularProgress />
           </Box>
         )}
-        {error && (
+        {!loading && error && (
           <Box display="flex" justifyContent="center">
             <DisplayError error={error || new Error('asd')} onRetry={handleRetry} />
           </Box>
         )}
-        {taskList && !error && <TaskListView taskList={taskList} onUpdate={handleUpdate} />}
+        {!loading && !error && taskList && (
+          <TaskListView taskList={taskList} onUpdate={handleUpdate} />
+        )}
       </>
+      {silentLoading && (
+        <SilenStatus>
+          <Box m={1} display="flex">
+            <CircularProgress size={20} />
+          </Box>
+        </SilenStatus>
+      )}
+      {!silentLoading && silentError && (
+        <SilenStatus>
+          <IconButton size="small" color="warning" onClick={handleUpdate}>
+            <ErrorOutlineIcon />
+          </IconButton>
+        </SilenStatus>
+      )}
     </Container>
   );
 };
