@@ -105,7 +105,7 @@ const TaskList: FC<TaskListProps> = () => {
         )}
         {!loading && error && (
           <Box display="flex" justifyContent="center">
-            <DisplayError error={error || new Error('asd')} onRetry={handleRetry} />
+            <DisplayError error={error} onRetry={handleRetry} />
           </Box>
         )}
         {!loading && !error && taskList && (
