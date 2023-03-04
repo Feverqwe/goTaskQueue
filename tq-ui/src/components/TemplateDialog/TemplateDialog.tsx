@@ -79,13 +79,16 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
     return {command: commandResult, label: labelResult, group, isPty, isOnlyCombined};
   }, [refMap]);
 
-  const handleSubmit = useCallback(async (e: SyntheticEvent) => {
-    e.preventDefault();
-    const runTask = getCommand();
-    const isNewTab = ('metaKey' in e) && Boolean(e.metaKey);
-    await onSubmit(true, runTask, isNewTab);
-    onClose();
-  }, [onSubmit, onClose, getCommand]);
+  const handleSubmit = useCallback(
+    async (e: SyntheticEvent) => {
+      e.preventDefault();
+      const runTask = getCommand();
+      const isNewTab = 'metaKey' in e && Boolean(e.metaKey);
+      await onSubmit(true, runTask, isNewTab);
+      onClose();
+    },
+    [onSubmit, onClose, getCommand],
+  );
 
   const handleAdd = useCallback(async () => {
     const runTask = getCommand();
@@ -93,21 +96,27 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
     onClose();
   }, [onClose, onSubmit, getCommand]);
 
-  const handleAddAndRun = useCallback((e: SyntheticEvent) => {
-    const isNewTab = ('metaKey' in e) && Boolean(e.metaKey);
-    if (!isNewTab) return;
-    e.preventDefault();
-    handleSubmit(e);
-  }, [handleSubmit]);
+  const handleAddAndRun = useCallback(
+    (e: SyntheticEvent) => {
+      const isNewTab = 'metaKey' in e && Boolean(e.metaKey);
+      if (!isNewTab) return;
+      e.preventDefault();
+      handleSubmit(e);
+    },
+    [handleSubmit],
+  );
 
   const handleAdvancedClick = useCallback(() => {
     setExtended((v) => !v);
   }, []);
 
-  const handleClose = useCallback((e: Event, reason: string) => {
-    if (reason === 'backdropClick') return;
-    onClose();
-  }, [onClose]);
+  const handleClose = useCallback(
+    (e: Event, reason: string) => {
+      if (reason === 'backdropClick') return;
+      onClose();
+    },
+    [onClose],
+  );
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth>
@@ -135,9 +144,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
               <FormControlLabel
                 sx={{my: 1}}
                 label="Pseudo-terminal"
-                control={
-                  <Checkbox size="small" inputRef={refPty} defaultChecked={isPty} />
-                }
+                control={<Checkbox size="small" inputRef={refPty} defaultChecked={isPty} />}
               />
             )}
             <FormControlLabel
@@ -179,18 +186,27 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
               sx={{my: 1}}
               size="small"
               onClick={handleAdvancedClick}
-              startIcon={
-                isExtended ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
-              }
+              startIcon={isExtended ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             >
               Advanced
             </Button>
           )}
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button variant="outlined" onClick={handleAdd}>Add</Button>
-          <Button variant="contained" type="submit" autoFocus={!isNew && variables.length === 0} onClick={handleAddAndRun}>Add & Run</Button>
+          <Button variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="outlined" onClick={handleAdd}>
+            Add
+          </Button>
+          <Button
+            variant="contained"
+            type="submit"
+            autoFocus={!isNew && variables.length === 0}
+            onClick={handleAddAndRun}
+          >
+            Add & Run
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

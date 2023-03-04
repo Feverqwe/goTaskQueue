@@ -43,9 +43,9 @@ export interface TaskGroup {
 export type TaskOrGroup = Task | TaskGroup;
 
 export interface AddTaskReuest {
-  command: string,
-  label: string,
-  group: string,
-  isPty: boolean,
-  isOnlyCombined: boolean,
+  command: string;
+  label: string;
+  group: string;
+  isPty: boolean;
+  isOnlyCombined: boolean;
 }

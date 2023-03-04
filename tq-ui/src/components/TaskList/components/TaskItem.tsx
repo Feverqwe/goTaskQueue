@@ -16,7 +16,7 @@ import LinkIcon from '../../Task/components/LinkIcon';
 import KillDialog from '../../KillDialog/KillDialog';
 
 interface TaskItemProps {
-  task: Task,
+  task: Task;
   onUpdate: () => void;
 }
 
@@ -40,11 +40,14 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     setShowConfirm({type: 'stop'});
   }, []);
 
-  const handleOpen = useCallback((e: SyntheticEvent) => {
-    if (('metaKey' in e) && e.metaKey) return;
-    e.preventDefault();
-    navigate(`task?id=${id}`);
-  }, [navigate, id]);
+  const handleOpen = useCallback(
+    (e: SyntheticEvent) => {
+      if ('metaKey' in e && e.metaKey) return;
+      e.preventDefault();
+      navigate(`task?id=${id}`);
+    },
+    [navigate, id],
+  );
 
   const handleOpenMenu = useCallback(() => {
     setOpenMenu(true);
@@ -54,10 +57,13 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     setOpenMenu(false);
   }, []);
 
-  const handleStopConfirmSubmit = useCallback(async (signal: number) => {
-    await api.taskSignal({id, signal});
-    onUpdate();
-  }, [id, onUpdate]);
+  const handleStopConfirmSubmit = useCallback(
+    async (signal: number) => {
+      await api.taskSignal({id, signal});
+      onUpdate();
+    },
+    [id, onUpdate],
+  );
 
   const handleConfirmClose = useCallback(async () => {
     setShowConfirm(undefined);
@@ -68,15 +74,16 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     if ([TaskState.Started, TaskState.Idle].includes(state)) {
       result.push(
         <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
-          {state === TaskState.Started && (
+          {(state === TaskState.Started && (
             <IconButton onClick={handleStop} title="Stop">
               <StopIcon />
             </IconButton>
-          ) || state === TaskState.Idle && (
-            <IconButton onClick={handleStart} title="Start">
-              <PlayArrowIcon />
-            </IconButton>
-          )}
+          )) ||
+            (state === TaskState.Idle && (
+              <IconButton onClick={handleStart} title="Start">
+                <PlayArrowIcon />
+              </IconButton>
+            ))}
         </Box>,
       );
     }
@@ -92,7 +99,10 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
           ) : (
             <IconButton onClick={handleOpenMenu} title="Menu">
               <TaskStatusIcon task={task} />
-              <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="disabled" />
+              <CircleIcon
+                sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}}
+                color="disabled"
+              />
             </IconButton>
           )}
         </Box>,
@@ -117,12 +127,20 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       <Card>
         <Box display="flex" flexDirection="row" alignItems="stretch">
           <Box display="flex" alignItems="center">
-            <IconButton disabled={state === TaskState.Started} onClick={handleDelete} title="Delete">
+            <IconButton
+              disabled={state === TaskState.Started}
+              onClick={handleDelete}
+              title="Delete"
+            >
               <ClearIcon />
             </IconButton>
           </Box>
           <Box flexGrow={1}>
-            <CardActionArea href={`task?id=${id}`} onClick={handleOpen} sx={{height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+            <CardActionArea
+              href={`task?id=${id}`}
+              onClick={handleOpen}
+              sx={{height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center'}}
+            >
               <Box px={1} width="100%" sx={{wordBreak: 'break-all'}}>
                 <TaskName task={task} />
               </Box>

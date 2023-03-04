@@ -21,10 +21,13 @@ const DisplayError: FC<DisplayErrorProps> = ({error, onRetry, back}) => {
     return 'Unknown error';
   }, [error]);
 
-  const handleBack = useCallback((e: SyntheticEvent) => {
-    e.preventDefault();
-    navigate('/');
-  }, [navigate]);
+  const handleBack = useCallback(
+    (e: SyntheticEvent) => {
+      e.preventDefault();
+      navigate('/');
+    },
+    [navigate],
+  );
 
   return (
     <Stack spacing={2} p={1} direction="row" alignItems="center">

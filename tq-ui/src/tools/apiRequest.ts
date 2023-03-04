@@ -15,7 +15,7 @@ export class HTTPError extends Error {
 export async function handleApiResponse<T>(response: Response) {
   const body: {error: string} | {result: T} | null = await response.json().catch((err) => null);
 
-  if (body !== null && ('error' in body)) {
+  if (body !== null && 'error' in body) {
     throw new ApiError(body.error);
   }
 

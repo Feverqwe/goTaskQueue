@@ -23,9 +23,7 @@ const TemplateProvider: FC<TemplateProviderProps> = ({children}) => {
 
   return (
     <TemplatesUpdateCtx.Provider value={updateTemplates}>
-      <TemplatesCtx.Provider value={rootFolder}>
-        {children}
-      </TemplatesCtx.Provider>
+      <TemplatesCtx.Provider value={rootFolder}>{children}</TemplatesCtx.Provider>
     </TemplatesUpdateCtx.Provider>
   );
 };

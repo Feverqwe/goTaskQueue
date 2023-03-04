@@ -20,7 +20,11 @@ interface TemplateDialogProps {
   folder: TemplateFolder;
   open: boolean;
   onClose: () => void;
-  onSubmit: (folder: TemplateFolder, prevTemplate: Template | null, template: Template) => Promise<void>;
+  onSubmit: (
+    folder: TemplateFolder,
+    prevTemplate: Template | null,
+    template: Template,
+  ) => Promise<void>;
   template: TemplateButton;
   isNew?: boolean;
 }
@@ -29,7 +33,14 @@ type Variable = TemplateButton['variables'][number];
 
 const variableIdMap = new WeakMap<Variable, string>();
 
-const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, onSubmit, onClose, isNew}) => {
+const EditTemplateDialog: FC<TemplateDialogProps> = ({
+  folder,
+  template,
+  open,
+  onSubmit,
+  onClose,
+  isNew,
+}) => {
   const {id, name, command, label, group, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
@@ -50,25 +61,34 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
     });
   }, [variables]);
 
-  const handleDeleteVariable = useCallback((variable: Variable) => {
-    if (!variable) return;
-    setVariables((prev) => {
-      const newValue = [...prev];
-      const pos = variables.indexOf(variable);
-      if (pos !== -1) {
-        newValue.splice(pos, 1);
-      }
-      return newValue;
-    });
-  }, [variables]);
+  const handleDeleteVariable = useCallback(
+    (variable: Variable) => {
+      if (!variable) return;
+      setVariables((prev) => {
+        const newValue = [...prev];
+        const pos = variables.indexOf(variable);
+        if (pos !== -1) {
+          newValue.splice(pos, 1);
+        }
+        return newValue;
+      });
+    },
+    [variables],
+  );
 
   const variableInputs = useMemo(() => {
     refMap.current.clear();
 
     return variables.map((variable, index, arr) => {
       const {name, value, defaultValue} = variable;
-      const {name: refName, value: refValue, defaultValue: refDefaultValue} = Object.keys(variable).reduce((acc, key) => {
-        acc[key as keyof Variable] = (el: HTMLInputElement) => { refMap.current.set(`${key}_${index}`, el); };
+      const {
+        name: refName,
+        value: refValue,
+        defaultValue: refDefaultValue,
+      } = Object.keys(variable).reduce((acc, key) => {
+        acc[key as keyof Variable] = (el: HTMLInputElement) => {
+          refMap.current.set(`${key}_${index}`, el);
+        };
         return acc;
       }, {} as Record<keyof Variable, (el: HTMLInputElement) => void>);
 
@@ -125,10 +145,13 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
     setVariables((prev) => [...prev, {name: '', value: '', defaultValue: ''}]);
   }, []);
 
-  const handleClose = useCallback((e: Event, reason: string) => {
-    if (reason === 'backdropClick') return;
-    onClose();
-  }, [onClose]);
+  const handleClose = useCallback(
+    (e: Event, reason: string) => {
+      if (reason === 'backdropClick') return;
+      onClose();
+    },
+    [onClose],
+  );
 
   const getTemplate = useCallback(() => {
     const map = refMap.current;
@@ -154,19 +177,20 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
     return template;
   }, [variables]);
 
-  const handleSubmit = useCallback(async (e: SyntheticEvent) => {
-    e.preventDefault();
-    const newTemplate = getTemplate();
-    await onSubmit(folder, isNew ? null : template, newTemplate);
-    onClose();
-  }, [isNew, getTemplate, onSubmit, onClose, folder, template]);
+  const handleSubmit = useCallback(
+    async (e: SyntheticEvent) => {
+      e.preventDefault();
+      const newTemplate = getTemplate();
+      await onSubmit(folder, isNew ? null : template, newTemplate);
+      onClose();
+    },
+    [isNew, getTemplate, onSubmit, onClose, folder, template],
+  );
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth>
       <Box component="form" onSubmit={handleSubmit}>
-        <DialogTitle>
-          {isNew ? 'Add template' : 'Edit template'}
-        </DialogTitle>
+        <DialogTitle>{isNew ? 'Add template' : 'Edit template'}</DialogTitle>
         <DialogContent>
           <TextField
             size="small"
@@ -205,9 +229,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
             <FormControlLabel
               sx={{my: 1}}
               label="Pseudo-terminal"
-              control={
-                <Checkbox size="small" inputRef={refPty} defaultChecked={isPty} />
-              }
+              control={<Checkbox size="small" inputRef={refPty} defaultChecked={isPty} />}
             />
           )}
           <FormControlLabel
@@ -258,8 +280,12 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({folder, template, open, on
           />
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button variant="contained" type="submit">Save</Button>
+          <Button variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="contained" type="submit">
+            Save
+          </Button>
         </DialogActions>
       </Box>
     </Dialog>

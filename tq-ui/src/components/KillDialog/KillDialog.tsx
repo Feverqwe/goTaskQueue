@@ -1,7 +1,7 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import React, { useCallback, useRef, FC } from 'react';
+import {Box, FormControl, InputLabel, MenuItem, Select} from '@mui/material';
+import React, {useCallback, useRef, FC} from 'react';
 import ConfirmDialog from '../ConfirmDialog';
-import { Task } from '../types';
+import {Task} from '../types';
 
 const signals = {
   SIGINT: 0x2,
@@ -12,10 +12,10 @@ const signals = {
 };
 
 interface KillDialogProps {
-    open: boolean;
-    task: Task;
-    onClose: () => void;
-    onSubmit: (sig: number) => void;
+  open: boolean;
+  task: Task;
+  onClose: () => void;
+  onSubmit: (sig: number) => void;
 }
 
 const KillDialog: FC<KillDialogProps> = ({open, task, onClose, onSubmit}) => {
@@ -31,9 +31,9 @@ const KillDialog: FC<KillDialogProps> = ({open, task, onClose, onSubmit}) => {
     <ConfirmDialog
       open={open}
       title="Stop task?"
-      message={(
+      message={
         <Box display="flex" flexDirection="column">
-          <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+          <FormControl variant="standard" sx={{m: 1, minWidth: 120}}>
             <InputLabel>Signal</InputLabel>
             <Select
               inputProps={{
@@ -43,13 +43,15 @@ const KillDialog: FC<KillDialogProps> = ({open, task, onClose, onSubmit}) => {
             >
               {Object.entries(signals).map(([name, sig]) => {
                 return (
-                  <MenuItem key={sig} value={sig}>{name}</MenuItem>
+                  <MenuItem key={sig} value={sig}>
+                    {name}
+                  </MenuItem>
                 );
               })}
             </Select>
           </FormControl>
         </Box>
-      )}
+      }
       onClose={onClose}
       onSubmit={handleSubmit}
     />

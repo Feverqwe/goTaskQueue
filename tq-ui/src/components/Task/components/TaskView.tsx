@@ -24,10 +24,14 @@ const TaskView: FC<TaskViewProps> = ({task, onUpdate}) => {
 
   return (
     <>
-      <TaskHeader task={task} remapNewLine={remapNewLine} onToggleInfo={handleToggleInfo} onToggleRemapNewLine={handleToggleRemapNewLine} onUpdate={onUpdate} />
-      {showInfo && (
-        <TaskInfo task={task} onUpdate={onUpdate} />
-      )}
+      <TaskHeader
+        task={task}
+        remapNewLine={remapNewLine}
+        onToggleInfo={handleToggleInfo}
+        onToggleRemapNewLine={handleToggleRemapNewLine}
+        onUpdate={onUpdate}
+      />
+      {showInfo && <TaskInfo task={task} onUpdate={onUpdate} />}
       <TaskLog task={task} remapNewLine={remapNewLine} onUpdate={onUpdate} />
     </>
   );

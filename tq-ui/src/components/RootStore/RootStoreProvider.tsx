@@ -5,7 +5,7 @@ export type Template = TemplateButton | TemplateFolder;
 
 export enum TemplateType {
   Folder = 'folder',
-  Button = 'button'
+  Button = 'button',
 }
 
 export interface TemplateFolder {
@@ -19,15 +19,15 @@ export interface TemplateButton {
   type?: TemplateType.Button;
   label?: string;
   group?: string;
-  name: string,
+  name: string;
   variables: {
-    name: string,
-    value: string,
+    name: string;
+    value: string;
     defaultValue?: string;
-  }[],
-  command: string,
-  isPty?: boolean,
-  isOnlyCombined?: boolean,
+  }[];
+  command: string;
+  isPty?: boolean;
+  isOnlyCombined?: boolean;
 }
 
 export interface RootStore {
@@ -45,11 +45,7 @@ interface RootStoreProviderProps {
 }
 
 const RootStoreProvider: FC<RootStoreProviderProps> = ({children}) => {
-  return (
-    <RootStoreCtx.Provider value={rootStore}>
-      {children}
-    </RootStoreCtx.Provider>
-  );
+  return <RootStoreCtx.Provider value={rootStore}>{children}</RootStoreCtx.Provider>;
 };
 
 export default RootStoreProvider;

@@ -9,8 +9,8 @@ interface NotificationProviderProps {
 }
 
 interface StackItem {
-  color: AlertColor,
-  content: ReactNode,
+  color: AlertColor;
+  content: ReactNode;
   onClose: (event?: React.SyntheticEvent | Event, reason?: string) => void;
 }
 
@@ -68,22 +68,23 @@ const NotificationProvider: FC<NotificationProviderProps> = ({children}) => {
     setTimeout(onClose, 10 * 1000);
 
     setStack((prevValue) => {
-      return [
-        ...prevValue,
-        item,
-      ];
+      return [...prevValue, item];
     });
   }, []);
 
   return (
     <>
-      <NotificationCtx.Provider value={emit}>
-        {children}
-      </NotificationCtx.Provider>
+      <NotificationCtx.Provider value={emit}>{children}</NotificationCtx.Provider>
       {stack.map(({color, content, onClose}, index) => {
         return (
-          <Snackbar key={String(index)} anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true} autoHideDuration={6000} onClose={onClose}>
-            <Alert onClose={onClose} severity={color} sx={{ width: '100%' }}>
+          <Snackbar
+            key={String(index)}
+            anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
+            open={true}
+            autoHideDuration={6000}
+            onClose={onClose}
+          >
+            <Alert onClose={onClose} severity={color} sx={{width: '100%'}}>
               {content}
             </Alert>
           </Snackbar>

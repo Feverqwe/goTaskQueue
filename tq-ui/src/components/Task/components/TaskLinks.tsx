@@ -14,7 +14,8 @@ const TaskLinks: FC<TaskLinksProps> = ({task, onClick}) => {
       {task.links.map(({name, type, url, title}) => {
         return (
           <DialogMenuItem key={name} component="a" href={url} target="_blank" onClick={onClick}>
-            <LinkIcon type={type} sx={{ml: -1, mr: 1}} />{title}
+            <LinkIcon type={type} sx={{ml: -1, mr: 1}} />
+            {title}
           </DialogMenuItem>
         );
       })}

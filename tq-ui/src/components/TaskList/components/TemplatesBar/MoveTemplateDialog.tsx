@@ -21,49 +21,52 @@ interface MoveTemplateDialogProps {
   open: boolean;
 }
 
-const MoveTemplateDialog: FC<MoveTemplateDialogProps> = ({folder, onSubmit, onClose, open, template}) => {
+const MoveTemplateDialog: FC<MoveTemplateDialogProps> = ({
+  folder,
+  onSubmit,
+  onClose,
+  open,
+  template,
+}) => {
   const rootFolder = useContext(TemplatesCtx);
 
-  const handleMove = useCallback(async (targetTemplate: TemplateFolder) => {
-    await onSubmit(folder, template, targetTemplate);
-    onClose();
-  }, [folder, template, onClose, onSubmit]);
+  const handleMove = useCallback(
+    async (targetTemplate: TemplateFolder) => {
+      await onSubmit(folder, template, targetTemplate);
+      onClose();
+    },
+    [folder, template, onClose, onSubmit],
+  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>
-        Move
-      </DialogTitle>
+      <DialogTitle>Move</DialogTitle>
       <List>
         {getFolders(rootFolder, folder).map(({name, folder: subTemplate}, index) => {
           if (subTemplate === template) {
             return null;
           }
           return (
-            <ListItemButton
-              key={index}
-              onClick={handleMove.bind(null, subTemplate)}
-              title="Move"
-            >
+            <ListItemButton key={index} onClick={handleMove.bind(null, subTemplate)} title="Move">
               <ListItemIcon sx={{minWidth: 0, mr: 1}}>
                 <FolderOutlinedIcon />
               </ListItemIcon>
-              <ListItemText>
-                {name}
-              </ListItemText>
+              <ListItemText>{name}</ListItemText>
             </ListItemButton>
           );
         })}
       </List>
       <DialogActions>
-        <Button variant="outlined" onClick={onClose}>Cancel</Button>
+        <Button variant="outlined" onClick={onClose}>
+          Cancel
+        </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
 function getFolders(rootFolder: TemplateFolder, folder: TemplateFolder) {
-  const result: {name: string, folder: TemplateFolder}[] = [];
+  const result: {name: string; folder: TemplateFolder}[] = [];
   if (rootFolder !== folder) {
     result.push({
       name: 'Root',

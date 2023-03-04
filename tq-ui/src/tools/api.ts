@@ -3,18 +3,20 @@ import {AddTaskReuest, Task} from '../components/types';
 import {Template} from '../components/RootStore/RootStoreProvider';
 
 interface ActionParams {
-  method?: 'GET' | 'POST',
-  path: string,
+  method?: 'GET' | 'POST';
+  path: string;
 }
 
-function action<RequestParams = unknown, ResponseData = unknown>({method = 'GET', path}: ActionParams) {
+function action<RequestParams = unknown, ResponseData = unknown>({
+  method = 'GET',
+  path,
+}: ActionParams) {
   return async (params: RequestParams): Promise<ResponseData> => {
     let query = '';
     let body;
     if (method === 'POST') {
       body = JSON.stringify(params);
-    } else
-    if (params) {
+    } else if (params) {
       query = new URLSearchParams(params).toString();
     }
 
@@ -26,7 +28,7 @@ function action<RequestParams = unknown, ResponseData = unknown>({method = 'GET'
 }
 
 interface TaskId {
-  id: string,
+  id: string;
 }
 
 export const api = {
@@ -56,19 +58,21 @@ export const api = {
     method: 'POST',
     path: '/api/task/kill',
   }),
-  taskSignal: action<{id: string, signal: number}, string>({
+  taskSignal: action<{id: string; signal: number}, string>({
     method: 'POST',
     path: '/api/task/signal',
   }),
-  setTaskLabel: action<{id: string, label: string}, string>({
+  setTaskLabel: action<{id: string; label: string}, string>({
     method: 'POST',
     path: '/api/task/setLabel',
   }),
-  addTaskLink: action<{id: string, name: string, type: string, url: string, title: string}, string>({
-    method: 'POST',
-    path: '/api/task/addLink',
-  }),
-  delTaskLink: action<{id: string, name: string}, string>({
+  addTaskLink: action<{id: string; name: string; type: string; url: string; title: string}, string>(
+    {
+      method: 'POST',
+      path: '/api/task/addLink',
+    },
+  ),
+  delTaskLink: action<{id: string; name: string}, string>({
     method: 'POST',
     path: '/api/task/delLink',
   }),

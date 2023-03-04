@@ -22,9 +22,7 @@ const GroupStateProvider: FC<GroupStateProps> = ({children}) => {
 
   return (
     <GroupStateSetCtx.Provider value={setState}>
-      <GroupStateCtx.Provider value={groupState}>
-        {children}
-      </GroupStateCtx.Provider>
+      <GroupStateCtx.Provider value={groupState}>{children}</GroupStateCtx.Provider>
     </GroupStateSetCtx.Provider>
   );
 };

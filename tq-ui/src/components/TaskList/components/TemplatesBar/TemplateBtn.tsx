@@ -14,22 +14,36 @@ export interface TemplateBtnProps {
   onMove: (folder: TemplateFolder, template: Template) => void;
 }
 
-const TemplateBtn: FC<TemplateBtnProps> = ({folder, template, onClick, onEdit, onDelete, onClone, onMove}) => {
+const TemplateBtn: FC<TemplateBtnProps> = ({
+  folder,
+  template,
+  onClick,
+  onEdit,
+  onDelete,
+  onClone,
+  onMove,
+}) => {
   const {name} = template;
   const [showMenu, setShowMenu] = useState(false);
 
-  const handleClick = useCallback((e: SyntheticEvent) => {
-    onClick(e, template);
-  }, [template, onClick]);
+  const handleClick = useCallback(
+    (e: SyntheticEvent) => {
+      onClick(e, template);
+    },
+    [template, onClick],
+  );
 
   const handleCloseMenu = useCallback(() => {
     setShowMenu(false);
   }, []);
 
-  const handleRunAs = useCallback((e: SyntheticEvent) => {
-    onClick(e, template, true);
-    handleCloseMenu();
-  }, [template, onClick, handleCloseMenu]);
+  const handleRunAs = useCallback(
+    (e: SyntheticEvent) => {
+      onClick(e, template, true);
+      handleCloseMenu();
+    },
+    [template, onClick, handleCloseMenu],
+  );
 
   const handleEdit = useCallback(() => {
     onEdit(folder, template);

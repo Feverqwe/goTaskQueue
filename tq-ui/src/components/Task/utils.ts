@@ -1,9 +1,11 @@
-import { Task } from '../types';
+import {Task} from '../types';
 
 export function waitGroup() {
   let count = 0;
   let r: () => void;
-  const p = new Promise<void>((re) => { r = re; });
+  const p = new Promise<void>((re) => {
+    r = re;
+  });
   return {
     add: (c: number) => {
       count += c;

@@ -13,7 +13,7 @@ export function groupTasks(tasks: Task[]) {
           name: groupName,
           taskList: [],
         };
-        groupTaskList.set(groupName, group = newGroup);
+        groupTaskList.set(groupName, (group = newGroup));
         groupList.push(group);
       }
       group.taskList.push(task);

@@ -2,14 +2,14 @@ import React, {FC, useCallback, useContext, useMemo, useState} from 'react';
 import {Box, Card, CardActionArea, Typography} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { TaskGroup, TaskOrGroup, TaskState} from '../../types';
+import {TaskGroup, TaskOrGroup, TaskState} from '../../types';
 import TaskStatusIcon from '../../Task/components/TaskStatusIcon';
 import TaskListView from './TaskListView';
 import {GroupStateCtx} from '../../GroupStorageProvider/GroupStateCtx';
 import {GroupStateSetCtx} from '../../GroupStorageProvider/GroupStateSetCtx';
 
 interface TaskGroupItemProps {
-  group: TaskGroup,
+  group: TaskGroup;
   onUpdate: () => void;
 }
 
@@ -39,7 +39,13 @@ const TaskGroupItem: FC<TaskGroupItemProps> = ({group, onUpdate}) => {
     };
     taskList.forEach(next);
 
-    return [TaskState.Idle, TaskState.Started, TaskState.Finished, TaskState.Canceled, TaskState.Error].map((state) => {
+    return [
+      TaskState.Idle,
+      TaskState.Started,
+      TaskState.Finished,
+      TaskState.Canceled,
+      TaskState.Error,
+    ].map((state) => {
       const count = typeCount.get(state);
       if (!count) return null;
       return (
@@ -62,24 +68,16 @@ const TaskGroupItem: FC<TaskGroupItemProps> = ({group, onUpdate}) => {
             sx={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}
           >
             <Box p={1} display="flex" alignItems="center">
-              {open ? (
-                <ExpandLessIcon />
-              ) : (
-                <ExpandMoreIcon />
-              )}
+              {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </Box>
             <Box px={1} flexGrow={1} sx={{wordBreak: 'break-all'}}>
-              <Typography variant="body1">
-                {name}
-              </Typography>
+              <Typography variant="body1">{name}</Typography>
             </Box>
             {status}
           </CardActionArea>
         </Card>
       </Box>
-      {open && (
-        <TaskListView taskList={taskList} onUpdate={onUpdate} />
-      )}
+      {open && <TaskListView taskList={taskList} onUpdate={onUpdate} />}
     </>
   );
 };

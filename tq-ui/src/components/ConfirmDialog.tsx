@@ -24,23 +24,20 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, 
   }, [onSubmit, onClose]);
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="xs"
-    >
-      <DialogTitle>
-        {title}
-      </DialogTitle>
-      {message && (
-        <DialogContent>
-          {message}
-        </DialogContent>
-      )}
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+      <DialogTitle>{title}</DialogTitle>
+      {message && <DialogContent>{message}</DialogContent>}
       <DialogActions>
-        <Button variant="outlined" disabled={isLoading} onClick={onClose}>Cancel</Button>
-        <LoadingButton variant="contained" disabled={isLoading} loading={isLoading} onClick={handleSubmit} autoFocus>
+        <Button variant="outlined" disabled={isLoading} onClick={onClose}>
+          Cancel
+        </Button>
+        <LoadingButton
+          variant="contained"
+          disabled={isLoading}
+          loading={isLoading}
+          onClick={handleSubmit}
+          autoFocus
+        >
           Confirm
         </LoadingButton>
       </DialogActions>

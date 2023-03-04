@@ -14,8 +14,19 @@ export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template
   onEditFolder: (folder: TemplateFolder, template: TemplateFolder) => void;
 }
 
-const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onClick, onClone, onDelete, onNew, onNewFolder, onEdit, onEditFolder, onMove }) => {
-  const { name } = template;
+const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
+  folder,
+  template,
+  onClick,
+  onClone,
+  onDelete,
+  onNew,
+  onNewFolder,
+  onEdit,
+  onEditFolder,
+  onMove,
+}) => {
+  const {name} = template;
   const [showMenu, setShowMenu] = useState(false);
   const [showCtxMenu, setShowCtxMenu] = useState(false);
 
@@ -28,7 +39,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
   }, []);
 
   const withCloseMenu = useMemo(() => {
-    function proxy<T extends(...args: Parameters<T>) => void>(fn: T) {
+    function proxy<T extends (...args: Parameters<T>) => void>(fn: T) {
       return (...args: Parameters<T>) => {
         fn(...args);
         setShowMenu(false);
@@ -74,7 +85,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
   return (
     <>
       <Button
-        sx={{ m: 1, mt: 0, flexGrow: { xs: 1, sm: 0 } }}
+        sx={{m: 1, mt: 0, flexGrow: {xs: 1, sm: 0}}}
         variant="outlined"
         onClick={handleClick}
         onContextMenu={handleCtxMenu}
@@ -92,9 +103,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({ folder, template, onCli
         <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
       </DialogMenu>
       <Dialog open={showMenu} onClose={handleCloseMenu} title={name}>
-        <DialogTitle>
-          {name}
-        </DialogTitle>
+        <DialogTitle>{name}</DialogTitle>
         <DialogContent>
           <TemplatesBarView
             folder={template}

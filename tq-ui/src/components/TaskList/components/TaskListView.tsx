@@ -13,13 +13,9 @@ const TaskListView: FC<TaskListViewProps> = ({taskList, onUpdate}) => {
     <>
       {taskList.map((task) => {
         if ('taskList' in task) {
-          return (
-            <TaskGroupItem key={task.name} group={task} onUpdate={onUpdate} />
-          );
+          return <TaskGroupItem key={task.name} group={task} onUpdate={onUpdate} />;
         }
-        return (
-          <TaskItem key={task.id} task={task} onUpdate={onUpdate} />
-        );
+        return <TaskItem key={task.id} task={task} onUpdate={onUpdate} />;
       })}
     </>
   );

@@ -10,9 +10,7 @@ import {useVisibility} from '../../hooks/useVisibility';
 import {groupTasks} from './utils';
 import TaskListView from './components/TaskListView';
 
-interface TaskListProps {
-
-}
+interface TaskListProps {}
 
 const TaskList: FC<TaskListProps> = () => {
   const isVisible = useVisibility();
@@ -82,9 +80,7 @@ const TaskList: FC<TaskListProps> = () => {
             <DisplayError error={error || new Error('asd')} onRetry={handleRetry} />
           </Box>
         )}
-        {taskList && !error && (
-          <TaskListView taskList={taskList} onUpdate={handleUpdate} />
-        )}
+        {taskList && !error && <TaskListView taskList={taskList} onUpdate={handleUpdate} />}
       </>
     </Container>
   );

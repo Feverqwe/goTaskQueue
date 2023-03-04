@@ -16,7 +16,7 @@ const RootStyles = {
 
     '&.task-page': {
       overscrollBehavior: 'contain',
-    }
+    },
   },
 
   '#root': {

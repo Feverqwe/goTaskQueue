@@ -11,7 +11,7 @@ import 'xterm/css/xterm.css';
 import './XTerm.css';
 
 interface TaskLogProps {
-  task: Task,
+  task: Task;
   remapNewLine: boolean;
   onUpdate: () => void;
 }
@@ -52,9 +52,11 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       return true;
     });
 
-    const resizeObserver = new ResizeObserver(throttle(() => {
-      fitAddon.fit();
-    }, 100));
+    const resizeObserver = new ResizeObserver(
+      throttle(() => {
+        fitAddon.fit();
+      }, 100),
+    );
 
     let ws: WebSocket;
     let isOpen = false;
@@ -94,8 +96,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     const writeData = (dataType: string, data: Uint8Array) => {
       if (dataType === 'h') {
         history.push(data);
-      } else
-      if (dataType === 'a') {
+      } else if (dataType === 'a') {
         queue.push(data);
       }
       nextData();
@@ -139,7 +140,10 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       const x = wrapper.clientWidth;
       const y = wrapper.clientHeight;
       const screenSize: PtyScreenSize = {
-        x, y, cols, rows,
+        x,
+        y,
+        cols,
+        rows,
       };
       sendCommand('resize', screenSize);
     };
@@ -153,12 +157,12 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
         setConnecting(true);
         ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
         ws.onopen = () => {
-          setOpen(isOpen = true);
+          setOpen((isOpen = true));
           setConnecting(false);
           handleResize(terminal.cols, terminal.rows);
         };
         ws.onclose = () => {
-          setOpen(isOpen = false);
+          setOpen((isOpen = false));
           setConnecting(false);
         };
         ws.onmessage = async (e: MessageEvent<Blob>) => {
@@ -229,9 +233,11 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
         <Snackbar anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true}>
           <Alert
             severity="error"
-            sx={{ width: '100%' }}
+            sx={{width: '100%'}}
             action={
-              <Button size="small" onClick={handleReconnect}>Reconnect</Button>
+              <Button size="small" onClick={handleReconnect}>
+                Reconnect
+              </Button>
             }
           >
             Connection lost

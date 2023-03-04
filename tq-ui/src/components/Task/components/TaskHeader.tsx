@@ -26,7 +26,13 @@ interface TaskInfoProps {
   onUpdate: () => void;
 }
 
-const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onToggleInfo, onUpdate}) => {
+const TaskHeader: FC<TaskInfoProps> = ({
+  task,
+  remapNewLine,
+  onToggleRemapNewLine,
+  onToggleInfo,
+  onUpdate,
+}) => {
   const navigate = useNavigate();
   const {id, state, label, command, error, isOnlyCombined} = task;
   const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | TemplateButton>(null);
@@ -46,10 +52,13 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
     setShowConfirm({type: 'stop'});
   }, []);
 
-  const handleStopConfirmSubmit = useCallback(async (signal: number) => {
-    await api.taskSignal({id, signal});
-    onUpdate();
-  }, [id, onUpdate]);
+  const handleStopConfirmSubmit = useCallback(
+    async (signal: number) => {
+      await api.taskSignal({id, signal});
+      onUpdate();
+    },
+    [id, onUpdate],
+  );
 
   const handleOpenMenu = useCallback(() => {
     setShowMenu(true);
@@ -76,30 +85,36 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
     onToggleInfo();
   }, [onToggleInfo]);
 
-  const handleRestartTask = useCallback(async (run: boolean, runTask: AddTaskReuest) => {
-    try {
-      const {id} = await api.add(runTask);
-      if (run) {
-        await api.taskRun({id});
-      }
+  const handleRestartTask = useCallback(
+    async (run: boolean, runTask: AddTaskReuest) => {
+      try {
+        const {id} = await api.add(runTask);
+        if (run) {
+          await api.taskRun({id});
+        }
 
-      if (run) {
-        navigate(`/task?id=${id}`);
+        if (run) {
+          navigate(`/task?id=${id}`);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [navigate]);
+    },
+    [navigate],
+  );
 
   const handleCloseRestartDlg = useCallback(() => {
     setRestartDialogTemplate(null);
   }, []);
 
-  const handleBack = useCallback((e: SyntheticEvent) => {
-    if (('metaKey' in e) && e.metaKey) return;
-    e.preventDefault();
-    navigate('/');
-  }, [navigate]);
+  const handleBack = useCallback(
+    (e: SyntheticEvent) => {
+      if ('metaKey' in e && e.metaKey) return;
+      e.preventDefault();
+      navigate('/');
+    },
+    [navigate],
+  );
 
   const handleConfirmClose = useCallback(async () => {
     setShowConfirm(undefined);
@@ -149,23 +164,27 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
               </CardActionArea>
             </Box>
             <Box display="flex" alignItems="center">
-              {state === TaskState.Started && (
+              {(state === TaskState.Started && (
                 <IconButton onClick={handleStop} title="Stop">
                   <StopIcon />
                 </IconButton>
-              ) || state === TaskState.Idle && (
-                <IconButton onClick={handleStart} title="Start">
-                  <PlayArrowIcon />
-                </IconButton>
-              ) || (
-                <IconButton onClick={handleRestart} title="Restart">
-                  <RestartAltIcon />
-                </IconButton>
-              )}
+              )) ||
+                (state === TaskState.Idle && (
+                  <IconButton onClick={handleStart} title="Start">
+                    <PlayArrowIcon />
+                  </IconButton>
+                )) || (
+                  <IconButton onClick={handleRestart} title="Restart">
+                    <RestartAltIcon />
+                  </IconButton>
+                )}
               <IconButton onClick={handleOpenMenu} title="Menu">
                 <TaskStatusIcon task={task} />
                 {task.links.length > 0 && (
-                  <CircleIcon sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}} color="disabled" />
+                  <CircleIcon
+                    sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}}
+                    color="disabled"
+                  />
                 )}
               </IconButton>
               <DialogMenu open={showMenu} onClose={handleCloseMenu}>
@@ -186,11 +205,32 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
                 <Divider />
                 {!isOnlyCombined && (
                   <>
-                    <DialogMenuItem component="a" href={`/api/task/stdout?id=${id}`} target="_blank" onClick={handleCloseMenu}>stdout.log</DialogMenuItem>
-                    <DialogMenuItem component="a" href={`/api/task/stderr?id=${id}`} target="_blank" onClick={handleCloseMenu}>stderr.log</DialogMenuItem>
+                    <DialogMenuItem
+                      component="a"
+                      href={`/api/task/stdout?id=${id}`}
+                      target="_blank"
+                      onClick={handleCloseMenu}
+                    >
+                      stdout.log
+                    </DialogMenuItem>
+                    <DialogMenuItem
+                      component="a"
+                      href={`/api/task/stderr?id=${id}`}
+                      target="_blank"
+                      onClick={handleCloseMenu}
+                    >
+                      stderr.log
+                    </DialogMenuItem>
                   </>
                 )}
-                <DialogMenuItem component="a" href={`/api/task/combined?id=${id}`} target="_blank" onClick={handleCloseMenu}>combined.log</DialogMenuItem>
+                <DialogMenuItem
+                  component="a"
+                  href={`/api/task/combined?id=${id}`}
+                  target="_blank"
+                  onClick={handleCloseMenu}
+                >
+                  combined.log
+                </DialogMenuItem>
               </DialogMenu>
             </Box>
           </Box>
