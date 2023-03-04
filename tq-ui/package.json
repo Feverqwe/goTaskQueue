@@ -11,9 +11,10 @@
     "dev": "webpack --mode development --watch",
     "release": "npm run clean:dist && npm run build && npm run clean:www && npm run copy:dist",
     "tsc": "tsc --noEmit",
-    "lint": "npx eslint ./src",
-    "prettier": "npx prettier --write ./src",
-    "lint:fix": "npx eslint --fix ./src"
+    "lint": "npx eslint ./src && npm run prettier",
+    "prettier": "npx prettier --check ./src",
+    "prettier:fix": "npx prettier --write ./src",
+    "lint:fix": "npx eslint --fix ./src && npm run prettier:fix"
   },
   "author": "",
   "license": "ISC",
