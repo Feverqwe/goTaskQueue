@@ -13,6 +13,10 @@ const RootStyles = {
 
   body: {
     height: '100%',
+
+    '&.task-page': {
+      overscrollBehavior: 'contain',
+    }
   },
 
   '#root': {

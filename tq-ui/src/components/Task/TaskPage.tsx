@@ -45,6 +45,13 @@ const TaskPage: FC = () => {
   }, [fetchTask]);
 
   useEffect(() => {
+    document.body.classList.add('task-page');
+    return () => {
+      document.body.classList.remove('task-page');
+    };
+  }, []);
+
+  useEffect(() => {
     if (!id) return;
     fetchTask(id);
   }, [id, fetchTask]);
