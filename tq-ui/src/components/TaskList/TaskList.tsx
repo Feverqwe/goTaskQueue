@@ -14,7 +14,7 @@ import TaskListView from './components/TaskListView';
 
 const SilenStatus = styled(Box)(() => {
   return {
-    position: 'absolute',
+    position: 'fixed',
     right: '16px',
     bottom: '16px',
   };
