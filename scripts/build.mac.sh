@@ -1,9 +1,16 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-cd $SCRIPT_DIR/..
+set -e
 
-source ./scripts/_variables.sh
+cd $(dirname $0)
+
+if [ ! -f "$(basename $0)" ]; then
+  echo "Incorrect location"
+  exit 1
+fi
+
+source ./_variables.sh
+cd ..
 
 sh ./scripts/build.sh ${BINARY}
 

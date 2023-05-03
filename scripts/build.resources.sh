@@ -1,7 +1,16 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-cd $SCRIPT_DIR/..
+set -e
+
+cd $(dirname $0)
+
+if [ ! -f "$(basename $0)" ]; then
+  echo "Incorrect location"
+  exit 1
+fi
+
+source ./_variables.sh
+cd ..
 
 cd assets
 go get github.com/jteeuwen/go-bindata/...
