@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd $(dirname $0)/..
+
 BINARY="goTaskQueue"
 NAME="goTaskQueue"
 AUTHOR="Anton V"

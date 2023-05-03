@@ -2,15 +2,7 @@
 
 set -e
 
-cd $(dirname $0)
-
-if [ ! -f "$(basename $0)" ]; then
-  echo "Incorrect location"
-  exit 1
-fi
-
-source ./_variables.sh
-cd ..
+source "$(dirname $0)/_variables.sh"
 
 if [ -f "./${BINARY}" ]; then
     rm ./${BINARY}
