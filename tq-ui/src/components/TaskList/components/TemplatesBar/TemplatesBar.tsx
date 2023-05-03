@@ -65,7 +65,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
         }
         onUpdate();
 
-        if (run) {
+        if (runTask.isPty && run) {
           const url = `/task?id=${id}`;
           if (isNewTab) {
             window.open(url);

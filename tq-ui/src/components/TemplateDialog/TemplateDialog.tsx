@@ -28,6 +28,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
   const {name, variables, command, label, group, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [isExtended, setExtended] = useState(() => isNew);
+  const [isPtyEnabled, setPtyEnabled] = useState(isPty);
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refGroup = useRef<HTMLInputElement>(null);
@@ -118,6 +119,13 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
     [onClose],
   );
 
+  const handlePtyChange = useCallback(
+    (_: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+      setPtyEnabled(checked);
+    },
+    [],
+  );
+
   return (
     <Dialog open={open} onClose={handleClose} fullWidth>
       <form onSubmit={handleSubmit}>
@@ -144,7 +152,14 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
               <FormControlLabel
                 sx={{my: 1}}
                 label="Pseudo-terminal"
-                control={<Checkbox size="small" inputRef={refPty} defaultChecked={isPty} />}
+                control={
+                  <Checkbox
+                    size="small"
+                    inputRef={refPty}
+                    defaultChecked={isPty}
+                    onChange={handlePtyChange}
+                  />
+                }
               />
             )}
             <FormControlLabel
@@ -205,7 +220,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
             autoFocus={!isNew && variables.length === 0}
             onClick={handleAddAndRun}
           >
-            Add & Run
+            Add & {isPtyEnabled ? 'Open' : 'Run'}
           </Button>
         </DialogActions>
       </form>
