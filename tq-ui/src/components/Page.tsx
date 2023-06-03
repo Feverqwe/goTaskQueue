@@ -4,7 +4,6 @@ import * as React from 'react';
 import {FC, ReactNode} from 'react';
 import theme from '../tools/muiTheme';
 import cache from '../tools/muiCache';
-import NotificationProvider from './Notifications/NotificationProvider';
 
 const RootStyles = {
   html: {
@@ -32,11 +31,9 @@ const Page: FC<PageProps> = ({children}) => {
   return (
     <CacheProvider value={cache}>
       <ThemeProvider theme={theme}>
-        <NotificationProvider>
-          <CssBaseline />
-          <GlobalStyles styles={RootStyles} />
-          {children}
-        </NotificationProvider>
+        <CssBaseline />
+        <GlobalStyles styles={RootStyles} />
+        {children}
       </ThemeProvider>
     </CacheProvider>
   );

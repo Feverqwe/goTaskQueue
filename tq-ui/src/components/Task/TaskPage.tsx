@@ -8,6 +8,7 @@ import {NotificationCtx} from '../Notifications/NotificationCtx';
 import {ApiError, HTTPError} from '../../tools/apiRequest';
 import DisplayError from '../DisplayError';
 import TaskView from './components/TaskView';
+import NotificationProvider from '../Notifications/NotificationProvider';
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
@@ -74,23 +75,25 @@ const TaskPage: FC = () => {
   }, [id, fetchTask]);
 
   return (
-    <Container
-      maxWidth={false}
-      disableGutters={true}
-      sx={{display: 'flex', flexDirection: 'column', height: '100%'}}
-    >
-      {loading && (
-        <Box p={1} display="flex" justifyContent="center">
-          <CircularProgress />
-        </Box>
-      )}
-      {error && (
-        <Box p={1} display="flex" justifyContent="center">
-          <DisplayError error={error} onRetry={handleRetry} back={true} />
-        </Box>
-      )}
-      {!error && task && <TaskView task={task} onUpdate={handleUpdate} />}
-    </Container>
+    <NotificationProvider>
+      <Container
+        maxWidth={false}
+        disableGutters={true}
+        sx={{display: 'flex', flexDirection: 'column', height: '100%'}}
+      >
+        {loading && (
+          <Box p={1} display="flex" justifyContent="center">
+            <CircularProgress />
+          </Box>
+        )}
+        {error && (
+          <Box p={1} display="flex" justifyContent="center">
+            <DisplayError error={error} onRetry={handleRetry} back={true} />
+          </Box>
+        )}
+        {!error && task && <TaskView task={task} onUpdate={handleUpdate} />}
+      </Container>
+    </NotificationProvider>
   );
 };
 
