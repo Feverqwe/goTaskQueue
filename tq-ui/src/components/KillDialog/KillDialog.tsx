@@ -39,7 +39,7 @@ const KillDialog: FC<KillDialogProps> = ({open, task, onClose, onSubmit}) => {
               inputProps={{
                 ref: refSelect,
               }}
-              defaultValue={signals.SIGKILL}
+              defaultValue={signals.SIGTERM}
             >
               {Object.entries(signals).map(([name, sig]) => {
                 return (
