@@ -14,6 +14,7 @@ import {
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {Template, TemplateFolder, TemplateType} from '../../../RootStore/RootStoreProvider';
+import ActionButton from '../../../ActionButton/ActionButton';
 
 interface EditFolderDialogProps {
   folder: TemplateFolder;
@@ -142,9 +143,9 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({
           <Button variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="contained" type="submit">
+          <ActionButton variant="contained" type="submit" onSubmit={handleSubmit}>
             Save
-          </Button>
+          </ActionButton>
         </DialogActions>
       </Box>
     </Dialog>

@@ -14,6 +14,7 @@ import TaskLinks from '../../Task/components/TaskLinks';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import LinkIcon from '../../Task/components/LinkIcon';
 import KillDialog from '../../KillDialog/KillDialog';
+import IconActionButton from '../../IconActionButton/IconActionButton';
 
 interface TaskItemProps {
   task: Task;
@@ -65,7 +66,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     [id, onUpdate],
   );
 
-  const handleConfirmClose = useCallback(async () => {
+  const handleConfirmClose = useCallback(() => {
     setShowConfirm(undefined);
   }, []);
 
@@ -75,14 +76,14 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       result.push(
         <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
           {(state === TaskState.Started && (
-            <IconButton onClick={handleStop} title="Stop">
+            <IconActionButton onSubmit={handleStop} title="Stop">
               <StopIcon />
-            </IconButton>
+            </IconActionButton>
           )) ||
             (state === TaskState.Idle && (
-              <IconButton onClick={handleStart} title="Start">
+              <IconActionButton onSubmit={handleStart} title="Start">
                 <PlayArrowIcon />
-              </IconButton>
+              </IconActionButton>
             ))}
         </Box>,
       );
@@ -127,13 +128,13 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       <Card>
         <Box display="flex" flexDirection="row" alignItems="stretch">
           <Box display="flex" alignItems="center">
-            <IconButton
+            <IconActionButton
               disabled={state === TaskState.Started}
-              onClick={handleDelete}
+              onSubmit={handleDelete}
               title="Delete"
             >
               <ClearIcon />
-            </IconButton>
+            </IconActionButton>
           </Box>
           <Box flexGrow={1}>
             <CardActionArea

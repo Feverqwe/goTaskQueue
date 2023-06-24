@@ -5,13 +5,13 @@ import {
   DialogActions,
   DialogTitle,
   List,
-  ListItemButton,
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {Template, TemplateFolder, TemplateType} from '../../../RootStore/RootStoreProvider';
 import {TemplatesCtx} from '../../../TemplateProvider/TemplatesCtx';
+import ActionListItemButton from '../../../ActionListItemButton/ActionListItemButton';
 
 interface MoveTemplateDialogProps {
   folder: TemplateFolder;
@@ -47,12 +47,16 @@ const MoveTemplateDialog: FC<MoveTemplateDialogProps> = ({
             return null;
           }
           return (
-            <ListItemButton key={index} onClick={handleMove.bind(null, subTemplate)} title="Move">
+            <ActionListItemButton
+              key={index}
+              onSubmit={handleMove.bind(null, subTemplate)}
+              title="Move"
+            >
               <ListItemIcon sx={{minWidth: 0, mr: 1}}>
                 <FolderOutlinedIcon />
               </ListItemIcon>
               <ListItemText>{name}</ListItemText>
-            </ListItemButton>
+            </ActionListItemButton>
           );
         })}
       </List>

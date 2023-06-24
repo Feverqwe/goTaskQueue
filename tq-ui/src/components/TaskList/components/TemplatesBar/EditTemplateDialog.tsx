@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {Template, TemplateButton, TemplateFolder} from '../../../RootStore/RootStoreProvider';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
+import ActionButton from '../../../ActionButton/ActionButton';
 
 interface TemplateDialogProps {
   folder: TemplateFolder;
@@ -283,9 +284,9 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
           <Button variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="contained" type="submit">
+          <ActionButton variant="contained" type="submit" onSubmit={handleSubmit}>
             Save
-          </Button>
+          </ActionButton>
         </DialogActions>
       </Box>
     </Dialog>

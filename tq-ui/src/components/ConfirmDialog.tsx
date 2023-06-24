@@ -1,13 +1,13 @@
 import React, {FC, ReactNode, useCallback, useState} from 'react';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material';
-import LoadingButton from '@mui/lab/LoadingButton';
+import ActionButton from './ActionButton/ActionButton';
 
 interface ConfirmDialogProps {
   open: boolean;
   title: ReactNode;
   message?: ReactNode;
   onClose: () => void;
-  onSubmit: () => void | Promise<void>;
+  onSubmit: () => Promise<void>;
 }
 
 const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, onClose}) => {
@@ -17,9 +17,9 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, 
     setLoading(true);
     try {
       await onSubmit();
+      onClose();
     } finally {
       setLoading(false);
-      onClose();
     }
   }, [onSubmit, onClose]);
 
@@ -31,15 +31,9 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({title, message, open, onSubmit, 
         <Button variant="outlined" disabled={isLoading} onClick={onClose}>
           Cancel
         </Button>
-        <LoadingButton
-          variant="contained"
-          disabled={isLoading}
-          loading={isLoading}
-          onClick={handleSubmit}
-          autoFocus
-        >
+        <ActionButton variant="contained" onSubmit={handleSubmit} autoFocus>
           Confirm
-        </LoadingButton>
+        </ActionButton>
       </DialogActions>
     </Dialog>
   );

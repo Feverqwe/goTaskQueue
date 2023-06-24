@@ -1,8 +1,9 @@
 import React, {FC, SyntheticEvent, useCallback, useRef} from 'react';
-import {Box, IconButton, InputAdornment, Paper, TextField} from '@mui/material';
+import {Box, InputAdornment, Paper, TextField} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import {Task} from '../../types';
 import {api} from '../../../tools/api';
+import IconActionButton from '../../IconActionButton/IconActionButton';
 
 interface TaskInfoProps {
   task: Task;
@@ -54,9 +55,9 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton type="submit" edge="end">
+                  <IconActionButton type="submit" edge="end" onSubmit={handleSetLabel}>
                     <SaveIcon />
-                  </IconButton>
+                  </IconActionButton>
                 </InputAdornment>
               ),
             }}

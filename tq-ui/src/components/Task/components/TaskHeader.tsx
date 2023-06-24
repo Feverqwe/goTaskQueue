@@ -17,6 +17,7 @@ import TaskLinks from './TaskLinks';
 import {TemplateButton} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 import KillDialog from '../../KillDialog/KillDialog';
+import IconActionButton from '../../IconActionButton/IconActionButton';
 
 interface TaskInfoProps {
   task: Task;
@@ -48,7 +49,7 @@ const TaskHeader: FC<TaskInfoProps> = ({
     onUpdate();
   }, [id, onUpdate]);
 
-  const handleStop = useCallback(async () => {
+  const handleStop = useCallback(() => {
     setShowConfirm({type: 'stop'});
   }, []);
 
@@ -68,7 +69,7 @@ const TaskHeader: FC<TaskInfoProps> = ({
     setShowMenu(false);
   }, []);
 
-  const handleRestart = useCallback(async () => {
+  const handleRestart = useCallback(() => {
     const {label, group, command, isPty, isOnlyCombined} = task;
     setRestartDialogTemplate({
       name: 'New task',
@@ -116,7 +117,7 @@ const TaskHeader: FC<TaskInfoProps> = ({
     [navigate],
   );
 
-  const handleConfirmClose = useCallback(async () => {
+  const handleConfirmClose = useCallback(() => {
     setShowConfirm(undefined);
   }, []);
 
@@ -170,9 +171,9 @@ const TaskHeader: FC<TaskInfoProps> = ({
                 </IconButton>
               )) ||
                 (state === TaskState.Idle && (
-                  <IconButton onClick={handleStart} title="Start">
+                  <IconActionButton onSubmit={handleStart} title="Start">
                     <PlayArrowIcon />
-                  </IconButton>
+                  </IconActionButton>
                 )) || (
                   <IconButton onClick={handleRestart} title="Restart">
                     <RestartAltIcon />

@@ -15,16 +15,16 @@ interface KillDialogProps {
   open: boolean;
   task: Task;
   onClose: () => void;
-  onSubmit: (sig: number) => void;
+  onSubmit: (sig: number) => Promise<void>;
 }
 
 const KillDialog: FC<KillDialogProps> = ({open, task, onClose, onSubmit}) => {
   const refSelect = useRef<{value: number}>();
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!refSelect.current) return;
     const {value} = refSelect.current;
-    return onSubmit(value);
+    await onSubmit(value);
   }, [onSubmit]);
 
   return (
