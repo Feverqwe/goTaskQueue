@@ -40,7 +40,7 @@ const useActionButton = <ELEMENT, EVENT>({
       </Tooltip>
     ) : null;
 
-    if (!isIcon) {
+    if (!isIcon && icon) {
       icon = (
         <Box display="flex" alignItems="center" ml={1}>
           {icon}
