@@ -1,6 +1,5 @@
 import React, {FC, SyntheticEvent} from 'react';
-import {Box, CircularProgress, IconButton, Tooltip} from '@mui/material';
-import ErrorIcon from '@mui/icons-material/Error';
+import {IconButton} from '@mui/material';
 import {IconButtonProps} from '@mui/material/IconButton/IconButton';
 import useActionButton from '../ActionButton/useActionButton';
 
@@ -14,21 +13,11 @@ const IconActionButton: FC<IconActionButtonProps> = ({
   size = 'medium',
   ...props
 }) => {
-  const {isLoading, handleSubmit, error} = useActionButton(onSubmit);
+  const {isLoading, handleSubmit, stateNode} = useActionButton({onSubmit, isIcon: true});
 
   return (
     <IconButton disabled={isLoading} size={size} {...props} onClick={handleSubmit}>
-      {isLoading ? (
-        <Box display="flex" alignItems="center">
-          <CircularProgress size={size === 'medium' ? 24 : size} />
-        </Box>
-      ) : error ? (
-        <Tooltip title={error.message}>
-          <ErrorIcon color="error" />
-        </Tooltip>
-      ) : (
-        children
-      )}
+      {stateNode || children}
     </IconButton>
   );
 };

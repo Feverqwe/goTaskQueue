@@ -1,6 +1,5 @@
 import React, {FC, SyntheticEvent} from 'react';
-import {Box, CircularProgress, ListItemButton, Tooltip} from '@mui/material';
-import ErrorIcon from '@mui/icons-material/Error';
+import {ListItemButton} from '@mui/material';
 import {ListItemButtonProps} from '@mui/material/ListItemButton/ListItemButton';
 import useActionButton from '../ActionButton/useActionButton';
 
@@ -9,22 +8,11 @@ export type ActionListItemButtonProps = Omit<ListItemButtonProps, 'onSubmit' | '
 };
 
 const ActionListItemButton: FC<ActionListItemButtonProps> = ({onSubmit, children, ...props}) => {
-  const {isLoading, handleSubmit, error} = useActionButton(onSubmit);
+  const {isLoading, handleSubmit, stateNode} = useActionButton({onSubmit});
 
   return (
     <ListItemButton disabled={isLoading} {...props} onClick={handleSubmit}>
-      {children}
-      {isLoading ? (
-        <Box display="flex" alignItems="center" ml={1}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : error ? (
-        <Box display="flex" alignItems="center" ml={1}>
-          <Tooltip title={error.message}>
-            <ErrorIcon color="error" />
-          </Tooltip>
-        </Box>
-      ) : null}
+      {children} {stateNode}
     </ListItemButton>
   );
 };
