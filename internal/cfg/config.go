@@ -14,13 +14,14 @@ import (
 )
 
 type Config struct {
-	Port      int
-	Address   string
-	Name      string
-	Run       []string
-	PtyRun    []string
-	PtyRunEnv []string
-	RunEnv    []string
+	Port          int
+	Address       string
+	Name          string
+	Run           []string
+	PtyRun        []string
+	PtyRunEnv     []string
+	RunEnv        []string
+	TemplateOrder []string
 }
 
 var APP_ID = "com.rndnm.gotaskqueue"
@@ -51,6 +52,7 @@ func getNewConfig() Config {
 	}
 	config.PtyRunEnv = []string{"TERM=xterm-256color", "COLORTERM=truecolor", "HOME=/root"}
 	config.RunEnv = []string{}
+	config.TemplateOrder = []string{}
 	return config
 }
 
@@ -90,6 +92,10 @@ func LoadConfig() Config {
 
 	if config.RunEnv == nil {
 		config.RunEnv = getNewConfig().RunEnv
+	}
+
+	if config.TemplateOrder == nil {
+		config.TemplateOrder = getNewConfig().TemplateOrder
 	}
 
 	return config

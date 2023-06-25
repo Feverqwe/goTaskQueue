@@ -292,6 +292,32 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
+	type SetTemplateOrderPayload struct {
+		TemplateOrder []string `json:"templateOrder"`
+	}
+
+	router.Post("/api/setTemplateOrder", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := utils.ParseJson[SetTemplateOrderPayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			config.TemplateOrder = payload.TemplateOrder
+			cfg.SaveConfig(*config)
+
+			return "ok", nil
+		})
+	})
+
+	router.Get("/api/getTemplateOrder", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() ([]string, error) {
+			templateOrder := config.TemplateOrder
+
+			return templateOrder, nil
+		})
+	})
+
 	router.Custom([]string{"GET"}, []string{"/api/task/stdout", "/api/task/stderr", "/api/task/combined"}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		logType := r.URL.Path[10:]
 		id := r.URL.Query().Get("id")

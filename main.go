@@ -220,6 +220,7 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 
 	type RootStore struct {
 		Templates      []templatectr.Template `json:"templates"`
+		TemplateOrder  []string               `json:"templateOrder"`
 		MemStorage     map[string]interface{} `json:"memStorage"`
 		IsPtySupported bool                   `json:"isPtySupported"`
 	}
@@ -255,6 +256,7 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 
 			store := RootStore{
 				Templates:      templates,
+				TemplateOrder:  config.TemplateOrder,
 				MemStorage:     memStorage.GetKeys(nil),
 				IsPtySupported: runtime.GOOS != "windows",
 			}
