@@ -1,6 +1,5 @@
 import {handleApiResponse} from './apiRequest';
-import {AddTaskReuest, Task} from '../components/types';
-import {Template} from '../components/RootStore/RootStoreProvider';
+import {AddTaskReuest, Task, RawTemplate} from '../components/types';
 
 interface ActionParams {
   method?: 'GET' | 'POST';
@@ -80,14 +79,32 @@ export const api = {
     method: 'POST',
     path: '/api/reloadConfig',
   }),
-  setTemplates: action<{templates: Template[]}>({
-    method: 'POST',
-    path: '/api/setTemplates',
-  }),
-  templates: action<void, Template[]>({
+
+  templates: action<void, RawTemplate[]>({
     method: 'GET',
     path: '/api/templates',
   }),
+  getTemplate: action<{id: string}, RawTemplate>({
+    method: 'GET',
+    path: '/api/getTemplate',
+  }),
+  readTemplate: action<{place: string}, RawTemplate>({
+    method: 'GET',
+    path: '/api/readTemplate',
+  }),
+  setTemplate: action<{template: RawTemplate}, string>({
+    method: 'POST',
+    path: '/api/setTemplate',
+  }),
+  moveTemplate: action<{from: string, to: string}, string>({
+    method: 'POST',
+    path: '/api/moveTemplate',
+  }),
+  removeTemplate: action<{place: string}, string>({
+    method: 'POST',
+    path: '/api/removeTemplate',
+  }),
+
   memStorageGet: action<string[] | null, Record<string, unknown>>({
     method: 'POST',
     path: '/api/memStorage/get',

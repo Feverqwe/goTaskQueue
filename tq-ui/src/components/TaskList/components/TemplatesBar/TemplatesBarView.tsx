@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import {TemplateType} from '../../../RootStore/RootStoreProvider';
+import {TemplateType} from '../../../types';
 import TemplateBtn, {TemplateBtnProps} from './TemplateBtn';
 import TemplateFolderBtn, {TemplateFolderBtnProps} from './TemplateFolderBtn';
 

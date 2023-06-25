@@ -1,3 +1,44 @@
+export interface RawTemplate {
+  place: string;
+  command: string;
+
+  id?: string;
+  label?: string;
+  group?: string;
+  name: string;
+  variables: {
+    name: string;
+    value: string;
+    defaultValue?: string;
+  }[];
+  isPty?: boolean;
+  isOnlyCombined?: boolean;
+}
+
+export type Template = TemplateButton | TemplateFolder;
+
+export enum TemplateType {
+  Folder = 'folder',
+  Button = 'button',
+}
+
+export interface TemplateFolder {
+  type: TemplateType.Folder;
+  place: string;
+  name: string;
+  templates: Template[];
+}
+
+export interface TemplateButton extends RawTemplate {
+  type?: TemplateType.Button;
+}
+
+export interface RootStore {
+  templates: RawTemplate[];
+  memStorage: Record<string, unknown>;
+  isPtySupported: boolean;
+}
+
 export enum TaskState {
   Canceled = 'CANCELED',
   Error = 'ERROR',

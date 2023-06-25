@@ -1,40 +1,6 @@
 import React, {FC, ReactNode} from 'react';
 import {RootStoreCtx} from './RootStoreCtx';
-
-export type Template = TemplateButton | TemplateFolder;
-
-export enum TemplateType {
-  Folder = 'folder',
-  Button = 'button',
-}
-
-export interface TemplateFolder {
-  type: TemplateType.Folder;
-  name: string;
-  templates: Template[];
-}
-
-export interface TemplateButton {
-  id?: string;
-  type?: TemplateType.Button;
-  label?: string;
-  group?: string;
-  name: string;
-  variables: {
-    name: string;
-    value: string;
-    defaultValue?: string;
-  }[];
-  command: string;
-  isPty?: boolean;
-  isOnlyCombined?: boolean;
-}
-
-export interface RootStore {
-  templates: Template[];
-  memStorage: Record<string, unknown>;
-  isPtySupported: boolean;
-}
+import {RootStore} from '../types';
 
 declare const ROOT_STORE: RootStore | undefined;
 

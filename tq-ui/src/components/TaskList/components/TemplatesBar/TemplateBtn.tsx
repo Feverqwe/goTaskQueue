@@ -1,6 +1,6 @@
 import React, {FC, SyntheticEvent, useCallback, useState} from 'react';
 import {Button, Divider} from '@mui/material';
-import {Template, TemplateButton, TemplateFolder} from '../../../RootStore/RootStoreProvider';
+import { TemplateButton, TemplateFolder} from '../../../types';
 import DialogMenu from '../../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
 
@@ -9,9 +9,8 @@ export interface TemplateBtnProps {
   template: TemplateButton;
   onClick: (e: SyntheticEvent, template: TemplateButton, as?: boolean) => void;
   onEdit: (folder: TemplateFolder, template: TemplateButton) => void;
-  onDelete: (folder: TemplateFolder, template: Template) => void;
-  onClone: (folder: TemplateFolder, template: Template) => void;
-  onMove: (folder: TemplateFolder, template: Template) => void;
+  onDelete: (template: TemplateButton) => void;
+  onClone: (folder: TemplateFolder, template: TemplateButton) => void;
 }
 
 const TemplateBtn: FC<TemplateBtnProps> = ({
@@ -21,7 +20,6 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
   onEdit,
   onDelete,
   onClone,
-  onMove,
 }) => {
   const {name} = template;
   const [showMenu, setShowMenu] = useState(false);
@@ -51,19 +49,14 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
   }, [folder, template, onEdit, handleCloseMenu]);
 
   const handleDelete = useCallback(() => {
-    onDelete(folder, template);
+    onDelete(template);
     handleCloseMenu();
-  }, [folder, template, onDelete, handleCloseMenu]);
+  }, [template, onDelete, handleCloseMenu]);
 
   const handleClone = useCallback(() => {
     onClone(folder, template);
     handleCloseMenu();
   }, [folder, template, onClone, handleCloseMenu]);
-
-  const handleMove = useCallback(() => {
-    onMove(folder, template);
-    handleCloseMenu();
-  }, [folder, template, onMove, handleCloseMenu]);
 
   const handleCtxMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
@@ -88,7 +81,6 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
           </>
         )}
         <DialogMenuItem onClick={handleEdit}>Edit</DialogMenuItem>
-        <DialogMenuItem onClick={handleMove}>Move</DialogMenuItem>
         <DialogMenuItem onClick={handleClone}>Clone</DialogMenuItem>
         <Divider />
         <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>

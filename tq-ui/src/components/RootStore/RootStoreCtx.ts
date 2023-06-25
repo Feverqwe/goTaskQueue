@@ -1,5 +1,5 @@
 import {createContext} from 'react';
-import {RootStore} from './RootStoreProvider';
+import {RootStore} from '../types';
 
 export const RootStoreCtx = createContext<RootStore>({
   templates: [],

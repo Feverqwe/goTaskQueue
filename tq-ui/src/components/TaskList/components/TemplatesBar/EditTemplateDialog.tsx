@@ -13,7 +13,8 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import {Template, TemplateButton, TemplateFolder} from '../../../RootStore/RootStoreProvider';
+import path from 'path-browserify';
+import {Template, TemplateButton, TemplateFolder} from '../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import ActionButton from '../../../ActionButton/ActionButton';
 
@@ -21,11 +22,7 @@ interface TemplateDialogProps {
   folder: TemplateFolder;
   open: boolean;
   onClose: () => void;
-  onSubmit: (
-    folder: TemplateFolder,
-    prevTemplate: Template | null,
-    template: Template,
-  ) => Promise<void>;
+  onSubmit: (template: TemplateButton) => Promise<void>;
   template: TemplateButton;
   isNew?: boolean;
 }
@@ -154,15 +151,19 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
     [onClose],
   );
 
-  const getTemplate = useCallback(() => {
+  const getTemplate = useCallback((dirPlace: string) => {
     const map = refMap.current;
+
+    const name = refName.current?.value || '';
+
     const template: Template = {
+      place: path.join(dirPlace, name),
       command: refCommand.current?.value || '',
       isPty: refPty.current?.checked || false,
       isOnlyCombined: refOnlyCombined.current?.checked || false,
       label: refLabel.current?.value || '',
       group: refGroup.current?.value || '',
-      name: refName.current?.value || '',
+      name,
       id: refId.current?.value || '',
       variables: variables.map((item, index) => {
         return Object.keys(item).reduce((acc, key) => {
@@ -181,8 +182,11 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   const handleSubmit = useCallback(
     async (e: SyntheticEvent) => {
       e.preventDefault();
-      const newTemplate = getTemplate();
-      await onSubmit(folder, isNew ? null : template, newTemplate);
+      const newTemplate = getTemplate(folder.place);
+      if (!isNew) {
+        newTemplate.place = template.place;
+      }
+      await onSubmit(newTemplate);
       onClose();
     },
     [isNew, getTemplate, onSubmit, onClose, folder, template],

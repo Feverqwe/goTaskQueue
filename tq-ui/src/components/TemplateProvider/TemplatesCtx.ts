@@ -1,8 +1,12 @@
 import {createContext} from 'react';
-import {TemplateFolder, TemplateType} from '../RootStore/RootStoreProvider';
+import { RawTemplate, TemplateFolder, TemplateType } from '../types';
 
-export const TemplatesCtx = createContext<TemplateFolder>({
-  type: TemplateType.Folder,
-  name: '',
+export const TemplatesCtx = createContext<{rootFolder: TemplateFolder, templates: RawTemplate[]}>({
+  rootFolder: {
+    type: TemplateType.Folder,
+    place: '',
+    name: '',
+    templates: [],
+  },
   templates: [],
 });

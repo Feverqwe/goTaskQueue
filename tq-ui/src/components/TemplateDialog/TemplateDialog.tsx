@@ -12,9 +12,8 @@ import {
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import {TemplateButton} from '../RootStore/RootStoreProvider';
+import {TemplateButton, AddTaskReuest} from '../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
-import {AddTaskReuest} from '../types';
 import ActionButton from '../ActionButton/ActionButton';
 
 interface TemplateDialogProps {

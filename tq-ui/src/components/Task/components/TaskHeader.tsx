@@ -10,11 +10,10 @@ import CircleIcon from '@mui/icons-material/Circle';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
-import {AddTaskReuest, Task, TaskState} from '../../types';
+import {AddTaskReuest, Task, TaskState, TemplateButton} from '../../types';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
-import {TemplateButton} from '../../RootStore/RootStoreProvider';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 import KillDialog from '../../KillDialog/KillDialog';
 import IconActionButton from '../../IconActionButton/IconActionButton';
@@ -72,6 +71,7 @@ const TaskHeader: FC<TaskInfoProps> = ({
   const handleRestart = useCallback(() => {
     const {label, group, command, isPty, isOnlyCombined} = task;
     setRestartDialogTemplate({
+      place: '',
       name: 'New task',
       label,
       group,

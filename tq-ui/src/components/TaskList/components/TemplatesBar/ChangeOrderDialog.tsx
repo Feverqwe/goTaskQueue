@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useRef, useState} from 'react';
+import React, { FC, SyntheticEvent, useCallback, useContext, useState } from 'react';
 import {
   Box,
   Button,
@@ -9,18 +9,14 @@ import {
   IconButton,
   List,
   ListItem,
-  TextField,
 } from '@mui/material';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import {Template, TemplateFolder} from '../../../types';
+import { RawTemplate, TemplateFolder } from '../../../types';
 import ActionButton from '../../../ActionButton/ActionButton';
+import { TemplatesCtx } from '../../../TemplateProvider/TemplatesCtx';
 
 interface EditFolderDialogProps {
-  folder: TemplateFolder;
-  template: TemplateFolder;
-  isNew?: boolean;
-  isRoot?: boolean;
   open: boolean;
   onSubmit: (
     folder: TemplateFolder,
@@ -29,17 +25,12 @@ interface EditFolderDialogProps {
 }
 
 const EditFolderDialog: FC<EditFolderDialogProps> = ({
-  folder,
   onClose,
-  isNew,
-  isRoot,
-  template,
   onSubmit,
   open,
 }) => {
-  const {name} = template;
-  const refName = useRef<HTMLInputElement>(null);
-  const [templates, setTemplates] = useState(() => [...template.templates]);
+  const {templates: origTemplates} = useContext(TemplatesCtx);
+  const [templates, setTemplates] = useState(() => [...origTemplates]);
 
   const handleSubmit = useCallback(
     async (e: SyntheticEvent) => {
@@ -52,7 +43,7 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({
       await onSubmit(folder, isNew ? null : template, newTemplate);
       onClose(); */
     },
-    [isNew, onSubmit, onClose, folder, template, templates],
+    [onSubmit, onClose, templates],
   );
 
   const handleClose = useCallback(
@@ -64,7 +55,7 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({
   );
 
   const handleUp = useCallback(
-    (template: Template) => {
+    (template: RawTemplate) => {
       const newTemplates = [...templates];
       const pos = newTemplates.indexOf(template);
       if (pos === -1) {
@@ -79,7 +70,7 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({
   );
 
   const handleDown = useCallback(
-    (template: Template) => {
+    (template: RawTemplate) => {
       const newTemplates = [...templates];
       const pos = newTemplates.indexOf(template);
       if (pos === -1) {
@@ -96,30 +87,14 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({
   return (
     <Dialog open={open} onClose={handleClose} fullWidth>
       <Box component="form" onSubmit={handleSubmit}>
-        <DialogTitle>{isNew ? 'Add folder' : 'Edit folder'}</DialogTitle>
+        <DialogTitle>Change order</DialogTitle>
         <DialogContent>
-          {!isRoot && (
-            <TextField
-              size="small"
-              label="Name"
-              sx={{my: 1}}
-              defaultValue={name || ''}
-              inputProps={{ref: refName}}
-              fullWidth
-              type="text"
-              variant="outlined"
-              required
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-          )}
           <List>
-            {templates.map((template, index) => {
-              const {name} = template;
+            {templates.map((template) => {
+              const {place} = template;
               return (
                 <ListItem
-                  key={index}
+                  key={place}
                   secondaryAction={
                     <>
                       <IconButton title="Up" onClick={handleUp.bind(null, template)}>
@@ -131,7 +106,7 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({
                     </>
                   }
                 >
-                  {name}
+                  {place}
                 </ListItem>
               );
             })}
