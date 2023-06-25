@@ -79,6 +79,11 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseMenu();
   }, [handleCloseMenu]);
 
+  const handleReloadTemplates = useCallback(async () => {
+    await api.reloadTemplates();
+    handleCloseMenu();
+  }, [handleCloseMenu]);
+
   const handleNewTemplate = useCallback(
     (folder: TemplateFolder) => {
       setEditDialog({folder, template: {...NEW_TEMPLATE, name: ''}, isNew: true});
@@ -197,6 +202,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
           <DialogMenuItem onClick={handleOpenChangeOrderDialog}>Order</DialogMenuItem>
           <Divider />
           <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
+          <DialogMenuItem onClick={handleReloadTemplates}>Reload templates</DialogMenuItem>
         </DialogMenu>
       )}
       {runDialog && (

@@ -79,6 +79,10 @@ export const api = {
     method: 'POST',
     path: '/api/reloadConfig',
   }),
+  reloadTemplates: action<void>({
+    method: 'POST',
+    path: '/api/reloadTemplates',
+  }),
 
   templates: action<void, RawTemplate[]>({
     method: 'GET',
