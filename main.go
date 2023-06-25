@@ -12,7 +12,9 @@ import (
 	"goTaskQueue/internal/mutex"
 	"goTaskQueue/internal/powerCtr"
 	"goTaskQueue/internal/taskQueue"
+	templatectr "goTaskQueue/internal/templateCtr"
 	"goTaskQueue/internal/trayIcon"
+	"goTaskQueue/internal/utils"
 	"io"
 	"log"
 	"net/http"
@@ -140,7 +142,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 						task.Send(data[1:])
 					} else if data[0:1] == "r" {
 						reader := strings.NewReader(data[1:])
-						payload, err := internal.ParseJson[taskQueue.PtyScreenSize](reader)
+						payload, err := utils.ParseJson[taskQueue.PtyScreenSize](reader)
 						if err == nil {
 							err = task.Resize(payload)
 							if err != nil {
@@ -217,7 +219,7 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 	}
 
 	type RootStore struct {
-		Templates      []interface{}          `json:"templates"`
+		Templates      []templatectr.Template `json:"templates"`
 		MemStorage     map[string]interface{} `json:"memStorage"`
 		IsPtySupported bool                   `json:"isPtySupported"`
 	}
@@ -249,8 +251,10 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 		if assetPath == "/index.html" {
 			mTime = time.Now()
 
+			templates := templatectr.GetTemplates()
+
 			store := RootStore{
-				Templates:      config.Templates,
+				Templates:      templates,
 				MemStorage:     memStorage.GetKeys(nil),
 				IsPtySupported: runtime.GOOS != "windows",
 			}

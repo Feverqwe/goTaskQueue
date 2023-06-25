@@ -7,7 +7,8 @@ import (
 	gzbuffer "goTaskQueue/internal/gzBuffer"
 	memstorage "goTaskQueue/internal/memStorage"
 	"goTaskQueue/internal/taskQueue"
-	"io"
+	templatectr "goTaskQueue/internal/templateCtr"
+	"goTaskQueue/internal/utils"
 	"net/http"
 	"strings"
 	"syscall"
@@ -90,7 +91,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/delete", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[GetTaskPayload](r.Body)
+			payload, err := utils.ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -103,14 +104,14 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/add", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (*taskQueue.Task, error) {
-			payload, err := ParseJson[AddTaskPayload](r.Body)
+			payload, err := utils.ParseJson[AddTaskPayload](r.Body)
 			if err != nil {
 				return nil, err
 			}
 
 			if payload.TemplateId != "" {
-				template := config.GetTemplate(payload.TemplateId)
-				if template == nil {
+				template, err := templatectr.GetTemplate(payload.TemplateId)
+				if err != nil {
 					return nil, fmt.Errorf("template not found %v", payload.TemplateId)
 				}
 
@@ -153,7 +154,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/clone", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (*taskQueue.Task, error) {
-			payload, err := ParseJson[GetTaskPayload](r.Body)
+			payload, err := utils.ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return nil, err
 			}
@@ -175,7 +176,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/task/run", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[GetTaskPayload](r.Body)
+			payload, err := utils.ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -193,7 +194,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/task/kill", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[GetTaskPayload](r.Body)
+			payload, err := utils.ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -211,7 +212,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/task/signal", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[SignalTaskPayload](r.Body)
+			payload, err := utils.ParseJson[SignalTaskPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -231,7 +232,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/task/setLabel", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[SetLabelPayload](r.Body)
+			payload, err := utils.ParseJson[SetLabelPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -249,7 +250,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/task/addLink", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[AddLinkPayload](r.Body)
+			payload, err := utils.ParseJson[AddLinkPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -267,7 +268,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/task/delLink", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[DelLinkPayload](r.Body)
+			payload, err := utils.ParseJson[DelLinkPayload](r.Body)
 			if err != nil {
 				return "", err
 			}
@@ -319,32 +320,98 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		data.PipeTo(w)
 	})
 
-	type SetTemplatesPayload struct {
-		Templates []interface{} `json:"templates"`
+	router.Get("/api/templates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() ([]templatectr.Template, error) {
+			templates := templatectr.GetTemplates()
+
+			return templates, nil
+		})
+	})
+
+	router.Get("/api/getTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (*templatectr.Template, error) {
+			id := r.URL.Query().Get("id")
+
+			template, err := templatectr.GetTemplate(id)
+			if err != nil {
+				return nil, err
+			}
+
+			return template, nil
+		})
+	})
+
+	type SetTemplatePayload struct {
+		Template templatectr.Template `json:"template"`
 	}
 
-	router.Post("/api/setTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/setTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			payload, err := ParseJson[SetTemplatesPayload](r.Body)
+			payload, err := utils.ParseJson[SetTemplatePayload](r.Body)
 			if err != nil {
 				return "", err
 			}
 
-			config.Templates = payload.Templates
-
-			cfg.SaveConfig(*config)
+			err = templatectr.WriteTemplate(payload.Template)
+			if err != nil {
+				return "", err
+			}
 
 			return "ok", nil
 		})
 	})
 
-	router.Get("/api/templates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() ([]interface{}, error) {
-			var err error
+	router.Get("/api/readTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (*templatectr.Template, error) {
+			relPlace := r.URL.Query().Get("place")
 
-			templates := config.Templates
+			template, err := templatectr.ReadTemplate(relPlace)
+			if err != nil {
+				return nil, err
+			}
 
-			return templates, err
+			return template, nil
+		})
+	})
+
+	type MoveTemplatePayload struct {
+		RelFrom string `json:"from"`
+		RelTo   string `json:"to"`
+	}
+
+	router.Post("/api/moveTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := utils.ParseJson[MoveTemplatePayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			err = templatectr.MoveTemplate(payload.RelFrom, payload.RelTo)
+			if err != nil {
+				return "", err
+			}
+
+			return "ok", nil
+		})
+	})
+
+	type RemoveTemplatePayload struct {
+		RelPlace string `json:"place"`
+	}
+
+	router.Post("/api/removeTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := utils.ParseJson[RemoveTemplatePayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			err = templatectr.RemoveTemplate(payload.RelPlace)
+			if err != nil {
+				return "", err
+			}
+
+			return "ok", nil
 		})
 	})
 }
@@ -352,7 +419,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 func handleMemStorage(router *Router, memStorage *memstorage.MemStorage) {
 	router.Post("/api/memStorage/get", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (map[string]interface{}, error) {
-			keys, err := ParseJson[[]string](r.Body)
+			keys, err := utils.ParseJson[[]string](r.Body)
 			if err != nil {
 				return nil, err
 			}
@@ -363,7 +430,7 @@ func handleMemStorage(router *Router, memStorage *memstorage.MemStorage) {
 
 	router.Post("/api/memStorage/set", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			keyValue, err := ParseJson[map[string]interface{}](r.Body)
+			keyValue, err := utils.ParseJson[map[string]interface{}](r.Body)
 			if err == nil {
 				err = memStorage.SetObject(*keyValue)
 			}
@@ -373,7 +440,7 @@ func handleMemStorage(router *Router, memStorage *memstorage.MemStorage) {
 
 	router.Post("/api/memStorage/del", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			keys, err := ParseJson[[]string](r.Body)
+			keys, err := utils.ParseJson[[]string](r.Body)
 			if err == nil {
 				err = memStorage.DelKeys(*keys)
 			}
@@ -413,16 +480,6 @@ func writeApiResult(w http.ResponseWriter, result interface{}, err error) error 
 		_, err = w.Write(json)
 	}
 	return err
-}
-
-func ParseJson[T any](data io.Reader) (*T, error) {
-	decoder := json.NewDecoder(data)
-	var payload T
-	err := decoder.Decode(&payload)
-	if err != nil {
-		return nil, err
-	}
-	return &payload, nil
 }
 
 func sendStatus(w http.ResponseWriter, statusCode int) {

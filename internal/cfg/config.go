@@ -13,32 +13,12 @@ import (
 	"github.com/natefinch/atomic"
 )
 
-type TemplateVariable struct {
-	Name         string `json:"name"`
-	Value        string `json:"value"`
-	DefaultValue string `json:"defaultValue"`
-}
-
-type TemplateBase struct {
-	Type           string             `json:"type"`
-	Name           string             `json:"name"`
-	Templates      []TemplateBase     `json:"templates"`
-	Id             string             `json:"id"`
-	Label          string             `json:"label"`
-	Group          string             `json:"group"`
-	Variables      []TemplateVariable `json:"variables"`
-	Command        string             `json:"command"`
-	IsPty          bool               `json:"isPty"`
-	IsOnlyCombined bool               `json:"isOnlyCombined"`
-}
-
 type Config struct {
 	Port      int
 	Address   string
 	Name      string
 	Run       []string
 	PtyRun    []string
-	Templates []interface{}
 	PtyRunEnv []string
 	RunEnv    []string
 }
@@ -57,36 +37,10 @@ func (s *Config) GetBrowserAddress() string {
 	return "http://" + addr + ":" + strconv.Itoa(s.Port)
 }
 
-func (s *Config) GetTemplate(id string) *TemplateBase {
-	var templates []TemplateBase
-	if j, err := json.Marshal(s.Templates); err == nil {
-		json.Unmarshal(j, &templates)
-	}
-
-	var next func(templates []TemplateBase) *TemplateBase
-
-	next = func(templates []TemplateBase) *TemplateBase {
-		for _, tempalate := range templates {
-			if tempalate.Type == "folder" {
-				if t := next(tempalate.Templates); t != nil {
-					return t
-				}
-			}
-			if tempalate.Id == id {
-				return &tempalate
-			}
-		}
-		return nil
-	}
-
-	return next(templates)
-}
-
 func getNewConfig() Config {
 	var config = Config{
-		Templates: make([]interface{}, 0),
-		Port:      80,
-		Name:      "TaskQueue",
+		Port: 80,
+		Name: "TaskQueue",
 	}
 	if runtime.GOOS == "windows" {
 		config.Run = []string{"cmd", "/C"}
