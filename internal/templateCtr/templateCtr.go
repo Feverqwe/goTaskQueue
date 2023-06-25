@@ -106,7 +106,7 @@ func readTemplate(place string, mayBeNull bool) (*Template, error) {
 	return json, nil
 }
 
-func WriteTemplate(template Template) error {
+func WriteTemplate(template Template, isNew bool) error {
 	relPlace := template.Place
 	command := template.Command
 
@@ -119,6 +119,19 @@ func WriteTemplate(template Template) error {
 	template.Command = ""
 
 	json, err := json.Marshal(template)
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Stat(place)
+	if isNew {
+		if err == nil {
+			err = errors.New("template_exists")
+		}
+		if os.IsNotExist(err) {
+			err = nil
+		}
+	}
 	if err != nil {
 		return err
 	}
@@ -179,20 +192,19 @@ func MoveTemplate(relFrom string, relTo string) error {
 
 	dir, err := os.ReadDir(to)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if !os.IsNotExist(err) {
 			return err
 		}
-	}
-	if len(dir) != 0 {
+	} else if len(dir) != 0 {
 		return errors.New("to_place_not_empty")
 	}
 
-	err = os.MkdirAll(to, 0755)
+	err = os.MkdirAll(filepath.Dir(to), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.Rename(relFrom, relTo)
+	err = os.Rename(from, to)
 
 	if err == nil {
 		cleanTemplates()

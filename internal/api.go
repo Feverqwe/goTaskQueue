@@ -368,7 +368,8 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	})
 
 	type SetTemplatePayload struct {
-		Template templatectr.Template `json:"template"`
+		PrevRelPlace string               `json:"prevPlace"`
+		Template     templatectr.Template `json:"template"`
 	}
 
 	router.Post("/api/setTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
@@ -378,7 +379,16 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			err = templatectr.WriteTemplate(payload.Template)
+			isNew := len(payload.PrevRelPlace) == 0
+
+			if !isNew && payload.PrevRelPlace != payload.Template.Place {
+				err = templatectr.MoveTemplate(payload.PrevRelPlace, payload.Template.Place)
+				if err != nil {
+					return "", err
+				}
+			}
+
+			err = templatectr.WriteTemplate(payload.Template, isNew)
 			if err != nil {
 				return "", err
 			}
