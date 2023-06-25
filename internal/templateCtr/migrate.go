@@ -20,7 +20,8 @@ type LegacyTemplateBase struct {
 	IsOnlyCombined bool                 `json:"isOnlyCombined"`
 }
 
-func MigrateTemplates(config cfg.Config) {
+func MigrateTemplates(config cfg.Config) []string {
+	templateOrder := make([]string, 0)
 	var legacyTemplates []LegacyTemplateBase
 	if j, err := json.Marshal(config.Templates); err == nil {
 		json.Unmarshal(j, &legacyTemplates)
@@ -33,8 +34,9 @@ func MigrateTemplates(config cfg.Config) {
 			if tempalate.Type == "folder" {
 				next(filepath.Join(place, tempalate.Name), tempalate.Templates)
 			} else {
+				templatePlace := filepath.Join(place, tempalate.Name)
 				newTemplate := Template{
-					Place:          place,
+					Place:          templatePlace,
 					Command:        tempalate.Command,
 					Name:           tempalate.Name,
 					Id:             tempalate.Id,
@@ -48,9 +50,12 @@ func MigrateTemplates(config cfg.Config) {
 				if err != nil {
 					fmt.Println("Migrate template error", err)
 				}
+				templateOrder = append(templateOrder, templatePlace)
 			}
 		}
 	}
 
 	next("", legacyTemplates)
+
+	return templateOrder
 }

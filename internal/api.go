@@ -453,7 +453,11 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Get("/api/migrateTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			templatectr.MigrateTemplates(*config)
+			order := templatectr.MigrateTemplates(*config)
+
+			config.TemplateOrder = order
+
+			cfg.SaveConfig(*config)
 
 			return "ok", nil
 		})
