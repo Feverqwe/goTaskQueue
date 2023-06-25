@@ -22,7 +22,7 @@ interface TemplateDialogProps {
   folder: TemplateFolder;
   open: boolean;
   onClose: () => void;
-  onSubmit: (template: TemplateButton) => Promise<void>;
+  onSubmit: (prevPlace: string, template: TemplateButton) => Promise<void>;
   template: TemplateButton;
   isNew?: boolean;
 }
@@ -39,7 +39,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   onClose,
   isNew,
 }) => {
-  const {id, name, command, label, group, isPty, isOnlyCombined} = template;
+  const {place, id, name, command, label, group, isPty, isOnlyCombined} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
   const refCommand = useRef<HTMLInputElement>(null);
@@ -50,6 +50,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   const refPty = useRef<HTMLInputElement>(null);
   const refId = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
+  const refPlace = useRef<HTMLInputElement>(null);
 
   useMemo(() => {
     variables.forEach((variable) => {
@@ -151,13 +152,14 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
     [onClose],
   );
 
-  const getTemplate = useCallback((dirPlace: string) => {
+  const getTemplate = useCallback(() => {
     const map = refMap.current;
 
     const name = refName.current?.value || '';
+    const place = isNew ? path.join(folder.place, name) : refPlace.current?.value || '';
 
     const template: Template = {
-      place: path.join(dirPlace, name),
+      place,
       command: refCommand.current?.value || '',
       isPty: refPty.current?.checked || false,
       isOnlyCombined: refOnlyCombined.current?.checked || false,
@@ -177,19 +179,17 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
       }),
     };
     return template;
-  }, [variables]);
+  }, [variables, folder, isNew]);
 
   const handleSubmit = useCallback(
     async (e: SyntheticEvent) => {
       e.preventDefault();
-      const newTemplate = getTemplate(folder.place);
-      if (!isNew) {
-        newTemplate.place = template.place;
-      }
-      await onSubmit(newTemplate);
+      const newTemplate = getTemplate();
+      const prevPlace = isNew ? '' : template.place;
+      await onSubmit(prevPlace, newTemplate);
       onClose();
     },
-    [isNew, getTemplate, onSubmit, onClose, folder, template],
+    [isNew, getTemplate, onSubmit, onClose, template],
   );
 
   return (
@@ -283,6 +283,22 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               shrink: true,
             }}
           />
+          {!isNew && (
+            <TextField
+              size="small"
+              label="Place"
+              sx={{my: 1}}
+              defaultValue={place || ''}
+              inputProps={{ref: refPlace}}
+              fullWidth
+              type="text"
+              variant="outlined"
+              required
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>

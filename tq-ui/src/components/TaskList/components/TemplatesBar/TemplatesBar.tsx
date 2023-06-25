@@ -154,8 +154,8 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   );
 
   const handleEdit = useCallback(
-    async (newTemplate: TemplateButton) => {
-      await api.setTemplate({template: newTemplate});
+    async (prevPlace: string, newTemplate: TemplateButton) => {
+      await api.setTemplate({template: newTemplate, prevPlace});
       await updateTemplates();
     },
     [updateTemplates],
