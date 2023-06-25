@@ -450,6 +450,14 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			return "ok", nil
 		})
 	})
+
+	router.Get("/api/migrateTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			templatectr.MigrateTemplates(*config)
+
+			return "ok", nil
+		})
+	})
 }
 
 func handleMemStorage(router *Router, memStorage *memstorage.MemStorage) {
