@@ -11,11 +11,16 @@ interface TemplateProviderProps {
 }
 
 const TemplateProvider: FC<TemplateProviderProps> = ({children}) => {
-  const {templates: initTemplates} = useContext(RootStoreCtx);
+  const {templates: initTemplates, templateOrder: initTemplateOrder} = useContext(RootStoreCtx);
   const [rawTemplates, setRawTemplates] = useState<RawTemplate[]>(initTemplates);
+  const [templateOrder, setTemplateOrder] = useState<string[]>(initTemplateOrder);
 
   const updateTemplates = useCallback(async () => {
-    const templatesLocal = await api.templates();
+    const [templatesLocal, order] = await Promise.all([
+      api.templates(),
+      api.getTemplateOrder(),
+    ]);
+    setTemplateOrder(order);
     setRawTemplates(templatesLocal);
   }, []);
 
@@ -50,6 +55,18 @@ const TemplateProvider: FC<TemplateProviderProps> = ({children}) => {
       return prevFolder;
     };
 
+    rawTemplates.forEach(({place}) => {
+      if (!templateOrder.includes(place)) {
+        templateOrder.push(place);
+      }
+    });
+
+    rawTemplates.sort(({place: a}, {place: b}) => {
+      const ap = templateOrder.indexOf(a);
+      const bp = templateOrder.indexOf(b);
+      return ap > bp ? 1 : -1;
+    });
+
     rawTemplates.forEach((template) => {
       const {place} = template;
 
@@ -62,9 +79,9 @@ const TemplateProvider: FC<TemplateProviderProps> = ({children}) => {
     });
 
     return rootFolder;
-  }, [rawTemplates]);
+  }, [rawTemplates, templateOrder]);
 
-  const value = useMemo(() => ({rootFolder, templates: rawTemplates}), [rootFolder, rawTemplates]);
+  const value = useMemo(() => ({rootFolder, templates: rawTemplates, templateOrder}), [rootFolder, rawTemplates, templateOrder]);
 
   return (
     <TemplatesUpdateCtx.Provider value={updateTemplates}>

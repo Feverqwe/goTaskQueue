@@ -161,21 +161,15 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
     [updateTemplates],
   );
 
-  const handleEditFolder = useCallback(
-    async (newTemplate: TemplateFolder) => {
-      /* await api.setTemplate({template: newTemplate});
-      await updateTemplates(); */
-    },
-    [updateTemplates],
-  );
-
   const handleOpenChangeOrderDialog = useCallback(() => {
     setChangeOrderDialog(true);
-  }, []);
+    handleCloseMenu();
+  }, [handleCloseMenu]);
 
-  const handleChangeOrder = useCallback(async () => {
-    //
-  }, []);
+  const handleChangeOrder = useCallback(async (templateOrder: string[]) => {
+    await api.setTemplateOrder({templateOrder});
+    await updateTemplates();
+  }, [updateTemplates]);
 
   return (
     <>

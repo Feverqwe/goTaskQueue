@@ -1,4 +1,4 @@
-import React, { FC, SyntheticEvent, useCallback, useContext, useState } from 'react';
+import React, {FC, SyntheticEvent, useCallback, useContext, useState} from 'react';
 import {
   Box,
   Button,
@@ -12,36 +12,33 @@ import {
 } from '@mui/material';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import { RawTemplate, TemplateFolder } from '../../../types';
+import {RawTemplate} from '../../../types';
 import ActionButton from '../../../ActionButton/ActionButton';
-import { TemplatesCtx } from '../../../TemplateProvider/TemplatesCtx';
+import {TemplatesCtx} from '../../../TemplateProvider/TemplatesCtx';
 
-interface EditFolderDialogProps {
+interface ChangeOrderDialogProps {
   open: boolean;
-  onSubmit: (
-    folder: TemplateFolder,
-  ) => void;
+  onSubmit: (templateOrder: string[]) => void;
   onClose: () => void;
 }
 
-const EditFolderDialog: FC<EditFolderDialogProps> = ({
-  onClose,
-  onSubmit,
-  open,
-}) => {
-  const {templates: origTemplates} = useContext(TemplatesCtx);
-  const [templates, setTemplates] = useState(() => [...origTemplates]);
+const ChangeOrderDialog: FC<ChangeOrderDialogProps> = ({onClose, onSubmit, open}) => {
+  const {templates: origTemplates, templateOrder} = useContext(TemplatesCtx);
+  const [templates, setTemplates] = useState(() => {
+    const newTemplates = [...origTemplates];
+    newTemplates.sort(({place: a}, {place: b}) => {
+      const ap = templateOrder.indexOf(a);
+      const bp = templateOrder.indexOf(b);
+      return ap > bp ? 1 : -1;
+    });
+    return newTemplates;
+  });
 
   const handleSubmit = useCallback(
     async (e: SyntheticEvent) => {
-      /* e.preventDefault();
-      const newTemplate: TemplateFolder = {
-        type: TemplateType.Folder,
-        name: refName.current?.value || '',
-        templates,
-      };
-      await onSubmit(folder, isNew ? null : template, newTemplate);
-      onClose(); */
+      e.preventDefault();
+      await onSubmit(templates.map(({place}) => place));
+      onClose();
     },
     [onSubmit, onClose, templates],
   );
@@ -125,4 +122,4 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({
   );
 };
 
-export default EditFolderDialog;
+export default ChangeOrderDialog;

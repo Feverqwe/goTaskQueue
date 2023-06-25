@@ -1,7 +1,7 @@
 import {createContext} from 'react';
 import { RawTemplate, TemplateFolder, TemplateType } from '../types';
 
-export const TemplatesCtx = createContext<{rootFolder: TemplateFolder, templates: RawTemplate[]}>({
+export const TemplatesCtx = createContext<{rootFolder: TemplateFolder, templates: RawTemplate[], templateOrder: string[]}>({
   rootFolder: {
     type: TemplateType.Folder,
     place: '',
@@ -9,4 +9,5 @@ export const TemplatesCtx = createContext<{rootFolder: TemplateFolder, templates
     templates: [],
   },
   templates: [],
+  templateOrder: [],
 });

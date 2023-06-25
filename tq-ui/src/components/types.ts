@@ -35,6 +35,7 @@ export interface TemplateButton extends RawTemplate {
 
 export interface RootStore {
   templates: RawTemplate[];
+  templateOrder: string[];
   memStorage: Record<string, unknown>;
   isPtySupported: boolean;
 }

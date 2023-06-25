@@ -104,6 +104,14 @@ export const api = {
     method: 'POST',
     path: '/api/removeTemplate',
   }),
+  getTemplateOrder: action<void, string[]>({
+    method: 'GET',
+    path: '/api/getTemplateOrder',
+  }),
+  setTemplateOrder: action<{templateOrder: string[]}, string>({
+    method: 'POST',
+    path: '/api/setTemplateOrder',
+  }),
 
   memStorageGet: action<string[] | null, Record<string, unknown>>({
     method: 'POST',

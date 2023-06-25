@@ -52,7 +52,7 @@ const EditFolderDialog: FC<EditFolderDialogProps> = ({
       await onSubmit(folder, isNew ? null : template, newTemplate);
       onClose(); */
     },
-    [isNew, onSubmit, onClose, folder, template, templates],
+    [],
   );
 
   const handleClose = useCallback(
