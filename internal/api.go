@@ -292,6 +292,14 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
+	router.Post("/api/reloadTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			templatectr.FlushTemplateCache()
+
+			return "ok", nil
+		})
+	})
+
 	type SetTemplateOrderPayload struct {
 		TemplateOrder []string `json:"templateOrder"`
 	}

@@ -151,6 +151,8 @@ func WriteTemplate(template Template, isNew bool) error {
 		return err
 	}
 
+	FlushTemplateCache()
+
 	return nil
 }
 
@@ -170,6 +172,8 @@ func RemoveTemplate(relPlace string) error {
 	if err == nil {
 		cleanTemplates()
 	}
+
+	FlushTemplateCache()
 
 	return err
 }
@@ -209,6 +213,8 @@ func MoveTemplate(relFrom string, relTo string) error {
 	if err == nil {
 		cleanTemplates()
 	}
+
+	FlushTemplateCache()
 
 	return err
 }
@@ -256,10 +262,21 @@ func cleanEmptyFolders(place string) error {
 	return nil
 }
 
+var TEMPLATES_CACHE []Template
+
 func GetTemplates() []Template {
 	root := getTemplatesPath()
 
-	return readTemplateFolder(root)
+	if TEMPLATES_CACHE == nil {
+		templates := readTemplateFolder(root)
+		TEMPLATES_CACHE = templates
+	}
+
+	return TEMPLATES_CACHE
+}
+
+func FlushTemplateCache() {
+	TEMPLATES_CACHE = nil
 }
 
 func GetTemplate(id string) (*Template, error) {
