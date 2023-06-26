@@ -49,7 +49,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
           sx={{my: 1}}
           key={index}
           inputProps={{ref}}
-          autoFocus
+          autoFocus={!isNew && index === 0}
           label={name}
           type="text"
           fullWidth
@@ -61,7 +61,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
         />
       );
     });
-  }, [variables, refMap]);
+  }, [variables, refMap, isNew]);
 
   const getCommand = useCallback(() => {
     let labelResult = refLabel.current?.value || '';
