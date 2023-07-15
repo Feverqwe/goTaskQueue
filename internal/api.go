@@ -48,12 +48,18 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		Id string `json:"id"`
 	}
 
+	type CloneTaskPayload struct {
+		Id    string `json:"id"`
+		IsRun bool   `json:"isRun"`
+	}
+
 	type SignalTaskPayload struct {
 		Id     string `json:"id"`
 		Signal int    `json:"signal"`
 	}
 
 	type AddTaskPayload struct {
+		TemplatePlace  string            `json:"templatePlace"`
 		TemplateId     string            `json:"templateId"`
 		Variables      map[string]string `json:"variables"`
 		Command        string            `json:"command"`
@@ -109,11 +115,23 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return nil, err
 			}
 
-			if payload.TemplateId != "" {
-				template, err := templatectr.GetTemplate(payload.TemplateId)
+			var template *templatectr.Template
+			if payload.TemplatePlace != "" {
+				template, err = templatectr.ReadTemplate(payload.TemplatePlace)
 				if err != nil {
-					return nil, fmt.Errorf("template not found %v", payload.TemplateId)
+					return nil, fmt.Errorf("template not found by place %v", payload.TemplatePlace)
 				}
+			}
+			if payload.TemplateId != "" {
+				template, err = templatectr.GetTemplate(payload.TemplateId)
+				if err != nil {
+					return nil, fmt.Errorf("template not found by id %v", payload.TemplateId)
+				}
+			}
+
+			var templatePlace string
+			if template != nil {
+				templatePlace = template.Place
 
 				if payload.Command == "" {
 					payload.Command = template.Command
@@ -142,7 +160,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				}
 			}
 
-			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined)
+			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined, templatePlace)
 
 			if payload.IsRun {
 				task.Run(config)
@@ -154,12 +172,16 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/clone", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (*taskQueue.Task, error) {
-			payload, err := utils.ParseJson[GetTaskPayload](r.Body)
+			payload, err := utils.ParseJson[CloneTaskPayload](r.Body)
 			if err != nil {
 				return nil, err
 			}
 
 			task, err := queue.Clone(payload.Id)
+
+			if payload.IsRun {
+				task.Run(config)
+			}
 
 			return task, err
 		})

@@ -53,6 +53,7 @@ type Task struct {
 	FinishedAt     time.Time          `json:"finishedAt"`
 	IsPty          bool               `json:"isPty"`
 	IsOnlyCombined bool               `json:"isOnlyCombined"`
+	TemplatePlace  string             `json:"templatePlace"`
 	mu             sync.Mutex
 	cmu            sync.RWMutex
 	qCh            []chan int
@@ -70,6 +71,14 @@ func (s *Task) Run(config *cfg.Config) error {
 	}
 }
 
+func (s *Task) getEnvVariables(config *cfg.Config) []string {
+	return append(config.RunEnv,
+		"TASK_QUEUE_ID="+s.Id,
+		"TASK_QUEUE_URL="+config.GetBrowserAddress(),
+		"TASK_TEMPLATE_PLACE="+s.TemplatePlace,
+	)
+}
+
 func (s *Task) RunPty(config *cfg.Config) error {
 	runAs := config.PtyRun
 	runCommand := runAs[0]
@@ -80,7 +89,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
-	process.Env = append(append(process.Env, config.PtyRunEnv...), "TASK_QUEUE_ID="+s.Id, "TASK_QUEUE_URL="+config.GetBrowserAddress())
+	process.Env = append(append(process.Env, config.PtyRunEnv...), s.getEnvVariables(config)...)
 
 	f, err := pty.Start(process)
 	if err != nil {
@@ -158,7 +167,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
-	process.Env = append(process.Env, "TASK_QUEUE_ID="+s.Id, "TASK_QUEUE_URL="+config.GetBrowserAddress())
+	process.Env = append(process.Env, s.getEnvVariables(config)...)
 
 	const Out = "out"
 	const Err = "err"
@@ -407,7 +416,7 @@ func (s *Task) SetLabel(label string) {
 	s.queue.Save()
 }
 
-func NewTask(id string, command string, label string, group string, isPty bool, isOnlyCombined bool) *Task {
+func NewTask(id string, command string, label string, group string, isPty bool, isOnlyCombined bool, templatePlace string) *Task {
 	task := Task{
 		Id:             id,
 		Label:          label,
@@ -417,6 +426,7 @@ func NewTask(id string, command string, label string, group string, isPty bool, 
 		IsPty:          isPty,
 		IsOnlyCombined: isOnlyCombined,
 		Links:          make([]*TaskLink, 0),
+		TemplatePlace:  templatePlace,
 	}
 
 	task.syncStatus()

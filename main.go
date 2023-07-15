@@ -219,6 +219,7 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 	}
 
 	type RootStore struct {
+		Name           string                 `json:"name"`
 		Templates      []templatectr.Template `json:"templates"`
 		TemplateOrder  []string               `json:"templateOrder"`
 		MemStorage     map[string]interface{} `json:"memStorage"`
@@ -255,6 +256,7 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 			templates := templatectr.GetTemplates()
 
 			store := RootStore{
+				Name:           config.Name,
 				Templates:      templates,
 				TemplateOrder:  config.TemplateOrder,
 				MemStorage:     memStorage.GetKeys(nil),
