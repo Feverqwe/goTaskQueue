@@ -34,6 +34,7 @@ export interface TemplateButton extends RawTemplate {
 }
 
 export interface RootStore {
+  name: string;
   templates: RawTemplate[];
   templateOrder: string[];
   memStorage: Record<string, unknown>;
@@ -68,6 +69,7 @@ export interface Task {
   isPty: boolean;
   isOnlyCombined: boolean;
   links: TaskLink[];
+  templatePlace: string;
 }
 
 export interface PtyScreenSize {
@@ -84,10 +86,22 @@ export interface TaskGroup {
 
 export type TaskOrGroup = Task | TaskGroup;
 
-export interface AddTaskReuest {
-  command: string;
-  label: string;
-  group: string;
-  isPty: boolean;
-  isOnlyCombined: boolean;
+export interface TaskId {
+  id: string;
+}
+
+export interface AddTaskRequest {
+  templatePlace?: string;
+  templateId?: string;
+  variables?: Record<string, string>;
+  command?: string;
+  label?: string;
+  group?: string;
+  isPty?: boolean;
+  isOnlyCombined?: boolean;
+  isRun?: boolean;
+}
+
+export interface CloneTaskRequest extends TaskId {
+  isRun?: boolean;
 }

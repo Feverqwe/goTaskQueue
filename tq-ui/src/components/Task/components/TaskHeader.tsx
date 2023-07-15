@@ -1,4 +1,4 @@
-import React, {FC, SyntheticEvent, useCallback, useEffect, useMemo, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react';
 import {Box, CardActionArea, Divider, IconButton, Paper, Typography} from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
@@ -10,13 +10,14 @@ import CircleIcon from '@mui/icons-material/Circle';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
-import {AddTaskReuest, Task, TaskState, TemplateButton} from '../../types';
+import {AddTaskRequest, Task, TaskState, TemplateButton} from '../../types';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
 import TemplateDialog from '../../TemplateDialog/TemplateDialog';
 import KillDialog from '../../KillDialog/KillDialog';
 import IconActionButton from '../../IconActionButton/IconActionButton';
+import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
 
 interface TaskInfoProps {
   task: Task;
@@ -34,14 +35,15 @@ const TaskHeader: FC<TaskInfoProps> = ({
   onUpdate,
 }) => {
   const navigate = useNavigate();
+  const {name} = useContext(RootStoreCtx);
   const {id, state, label, command, error, isOnlyCombined} = task;
   const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | TemplateButton>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showConfirm, setShowConfirm] = useState<{type: string} | undefined>();
 
   useMemo(() => {
-    document.title = `Task ${label || command} — TaskQueue`;
-  }, [label, command]);
+    document.title = `Task ${label || command} — ${name}`;
+  }, [name, label, command]);
 
   const handleStart = useCallback(async () => {
     await api.taskRun({id});
@@ -69,9 +71,9 @@ const TaskHeader: FC<TaskInfoProps> = ({
   }, []);
 
   const handleRestart = useCallback(() => {
-    const {label, group, command, isPty, isOnlyCombined} = task;
+    const {label, group, command, isPty, isOnlyCombined, templatePlace} = task;
     setRestartDialogTemplate({
-      place: '',
+      place: templatePlace,
       name: 'New task',
       label,
       group,
@@ -87,14 +89,11 @@ const TaskHeader: FC<TaskInfoProps> = ({
   }, [onToggleInfo]);
 
   const handleRestartTask = useCallback(
-    async (run: boolean, runTask: AddTaskReuest) => {
+    async (runTask: AddTaskRequest) => {
       try {
         const {id} = await api.add(runTask);
-        if (run) {
-          await api.taskRun({id});
-        }
 
-        if (run) {
+        if (runTask.isRun) {
           navigate(`/task?id=${id}`);
         }
       } catch (err) {

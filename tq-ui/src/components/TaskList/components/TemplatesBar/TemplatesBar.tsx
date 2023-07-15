@@ -4,7 +4,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import {useNavigate} from 'react-router-dom';
 import path from 'path-browserify';
 import {api} from '../../../../tools/api';
-import {Template, TemplateButton, TemplateFolder, AddTaskReuest} from '../../../types';
+import {Template, TemplateButton, TemplateFolder, AddTaskRequest} from '../../../types';
 import TemplateDialog from '../../../TemplateDialog/TemplateDialog';
 import EditTemplateDialog from './EditTemplateDialog';
 import {TemplatesCtx} from '../../../TemplateProvider/TemplatesCtx';
@@ -43,15 +43,12 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   const [changeOrderDialog, setChangeOrderDialog] = useState<boolean>(false);
 
   const handleAdd = useCallback(
-    async (run: boolean, runTask: AddTaskReuest, isNewTab = false) => {
+    async (runTask: AddTaskRequest, isNewTab = false) => {
       try {
         const {id} = await api.add(runTask);
-        if (run) {
-          await api.taskRun({id});
-        }
         onUpdate();
 
-        if (runTask.isPty && run) {
+        if (runTask.isPty && runTask.isRun) {
           const url = `/task?id=${id}`;
           if (isNewTab) {
             window.open(url);
@@ -95,19 +92,9 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   const handleClickTemplate = useCallback(
     (e: SyntheticEvent, template: TemplateButton, as?: boolean) => {
       if (!as && !template.variables.length) {
-        const {command, label = '', group = '', isPty = false, isOnlyCombined = false} = template;
+        const {place: templatePlace} = template;
         const isNewTab = 'metaKey' in e && Boolean(e.metaKey);
-        handleAdd(
-          true,
-          {
-            command,
-            label,
-            group,
-            isPty,
-            isOnlyCombined,
-          },
-          isNewTab,
-        );
+        handleAdd({templatePlace, isRun: true}, isNewTab);
       } else {
         setRunDialog({template});
       }
@@ -171,10 +158,13 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
     handleCloseMenu();
   }, [handleCloseMenu]);
 
-  const handleChangeOrder = useCallback(async (templateOrder: string[]) => {
-    await api.setTemplateOrder({templateOrder});
-    await updateTemplates();
-  }, [updateTemplates]);
+  const handleChangeOrder = useCallback(
+    async (templateOrder: string[]) => {
+      await api.setTemplateOrder({templateOrder});
+      await updateTemplates();
+    },
+    [updateTemplates],
+  );
 
   return (
     <>

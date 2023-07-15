@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useMemo, useRef} from 'react';
+import React, {FC, useCallback, useContext, useEffect, useMemo, useRef} from 'react';
 import {Box, CircularProgress, Container, IconButton} from '@mui/material';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import styled from '@emotion/styled';
@@ -11,6 +11,7 @@ import DisplayError from '../DisplayError';
 import {useVisibility} from '../../hooks/useVisibility';
 import {groupTasks} from './utils';
 import TaskListView from './components/TaskListView';
+import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 
 const SilenStatus = styled(Box)(() => {
   return {
@@ -25,6 +26,7 @@ interface TaskListProps {}
 const TaskList: FC<TaskListProps> = () => {
   const isVisible = useVisibility();
   const refInit = useRef(true);
+  const {name} = useContext(RootStoreCtx);
 
   const {loading, silentLoading, error, silentError, taskList, fetchTaskList} = useLocalObservable(
     () => ({
@@ -67,8 +69,8 @@ const TaskList: FC<TaskListProps> = () => {
   );
 
   useMemo(() => {
-    document.title = 'TaskQueue';
-  }, []);
+    document.title = name;
+  }, [name]);
 
   const handleUpdate = useCallback(() => {
     fetchTaskList(true);

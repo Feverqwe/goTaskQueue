@@ -1,5 +1,5 @@
 import {handleApiResponse} from './apiRequest';
-import {AddTaskReuest, Task, RawTemplate} from '../components/types';
+import {AddTaskRequest, Task, RawTemplate, CloneTaskRequest, TaskId} from '../components/types';
 
 interface ActionParams {
   method?: 'GET' | 'POST';
@@ -26,10 +26,6 @@ function action<RequestParams = unknown, ResponseData = unknown>({
   };
 }
 
-interface TaskId {
-  id: string;
-}
-
 export const api = {
   tasks: action<void, Task[]>({
     path: '/api/tasks',
@@ -37,11 +33,11 @@ export const api = {
   task: action<TaskId, Task>({
     path: '/api/task',
   }),
-  add: action<AddTaskReuest, Task>({
+  add: action<AddTaskRequest, Task>({
     method: 'POST',
     path: '/api/add',
   }),
-  clone: action<TaskId, Task>({
+  clone: action<CloneTaskRequest, Task>({
     method: 'POST',
     path: '/api/clone',
   }),
