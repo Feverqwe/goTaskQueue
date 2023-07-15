@@ -92,9 +92,9 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   const handleClickTemplate = useCallback(
     (e: SyntheticEvent, template: TemplateButton, as?: boolean) => {
       if (!as && !template.variables.length) {
-        const {place: templatePlace} = template;
+        const {place: templatePlace, isPty} = template;
         const isNewTab = 'metaKey' in e && Boolean(e.metaKey);
-        handleAdd({templatePlace, isRun: true}, isNewTab);
+        handleAdd({templatePlace, isPty, isRun: true}, isNewTab);
       } else {
         setRunDialog({template});
       }
