@@ -36,39 +36,39 @@ type PtyScreenSize struct {
 }
 
 type TaskBase struct {
-	Label          string `json:"label"`
-	Group          string `json:"group"`
-	Command        string `json:"command"`
-	IsPty          bool   `json:"isPty"`
-	IsOnlyCombined bool   `json:"isOnlyCombined"`
-	TemplatePlace  string `json:"templatePlace"`
+	Label            string `json:"label"`
+	Group            string `json:"group"`
+	Command          string `json:"command"`
+	TemplatePlace    string `json:"templatePlace"`
+	IsPty            bool   `json:"isPty"`
+	IsOnlyCombined   bool   `json:"isOnlyCombined"`
+	IsSingleInstance bool   `json:"isSingleInstance"`
+	IsStartOnBoot    bool   `json:"isStartOnBoot"`
 }
 
 type Task struct {
 	TaskBase
-	Id               string `json:"id"`
-	process          *exec.Cmd
-	IsStarted        bool               `json:"isStarted"`
-	IsFinished       bool               `json:"isFinished"`
-	IsCanceled       bool               `json:"isCanceled"`
-	IsError          bool               `json:"isError"`
-	State            string             `json:"state"`
-	Stdout           *gzbuffer.GzBuffer `json:"-"`
-	Stderr           *gzbuffer.GzBuffer `json:"-"`
-	Combined         *gzbuffer.GzBuffer `json:"-"`
-	Error            string             `json:"error"`
-	CreatedAt        time.Time          `json:"createdAt"`
-	StartedAt        time.Time          `json:"startedAt"`
-	FinishedAt       time.Time          `json:"finishedAt"`
-	IsSingleInstance bool               `json:"isSingleInstance"`
-	IsStartOnBoot    bool               `json:"isStartOnBoot"`
-	mu               sync.Mutex
-	cmu              sync.RWMutex
-	qCh              []chan int
-	stdin            io.Writer
-	combinedOffset   int
-	Links            []TaskLink `json:"links"`
-	queue            *Queue
+	Id             string `json:"id"`
+	process        *exec.Cmd
+	IsStarted      bool               `json:"isStarted"`
+	IsFinished     bool               `json:"isFinished"`
+	IsCanceled     bool               `json:"isCanceled"`
+	IsError        bool               `json:"isError"`
+	State          string             `json:"state"`
+	Stdout         *gzbuffer.GzBuffer `json:"-"`
+	Stderr         *gzbuffer.GzBuffer `json:"-"`
+	Combined       *gzbuffer.GzBuffer `json:"-"`
+	Error          string             `json:"error"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	StartedAt      time.Time          `json:"startedAt"`
+	FinishedAt     time.Time          `json:"finishedAt"`
+	mu             sync.Mutex
+	cmu            sync.RWMutex
+	qCh            []chan int
+	stdin          io.Writer
+	combinedOffset int
+	Links          []TaskLink `json:"links"`
+	queue          *Queue
 }
 
 func (s *Task) Run(config *cfg.Config, queue *Queue) error {

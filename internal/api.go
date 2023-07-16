@@ -60,9 +60,13 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	type AddTaskPayload struct {
 		taskQueue.TaskBase
-		TemplateId string            `json:"templateId"`
-		Variables  map[string]string `json:"variables"`
-		IsRun      bool              `json:"isRun"`
+		IsPty            *bool             `json:"isPty"`
+		IsOnlyCombined   *bool             `json:"isOnlyCombined"`
+		IsSingleInstance *bool             `json:"isSingleInstance"`
+		IsStartOnBoot    *bool             `json:"isStartOnBoot"`
+		TemplateId       string            `json:"templateId"`
+		Variables        map[string]string `json:"variables"`
+		IsRun            bool              `json:"isRun"`
 	}
 
 	type SetLabelPayload struct {
@@ -134,12 +138,27 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				if payload.Group == "" {
 					payload.Group = template.Group
 				}
-				if !payload.IsPty {
-					payload.IsPty = template.IsPty
+
+				if payload.IsPty == nil {
+					payload.IsPty = &template.IsPty
 				}
-				if !payload.IsOnlyCombined {
-					payload.IsOnlyCombined = template.IsOnlyCombined
+
+				if payload.IsOnlyCombined == nil {
+					payload.IsOnlyCombined = &template.IsOnlyCombined
 				}
+
+				if payload.IsSingleInstance == nil {
+					payload.IsSingleInstance = &template.IsSingleInstance
+				}
+
+				if payload.IsStartOnBoot == nil {
+					payload.IsStartOnBoot = &template.IsStartOnBoot
+				}
+
+				payload.TaskBase.IsPty = *payload.IsPty
+				payload.TaskBase.IsOnlyCombined = *payload.IsOnlyCombined
+				payload.TaskBase.IsSingleInstance = *payload.IsSingleInstance
+				payload.TaskBase.IsStartOnBoot = *payload.IsStartOnBoot
 
 				for _, variable := range template.Variables {
 					old := fmt.Sprintf("{%v}", variable.Value)
@@ -476,18 +495,6 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			if err != nil {
 				return "", err
 			}
-
-			return "ok", nil
-		})
-	})
-
-	router.Get("/api/migrateTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (string, error) {
-			order := templatectr.MigrateTemplates(*config)
-
-			config.TemplateOrder = order
-
-			cfg.SaveConfig(*config)
 
 			return "ok", nil
 		})

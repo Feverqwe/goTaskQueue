@@ -21,17 +21,22 @@ type TemplateVariable struct {
 	DefaultValue string `json:"defaultValue"`
 }
 
-type Template struct {
+type TemplatePrivate struct {
 	Place   string `json:"place"`
 	Command string `json:"command"`
+}
 
-	Name           string             `json:"name"`
-	Id             string             `json:"id"`
-	Label          string             `json:"label"`
-	Group          string             `json:"group"`
-	Variables      []TemplateVariable `json:"variables"`
-	IsPty          bool               `json:"isPty"`
-	IsOnlyCombined bool               `json:"isOnlyCombined"`
+type Template struct {
+	TemplatePrivate
+	Name             string             `json:"name"`
+	Id               string             `json:"id"`
+	Label            string             `json:"label"`
+	Group            string             `json:"group"`
+	Variables        []TemplateVariable `json:"variables"`
+	IsPty            bool               `json:"isPty"`
+	IsOnlyCombined   bool               `json:"isOnlyCombined"`
+	IsSingleInstance bool               `json:"isSingleInstance"`
+	IsStartOnBoot    bool               `json:"isStartOnBoot"`
 }
 
 const TEMPALTE_NAME = "template.json"
