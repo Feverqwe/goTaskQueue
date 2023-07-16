@@ -4,7 +4,7 @@ set -e
 
 source "$(dirname $0)/_variables.sh"
 
-sh ./scripts/build.sh ${BINARY}
+sh ./scripts/build.sh
 
 appify=./scripts/appify
 if [ ! -f $appify ]; then
