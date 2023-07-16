@@ -301,6 +301,10 @@ func getRelPlace(place string) (string, error) {
 	return relPath, err
 }
 
+func GetPlace(relPlace string) (string, error) {
+	return getPlace(relPlace)
+}
+
 func getPlace(relPlace string) (string, error) {
 	if filepath.Separator != '/' && strings.ContainsRune(relPlace, filepath.Separator) {
 		return "", errors.New("invalid character in file path")

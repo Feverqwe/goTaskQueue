@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
+	templatectr "goTaskQueue/internal/templateCtr"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"sync"
@@ -72,10 +74,20 @@ func (s *Task) Run(config *cfg.Config) error {
 }
 
 func (s *Task) getEnvVariables(config *cfg.Config) []string {
+	var fullPlace string
+	if s.TemplatePlace != "" {
+		if place, err := templatectr.GetPlace(s.TemplatePlace); err != nil {
+			log.Println("Get template path error", s.TemplatePlace, err)
+		} else {
+			fullPlace = place
+		}
+	}
+
 	return append(config.RunEnv,
 		"TASK_QUEUE_ID="+s.Id,
 		"TASK_QUEUE_URL="+config.GetBrowserAddress(),
 		"TASK_TEMPLATE_PLACE="+s.TemplatePlace,
+		"TASK_TEMPLATE_PATH="+fullPlace,
 	)
 }
 
