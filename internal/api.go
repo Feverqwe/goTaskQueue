@@ -59,15 +59,10 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	}
 
 	type AddTaskPayload struct {
-		TemplatePlace  string            `json:"templatePlace"`
-		TemplateId     string            `json:"templateId"`
-		Variables      map[string]string `json:"variables"`
-		Command        string            `json:"command"`
-		Label          string            `json:"label"`
-		Group          string            `json:"group"`
-		IsPty          bool              `json:"isPty"`
-		IsOnlyCombined bool              `json:"isOnlyCombined"`
-		IsRun          bool              `json:"isRun"`
+		taskQueue.TaskBase
+		TemplateId string            `json:"templateId"`
+		Variables  map[string]string `json:"variables"`
+		IsRun      bool              `json:"isRun"`
 	}
 
 	type SetLabelPayload struct {
@@ -76,11 +71,8 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	}
 
 	type AddLinkPayload struct {
-		Id    string `json:"id"`
-		Name  string `json:"name"`
-		Type  string `json:"type"`
-		Url   string `json:"url"`
-		Title string `json:"title"`
+		Id string `json:"id"`
+		taskQueue.TaskLink
 	}
 
 	type DelLinkPayload struct {
@@ -160,7 +152,9 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				}
 			}
 
-			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined, templatePlace)
+			payload.TemplatePlace = templatePlace
+
+			task := queue.Add(payload.TaskBase)
 
 			if payload.IsRun {
 				err := task.Run(config, queue)
@@ -288,7 +282,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task.AddLink(payload.Name, payload.Type, payload.Url, payload.Title)
+			task.AddLink(payload.TaskLink)
 
 			return "ok", err
 		})

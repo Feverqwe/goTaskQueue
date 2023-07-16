@@ -31,9 +31,9 @@ func (s *Queue) Get(id string) (*Task, error) {
 	return task, nil
 }
 
-func (s *Queue) Add(command string, label string, group string, isPty bool, isOnlyCombined bool, templatePlace string) *Task {
+func (s *Queue) Add(taskBase TaskBase) *Task {
 	id := s.getId()
-	task := NewTask(id, command, label, group, isPty, isOnlyCombined, templatePlace)
+	task := NewTask(id, taskBase)
 	s.Tasks = append(s.Tasks, task)
 	s.idTask[task.Id] = task
 	task.Init(s)
@@ -47,7 +47,7 @@ func (s *Queue) Clone(id string) (*Task, error) {
 		return nil, err
 	}
 
-	task := s.Add(origTask.Command, origTask.Label, origTask.Group, origTask.IsPty, origTask.IsOnlyCombined, origTask.TemplatePlace)
+	task := s.Add(origTask.TaskBase)
 
 	return task, nil
 }
@@ -118,7 +118,7 @@ func (s *Queue) WriteQueue() error {
 func (s *Queue) RunOnBoot(config *cfg.Config) {
 	ids := make([]string, 0)
 	for _, task := range s.Tasks {
-		if task.IsRunOnBoot {
+		if task.IsStartOnBoot {
 			ids = append(ids, task.Id)
 		}
 	}

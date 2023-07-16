@@ -35,11 +35,18 @@ type PtyScreenSize struct {
 	Y    int `json:"y"`
 }
 
+type TaskBase struct {
+	Label          string `json:"label"`
+	Group          string `json:"group"`
+	Command        string `json:"command"`
+	IsPty          bool   `json:"isPty"`
+	IsOnlyCombined bool   `json:"isOnlyCombined"`
+	TemplatePlace  string `json:"templatePlace"`
+}
+
 type Task struct {
+	TaskBase
 	Id               string `json:"id"`
-	Label            string `json:"label"`
-	Group            string `json:"group"`
-	Command          string `json:"command"`
 	process          *exec.Cmd
 	IsStarted        bool               `json:"isStarted"`
 	IsFinished       bool               `json:"isFinished"`
@@ -53,11 +60,8 @@ type Task struct {
 	CreatedAt        time.Time          `json:"createdAt"`
 	StartedAt        time.Time          `json:"startedAt"`
 	FinishedAt       time.Time          `json:"finishedAt"`
-	IsPty            bool               `json:"isPty"`
-	IsOnlyCombined   bool               `json:"isOnlyCombined"`
 	IsSingleInstance bool               `json:"isSingleInstance"`
-	IsRunOnBoot      bool               `json:"isRunOnBoot"`
-	TemplatePlace    string             `json:"templatePlace"`
+	IsStartOnBoot    bool               `json:"isStartOnBoot"`
 	mu               sync.Mutex
 	cmu              sync.RWMutex
 	qCh              []chan int
@@ -80,21 +84,23 @@ func (s *Task) Run(config *cfg.Config, queue *Queue) error {
 }
 
 func (s *Task) getEnvVariables(config *cfg.Config) []string {
-	var fullPlace string
-	if s.TemplatePlace != "" {
-		if place, err := templatectr.GetPlace(s.TemplatePlace); err != nil {
-			log.Println("Get template path error", s.TemplatePlace, err)
-		} else {
-			fullPlace = place
-		}
-	}
-
 	return append(config.RunEnv,
 		"TASK_QUEUE_ID="+s.Id,
 		"TASK_QUEUE_URL="+config.GetBrowserAddress(),
 		"TASK_TEMPLATE_PLACE="+s.TemplatePlace,
-		"TASK_TEMPLATE_PATH="+fullPlace,
 	)
+}
+
+func (s *Task) getWorkingDir() string {
+	var fullPlace string
+	if s.TemplatePlace != "" {
+		if place, err := templatectr.GetPlace(s.TemplatePlace); err != nil {
+			log.Println("Get working dir error", s.TemplatePlace, err)
+		} else {
+			fullPlace = place
+		}
+	}
+	return fullPlace
 }
 
 func (s *Task) RunPty(config *cfg.Config) error {
@@ -108,6 +114,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 
 	process := exec.Command(runCommand, runArgs...)
 	process.Env = append(append(process.Env, config.PtyRunEnv...), s.getEnvVariables(config)...)
+	process.Dir = s.getWorkingDir()
 
 	f, err := pty.Start(process)
 	if err != nil {
@@ -186,6 +193,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 
 	process := exec.Command(runCommand, runArgs...)
 	process.Env = append(process.Env, s.getEnvVariables(config)...)
+	process.Dir = s.getWorkingDir()
 
 	const Out = "out"
 	const Err = "err"
@@ -373,20 +381,12 @@ func (s *Task) GetLink(name string) *TaskLink {
 	return nil
 }
 
-func (s *Task) AddLink(Name string, Type string, Url string, Title string) {
-	link := s.GetLink(Name)
-	if link == nil {
-		link := TaskLink{
-			Name:  Name,
-			Type:  Type,
-			Url:   Url,
-			Title: Title,
-		}
-		s.Links = append(s.Links, link)
+func (s *Task) AddLink(taskLink TaskLink) {
+	idx := s.getLinkIndex(taskLink.Name)
+	if idx == -1 {
+		s.Links = append(s.Links, taskLink)
 	} else {
-		link.Type = Type
-		link.Url = Url
-		link.Title = Title
+		s.Links = append(append(s.Links[:idx], taskLink), s.Links[:idx+1]...)
 	}
 	s.queue.Save()
 }
@@ -442,17 +442,12 @@ func (s *Task) SetLabel(label string) {
 	s.queue.Save()
 }
 
-func NewTask(id string, command string, label string, group string, isPty bool, isOnlyCombined bool, templatePlace string) *Task {
+func NewTask(id string, taskBase TaskBase) *Task {
 	task := Task{
-		Id:             id,
-		Label:          label,
-		Group:          group,
-		Command:        command,
-		CreatedAt:      time.Now(),
-		IsPty:          isPty,
-		IsOnlyCombined: isOnlyCombined,
-		Links:          make([]TaskLink, 0),
-		TemplatePlace:  templatePlace,
+		TaskBase:  taskBase,
+		Id:        id,
+		CreatedAt: time.Now(),
+		Links:     make([]TaskLink, 0),
 	}
 
 	task.syncStatus()
