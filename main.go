@@ -35,7 +35,7 @@ func main() {
 		panic(err)
 	}
 
-	var config cfg.Config
+	var config = cfg.LoadConfig()
 
 	var powerControl = powerCtr.GetPowerControl()
 	var taskQueue = taskQueue.LoadQueue()
@@ -47,8 +47,6 @@ func main() {
 		var httpServer *http.Server
 
 		init := func() {
-			config = cfg.LoadConfig()
-
 			if httpServer != nil {
 				err := httpServer.Close()
 				if err != nil {
@@ -87,6 +85,7 @@ func main() {
 
 			switch v {
 			case "reload":
+				config = cfg.LoadConfig()
 				init()
 			}
 		}

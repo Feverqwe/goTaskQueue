@@ -14,3 +14,12 @@ func ParseJson[T any](data io.Reader) (*T, error) {
 	}
 	return &payload, nil
 }
+
+func IndexOf[T string](arr []T, target T) int {
+	for idx, v := range arr {
+		if target == v {
+			return idx
+		}
+	}
+	return -1
+}

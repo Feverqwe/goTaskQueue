@@ -155,11 +155,6 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 					payload.IsStartOnBoot = &template.IsStartOnBoot
 				}
 
-				payload.TaskBase.IsPty = *payload.IsPty
-				payload.TaskBase.IsOnlyCombined = *payload.IsOnlyCombined
-				payload.TaskBase.IsSingleInstance = *payload.IsSingleInstance
-				payload.TaskBase.IsStartOnBoot = *payload.IsStartOnBoot
-
 				for _, variable := range template.Variables {
 					old := fmt.Sprintf("{%v}", variable.Value)
 					value, ok := payload.Variables[variable.Value]
@@ -169,6 +164,19 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 					payload.Command = strings.ReplaceAll(payload.Command, old, value)
 					payload.Label = strings.ReplaceAll(payload.Label, old, value)
 				}
+			}
+
+			if payload.IsPty != nil {
+				payload.TaskBase.IsPty = *payload.IsPty
+			}
+			if payload.IsOnlyCombined != nil {
+				payload.TaskBase.IsOnlyCombined = *payload.IsOnlyCombined
+			}
+			if payload.IsSingleInstance != nil {
+				payload.TaskBase.IsSingleInstance = *payload.IsSingleInstance
+			}
+			if payload.IsStartOnBoot != nil {
+				payload.TaskBase.IsStartOnBoot = *payload.IsStartOnBoot
 			}
 
 			payload.TemplatePlace = templatePlace
