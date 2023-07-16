@@ -59,6 +59,9 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	type AddTaskPayload struct {
 		taskQueue.TaskBase
+		Command          *string           `json:"command"`
+		Label            *string           `json:"label"`
+		Group            *string           `json:"group"`
 		IsPty            *bool             `json:"isPty"`
 		IsOnlyCombined   *bool             `json:"isOnlyCombined"`
 		IsSingleInstance *bool             `json:"isSingleInstance"`
@@ -123,64 +126,32 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 					return nil, fmt.Errorf("template not found by id %v", payload.TemplateId)
 				}
 			}
-
-			var templatePlace string
-			if template != nil {
-				templatePlace = template.Place
-
-				if payload.Command == "" {
-					payload.Command = template.Command
-				}
-				if payload.Label == "" {
-					payload.Label = template.Label
-				}
-				if payload.Group == "" {
-					payload.Group = template.Group
-				}
-
-				if payload.IsPty == nil {
-					payload.IsPty = &template.IsPty
-				}
-
-				if payload.IsOnlyCombined == nil {
-					payload.IsOnlyCombined = &template.IsOnlyCombined
-				}
-
-				if payload.IsSingleInstance == nil {
-					payload.IsSingleInstance = &template.IsSingleInstance
-				}
-
-				if payload.IsStartOnBoot == nil {
-					payload.IsStartOnBoot = &template.IsStartOnBoot
-				}
-
-				for _, variable := range template.Variables {
-					old := fmt.Sprintf("{%v}", variable.Value)
-					value, ok := payload.Variables[variable.Value]
-					if !ok {
-						value = variable.DefaultValue
-					}
-					payload.Command = strings.ReplaceAll(payload.Command, old, value)
-					payload.Label = strings.ReplaceAll(payload.Label, old, value)
-				}
+			if template == nil {
+				template = &taskQueue.Template{}
 			}
 
-			if payload.IsPty != nil {
-				payload.TaskBase.IsPty = *payload.IsPty
-			}
-			if payload.IsOnlyCombined != nil {
-				payload.TaskBase.IsOnlyCombined = *payload.IsOnlyCombined
-			}
-			if payload.IsSingleInstance != nil {
-				payload.TaskBase.IsSingleInstance = *payload.IsSingleInstance
-			}
-			if payload.IsStartOnBoot != nil {
-				payload.TaskBase.IsStartOnBoot = *payload.IsStartOnBoot
+			taskBase := payload.TaskBase
+			taskBase.TemplatePlace = template.Place
+
+			taskBase.Command = setValue(payload.Command, template.Command)
+			taskBase.Label = setValue(payload.Label, template.Label)
+			taskBase.Group = setValue(payload.Group, template.Group)
+			taskBase.IsPty = setValue(payload.IsPty, template.IsPty)
+			taskBase.IsOnlyCombined = setValue(payload.IsOnlyCombined, template.IsOnlyCombined)
+			taskBase.IsSingleInstance = setValue(payload.IsSingleInstance, template.IsSingleInstance)
+			taskBase.IsStartOnBoot = setValue(payload.IsStartOnBoot, template.IsStartOnBoot)
+
+			for _, variable := range template.Variables {
+				old := fmt.Sprintf("{%v}", variable.Value)
+				value, ok := payload.Variables[variable.Value]
+				if !ok {
+					value = variable.DefaultValue
+				}
+				taskBase.Command = strings.ReplaceAll(taskBase.Command, old, value)
+				taskBase.Label = strings.ReplaceAll(taskBase.Label, old, value)
 			}
 
-			payload.TemplatePlace = templatePlace
-
-			task := queue.Add(payload.TaskBase)
+			task := queue.Add(taskBase)
 
 			if payload.IsRun {
 				err := task.Run(config, queue)
@@ -580,4 +551,11 @@ func sendStatus(w http.ResponseWriter, statusCode int) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func setValue[T string | bool](val *T, def T) T {
+	if val == nil {
+		return def
+	}
+	return *val
 }
