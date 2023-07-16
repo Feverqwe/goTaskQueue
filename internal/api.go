@@ -122,7 +122,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 					return nil, fmt.Errorf("template not found by place %v", payload.TemplatePlace)
 				}
 			}
-			if payload.TemplateId != "" {
+			if template == nil && payload.TemplateId != "" {
 				template, err = templatectr.GetTemplate(payload.TemplateId)
 				if err != nil {
 					return nil, fmt.Errorf("template not found by id %v", payload.TemplateId)
@@ -163,7 +163,10 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined, templatePlace)
 
 			if payload.IsRun {
-				task.Run(config)
+				err := task.Run(config)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			return task, err
@@ -180,7 +183,10 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			task, err := queue.Clone(payload.Id)
 
 			if payload.IsRun {
-				task.Run(config)
+				err = task.Run(config)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			return task, err
