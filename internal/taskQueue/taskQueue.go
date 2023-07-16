@@ -115,6 +115,25 @@ func (s *Queue) WriteQueue() error {
 	return nil
 }
 
+func (s *Queue) RunOnBoot(config *cfg.Config) {
+	ids := make([]string, 0)
+	for _, task := range s.Tasks {
+		if task.IsRunOnBoot {
+			ids = append(ids, task.Id)
+		}
+	}
+
+	for _, id := range ids {
+		task, err := s.Clone(id)
+		if err == nil {
+			err = task.Run(config, s)
+		}
+		if err != nil {
+			log.Println("run task on boot error", id, err)
+		}
+	}
+}
+
 func LoadQueue() *Queue {
 	queue := NewQueue()
 

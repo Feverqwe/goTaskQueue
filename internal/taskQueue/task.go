@@ -56,6 +56,7 @@ type Task struct {
 	IsPty            bool               `json:"isPty"`
 	IsOnlyCombined   bool               `json:"isOnlyCombined"`
 	IsSingleInstance bool               `json:"isSingleInstance"`
+	IsRunOnBoot      bool               `json:"isRunOnBoot"`
 	TemplatePlace    string             `json:"templatePlace"`
 	mu               sync.Mutex
 	cmu              sync.RWMutex
