@@ -163,8 +163,6 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
     const template: Template = {
       place,
       command: refCommand.current?.value || '',
-      isPty: refPty.current?.checked || false,
-      isOnlyCombined: refOnlyCombined.current?.checked || false,
       label: refLabel.current?.value || '',
       group: refGroup.current?.value || '',
       name,
@@ -179,6 +177,10 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
           return acc;
         }, {} as Variable);
       }),
+      isPty: refPty.current?.checked,
+      isOnlyCombined: refOnlyCombined.current?.checked,
+      isSingleInstance: refSingleInstance.current?.checked,
+      isStartOnBoot: refStartOnBoot.current?.checked,
     };
     return template;
   }, [variables, folder, isNew]);
