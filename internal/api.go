@@ -7,6 +7,7 @@ import (
 	gzbuffer "goTaskQueue/internal/gzBuffer"
 	memstorage "goTaskQueue/internal/memStorage"
 	"goTaskQueue/internal/taskQueue"
+	taskstruct "goTaskQueue/internal/taskStruct"
 	templatectr "goTaskQueue/internal/templateCtr"
 	"goTaskQueue/internal/utils"
 	"net/http"
@@ -59,7 +60,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	}
 
 	type AddTaskPayload struct {
-		taskQueue.TaskBase
+		taskstruct.TaskBase
 		IsPty            *bool             `json:"isPty"`
 		IsOnlyCombined   *bool             `json:"isOnlyCombined"`
 		IsSingleInstance *bool             `json:"isSingleInstance"`

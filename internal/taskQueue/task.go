@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
+	taskstruct "goTaskQueue/internal/taskStruct"
 	templatectr "goTaskQueue/internal/templateCtr"
 	"io"
 	"log"
@@ -35,19 +36,8 @@ type PtyScreenSize struct {
 	Y    int `json:"y"`
 }
 
-type TaskBase struct {
-	Label            string `json:"label"`
-	Group            string `json:"group"`
-	Command          string `json:"command"`
-	TemplatePlace    string `json:"templatePlace"`
-	IsPty            bool   `json:"isPty"`
-	IsOnlyCombined   bool   `json:"isOnlyCombined"`
-	IsSingleInstance bool   `json:"isSingleInstance"`
-	IsStartOnBoot    bool   `json:"isStartOnBoot"`
-}
-
 type Task struct {
-	TaskBase
+	taskstruct.TaskBase
 	Id             string `json:"id"`
 	process        *exec.Cmd
 	IsStarted      bool               `json:"isStarted"`
@@ -442,7 +432,7 @@ func (s *Task) SetLabel(label string) {
 	s.queue.Save()
 }
 
-func NewTask(id string, taskBase TaskBase) *Task {
+func NewTask(id string, taskBase taskstruct.TaskBase) *Task {
 	task := Task{
 		TaskBase:  taskBase,
 		Id:        id,

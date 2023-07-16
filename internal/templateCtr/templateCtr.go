@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"goTaskQueue/internal/cfg"
+	taskstruct "goTaskQueue/internal/taskStruct"
 	"goTaskQueue/internal/utils"
 	"log"
 	"os"
@@ -21,22 +22,15 @@ type TemplateVariable struct {
 	DefaultValue string `json:"defaultValue"`
 }
 
-type TemplatePrivate struct {
+type Template struct {
 	Place   string `json:"place"`
 	Command string `json:"command"`
-}
 
-type Template struct {
-	TemplatePrivate
-	Name             string             `json:"name"`
-	Id               string             `json:"id"`
-	Label            string             `json:"label"`
-	Group            string             `json:"group"`
-	Variables        []TemplateVariable `json:"variables"`
-	IsPty            bool               `json:"isPty"`
-	IsOnlyCombined   bool               `json:"isOnlyCombined"`
-	IsSingleInstance bool               `json:"isSingleInstance"`
-	IsStartOnBoot    bool               `json:"isStartOnBoot"`
+	Name      string             `json:"name"`
+	Id        string             `json:"id"`
+	Variables []TemplateVariable `json:"variables"`
+
+	taskstruct.TaskBaseTemplate
 }
 
 const TEMPALTE_NAME = "template.json"
