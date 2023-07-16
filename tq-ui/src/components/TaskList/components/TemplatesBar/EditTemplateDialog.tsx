@@ -257,7 +257,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
           />
           <FormControlLabel
             sx={{my: 1}}
-            label="Start in boot"
+            label="Start on boot"
             control={
               <Checkbox size="small" inputRef={refStartOnBoot} defaultChecked={isStartOnBoot} />
             }

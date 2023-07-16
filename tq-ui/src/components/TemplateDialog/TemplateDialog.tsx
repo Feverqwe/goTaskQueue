@@ -205,7 +205,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
             )}
             <FormControlLabel
               sx={{my: 1}}
-              label="Start in boot"
+              label="Start on boot"
               control={
                 <Checkbox size="small" inputRef={refStartOnBoot} defaultChecked={isStartOnBoot} />
               }
