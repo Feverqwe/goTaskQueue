@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"goTaskQueue/internal/cfg"
-	"goTaskQueue/internal/utils"
 	"log"
 	"os"
 	"path/filepath"
@@ -117,11 +116,11 @@ func (s *Queue) WriteQueue() error {
 }
 
 func (s *Queue) RunOnBoot(config *cfg.Config) {
-	unicTemplates := make([]string, 0)
+	unic := map[string]bool{}
 	ids := make([]string, 0)
 	for _, task := range s.Tasks {
-		if task.IsStartOnBoot && utils.IndexOf(unicTemplates, task.TemplatePlace) == -1 {
-			unicTemplates = append(unicTemplates, task.TemplatePlace)
+		if task.IsStartOnBoot && !unic[task.TemplatePlace] {
+			unic[task.TemplatePlace] = true
 			ids = append(ids, task.Id)
 		}
 	}
