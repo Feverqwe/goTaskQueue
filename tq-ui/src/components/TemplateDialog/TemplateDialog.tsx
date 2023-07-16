@@ -148,7 +148,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
   );
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth>
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
       <Box component="form" onSubmit={handleSubmit}>
         <DialogTitle>{name}</DialogTitle>
         <DialogContent>

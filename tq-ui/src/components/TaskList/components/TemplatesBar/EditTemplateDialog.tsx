@@ -195,7 +195,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   );
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth>
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
       <Box component="form" onSubmit={handleSubmit}>
         <DialogTitle>{isNew ? 'Add template' : 'Edit template'}</DialogTitle>
         <DialogContent>
