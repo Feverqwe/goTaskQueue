@@ -61,7 +61,7 @@ type Task struct {
 	qCh            []chan int
 	stdin          io.Writer
 	combinedOffset int
-	Links          []*TaskLink `json:"links"`
+	Links          []TaskLink `json:"links"`
 	queue          *Queue
 }
 
@@ -350,17 +350,25 @@ func (s *Task) Signal(sig syscall.Signal) error {
 	return s.process.Process.Signal(sig)
 }
 
-func (s *Task) GetLink(name string) (*TaskLink, int) {
-	for pos, link := range s.Links {
+func (s *Task) getLinkIndex(name string) int {
+	for idx, link := range s.Links {
 		if link.Name == name {
-			return link, pos
+			return idx
 		}
 	}
-	return nil, -1
+	return -1
+}
+
+func (s *Task) GetLink(name string) *TaskLink {
+	index := s.getLinkIndex(name)
+	if index != -1 {
+		return &s.Links[index]
+	}
+	return nil
 }
 
 func (s *Task) AddLink(Name string, Type string, Url string, Title string) {
-	link, _ := s.GetLink(Name)
+	link := s.GetLink(Name)
 	if link == nil {
 		link := TaskLink{
 			Name:  Name,
@@ -368,7 +376,7 @@ func (s *Task) AddLink(Name string, Type string, Url string, Title string) {
 			Url:   Url,
 			Title: Title,
 		}
-		s.Links = append(s.Links, &link)
+		s.Links = append(s.Links, link)
 	} else {
 		link.Type = Type
 		link.Url = Url
@@ -378,7 +386,7 @@ func (s *Task) AddLink(Name string, Type string, Url string, Title string) {
 }
 
 func (s *Task) DelLink(name string) {
-	_, index := s.GetLink(name)
+	index := s.getLinkIndex(name)
 	if index != -1 {
 		s.Links = append(s.Links[:index], s.Links[:index+1]...)
 	}
@@ -437,7 +445,7 @@ func NewTask(id string, command string, label string, group string, isPty bool, 
 		CreatedAt:      time.Now(),
 		IsPty:          isPty,
 		IsOnlyCombined: isOnlyCombined,
-		Links:          make([]*TaskLink, 0),
+		Links:          make([]TaskLink, 0),
 		TemplatePlace:  templatePlace,
 	}
 
