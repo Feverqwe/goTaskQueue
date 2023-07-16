@@ -73,7 +73,7 @@ type Task struct {
 
 func (s *Task) Run(config *cfg.Config, queue *Queue) error {
 	if s.IsSingleInstance && s.TemplatePlace != "" && queue.HasInstance(s.TemplatePlace) {
-		return fmt.Errorf("instance exists %v", s.TemplatePlace)
+		return fmt.Errorf("active instance exists %v", s.TemplatePlace)
 	}
 
 	if s.IsPty {
