@@ -131,9 +131,9 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			}
 
 			taskBase := taskQueue.TaskBase{}
+			taskBase.TemplatePlace = template.Place
 
 			taskBase.Command = setValue(payload.Command, template.Command)
-			taskBase.TemplatePlace = template.Place
 			taskBase.Label = setValue(payload.Label, template.Label)
 			taskBase.Group = setValue(payload.Group, template.Group)
 			taskBase.IsPty = setValue(payload.IsPty, template.IsPty)
