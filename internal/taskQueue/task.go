@@ -36,36 +36,41 @@ type PtyScreenSize struct {
 }
 
 type Task struct {
-	Id             string `json:"id"`
-	Label          string `json:"label"`
-	Group          string `json:"group"`
-	Command        string `json:"command"`
-	process        *exec.Cmd
-	IsStarted      bool               `json:"isStarted"`
-	IsFinished     bool               `json:"isFinished"`
-	IsCanceled     bool               `json:"isCanceled"`
-	IsError        bool               `json:"isError"`
-	State          string             `json:"state"`
-	Stdout         *gzbuffer.GzBuffer `json:"-"`
-	Stderr         *gzbuffer.GzBuffer `json:"-"`
-	Combined       *gzbuffer.GzBuffer `json:"-"`
-	Error          string             `json:"error"`
-	CreatedAt      time.Time          `json:"createdAt"`
-	StartedAt      time.Time          `json:"startedAt"`
-	FinishedAt     time.Time          `json:"finishedAt"`
-	IsPty          bool               `json:"isPty"`
-	IsOnlyCombined bool               `json:"isOnlyCombined"`
-	TemplatePlace  string             `json:"templatePlace"`
-	mu             sync.Mutex
-	cmu            sync.RWMutex
-	qCh            []chan int
-	stdin          io.Writer
-	combinedOffset int
-	Links          []TaskLink `json:"links"`
-	queue          *Queue
+	Id               string `json:"id"`
+	Label            string `json:"label"`
+	Group            string `json:"group"`
+	Command          string `json:"command"`
+	process          *exec.Cmd
+	IsStarted        bool               `json:"isStarted"`
+	IsFinished       bool               `json:"isFinished"`
+	IsCanceled       bool               `json:"isCanceled"`
+	IsError          bool               `json:"isError"`
+	State            string             `json:"state"`
+	Stdout           *gzbuffer.GzBuffer `json:"-"`
+	Stderr           *gzbuffer.GzBuffer `json:"-"`
+	Combined         *gzbuffer.GzBuffer `json:"-"`
+	Error            string             `json:"error"`
+	CreatedAt        time.Time          `json:"createdAt"`
+	StartedAt        time.Time          `json:"startedAt"`
+	FinishedAt       time.Time          `json:"finishedAt"`
+	IsPty            bool               `json:"isPty"`
+	IsOnlyCombined   bool               `json:"isOnlyCombined"`
+	IsSingleInstance bool               `json:"isSingleInstance"`
+	TemplatePlace    string             `json:"templatePlace"`
+	mu               sync.Mutex
+	cmu              sync.RWMutex
+	qCh              []chan int
+	stdin            io.Writer
+	combinedOffset   int
+	Links            []TaskLink `json:"links"`
+	queue            *Queue
 }
 
-func (s *Task) Run(config *cfg.Config) error {
+func (s *Task) Run(config *cfg.Config, queue *Queue) error {
+	if s.IsSingleInstance && s.TemplatePlace != "" && queue.HasInstance(s.TemplatePlace) {
+		return fmt.Errorf("instance exists %v", s.TemplatePlace)
+	}
+
 	if s.IsPty {
 		return s.RunPty(config)
 	} else {

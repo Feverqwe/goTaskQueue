@@ -77,6 +77,15 @@ func (s *Queue) Del(id string) error {
 	return nil
 }
 
+func (s *Queue) HasInstance(templatePlace string) bool {
+	for _, t := range s.Tasks {
+		if t.IsStarted && !t.IsFinished && t.TemplatePlace == templatePlace {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Queue) getId() string {
 	var id string
 	for {

@@ -163,7 +163,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			task := queue.Add(payload.Command, payload.Label, payload.Group, payload.IsPty, payload.IsOnlyCombined, templatePlace)
 
 			if payload.IsRun {
-				err := task.Run(config)
+				err := task.Run(config, queue)
 				if err != nil {
 					return nil, err
 				}
@@ -183,7 +183,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			task, err := queue.Clone(payload.Id)
 
 			if payload.IsRun {
-				err = task.Run(config)
+				err = task.Run(config, queue)
 				if err != nil {
 					return nil, err
 				}
@@ -214,7 +214,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			err = task.Run(config)
+			err = task.Run(config, queue)
 
 			return "ok", err
 		})
