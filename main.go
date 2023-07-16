@@ -267,9 +267,9 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 			storeJson, err := json.Marshal(store)
 
 			body := string(content)
-			body = strings.Replace(body, "{{TITLE}}", internal.EscapeHtmlInJson(config.Name), 1)
+			body = strings.Replace(body, "{{TITLE}}", utils.EscapeHtmlInJson(config.Name), 1)
 			if err == nil {
-				body = strings.Replace(body, "<script id=\"root_store\"></script>", "<script id=\"root_store\">window.ROOT_STORE="+internal.EscapeHtmlInJson(string(storeJson))+"</script>", 1)
+				body = strings.Replace(body, "<script id=\"root_store\"></script>", "<script id=\"root_store\">window.ROOT_STORE="+utils.EscapeHtmlInJson(string(storeJson))+"</script>", 1)
 			}
 			content = []byte(body)
 		}
