@@ -12,7 +12,6 @@ import (
 	"goTaskQueue/internal/mutex"
 	"goTaskQueue/internal/powerCtr"
 	"goTaskQueue/internal/taskQueue"
-	templatectr "goTaskQueue/internal/templateCtr"
 	"goTaskQueue/internal/trayIcon"
 	"goTaskQueue/internal/utils"
 	"io"
@@ -223,7 +222,7 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 
 	type RootStore struct {
 		Name           string                 `json:"name"`
-		Templates      []templatectr.Template `json:"templates"`
+		Templates      []taskQueue.Template   `json:"templates"`
 		TemplateOrder  []string               `json:"templateOrder"`
 		MemStorage     map[string]interface{} `json:"memStorage"`
 		IsPtySupported bool                   `json:"isPtySupported"`
@@ -256,7 +255,7 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 		if assetPath == "/index.html" {
 			mTime = time.Now()
 
-			templates := templatectr.GetTemplates()
+			templates := taskQueue.GetTemplates()
 
 			store := RootStore{
 				Name:           config.Name,

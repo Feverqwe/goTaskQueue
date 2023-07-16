@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"goTaskQueue/internal/cfg"
-	taskstruct "goTaskQueue/internal/taskStruct"
 	"log"
 	"os"
 	"path/filepath"
@@ -32,7 +31,7 @@ func (s *Queue) Get(id string) (*Task, error) {
 	return task, nil
 }
 
-func (s *Queue) Add(taskBase taskstruct.TaskBase) *Task {
+func (s *Queue) Add(taskBase TaskBase) *Task {
 	id := s.getId()
 	task := NewTask(id, taskBase)
 	s.Tasks = append(s.Tasks, task)

@@ -1,11 +1,10 @@
-package templatectr
+package taskQueue
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 	"goTaskQueue/internal/cfg"
-	taskstruct "goTaskQueue/internal/taskStruct"
 	"goTaskQueue/internal/utils"
 	"log"
 	"os"
@@ -30,7 +29,7 @@ type Template struct {
 	Id        string             `json:"id"`
 	Variables []TemplateVariable `json:"variables"`
 
-	taskstruct.TaskBaseTemplate
+	NewTaskBase
 }
 
 const TEMPALTE_NAME = "template.json"
@@ -310,6 +309,10 @@ func getPlace(relPlace string) (string, error) {
 	}
 	root := getTemplatesPath()
 	return filepath.Join(root, filepath.FromSlash(path.Clean("/"+relPlace))), nil
+}
+
+func GetTemplatesPath() string {
+	return getTemplatesPath()
 }
 
 func getTemplatesPath() string {

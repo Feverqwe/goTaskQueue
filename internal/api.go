@@ -7,8 +7,6 @@ import (
 	gzbuffer "goTaskQueue/internal/gzBuffer"
 	memstorage "goTaskQueue/internal/memStorage"
 	"goTaskQueue/internal/taskQueue"
-	taskstruct "goTaskQueue/internal/taskStruct"
-	templatectr "goTaskQueue/internal/templateCtr"
 	"goTaskQueue/internal/utils"
 	"net/http"
 	"strings"
@@ -60,7 +58,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	}
 
 	type AddTaskPayload struct {
-		taskstruct.TaskBase
+		taskQueue.TaskBase
 		IsPty            *bool             `json:"isPty"`
 		IsOnlyCombined   *bool             `json:"isOnlyCombined"`
 		IsSingleInstance *bool             `json:"isSingleInstance"`
@@ -112,15 +110,15 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return nil, err
 			}
 
-			var template *templatectr.Template
+			var template *taskQueue.Template
 			if payload.TemplatePlace != "" {
-				template, err = templatectr.ReadTemplate(payload.TemplatePlace)
+				template, err = taskQueue.ReadTemplate(payload.TemplatePlace)
 				if err != nil {
 					return nil, fmt.Errorf("template not found by place %v", payload.TemplatePlace)
 				}
 			}
 			if template == nil && payload.TemplateId != "" {
-				template, err = templatectr.GetTemplate(payload.TemplateId)
+				template, err = taskQueue.GetTemplate(payload.TemplateId)
 				if err != nil {
 					return nil, fmt.Errorf("template not found by id %v", payload.TemplateId)
 				}
@@ -344,7 +342,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/reloadTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() (string, error) {
-			templatectr.FlushTemplateCache()
+			taskQueue.FlushTemplateCache()
 
 			return "ok", nil
 		})
@@ -405,18 +403,18 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	})
 
 	router.Get("/api/templates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() ([]templatectr.Template, error) {
-			templates := templatectr.GetTemplates()
+		apiCall(w, func() ([]taskQueue.Template, error) {
+			templates := taskQueue.GetTemplates()
 
 			return templates, nil
 		})
 	})
 
 	router.Get("/api/getTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (*templatectr.Template, error) {
+		apiCall(w, func() (*taskQueue.Template, error) {
 			id := r.URL.Query().Get("id")
 
-			template, err := templatectr.GetTemplate(id)
+			template, err := taskQueue.GetTemplate(id)
 			if err != nil {
 				return nil, err
 			}
@@ -426,8 +424,8 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	})
 
 	type SetTemplatePayload struct {
-		PrevRelPlace string               `json:"prevPlace"`
-		Template     templatectr.Template `json:"template"`
+		PrevRelPlace string             `json:"prevPlace"`
+		Template     taskQueue.Template `json:"template"`
 	}
 
 	router.Post("/api/setTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
@@ -440,13 +438,13 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			isNew := len(payload.PrevRelPlace) == 0
 
 			if !isNew && payload.PrevRelPlace != payload.Template.Place {
-				err = templatectr.MoveTemplate(payload.PrevRelPlace, payload.Template.Place)
+				err = taskQueue.MoveTemplate(payload.PrevRelPlace, payload.Template.Place)
 				if err != nil {
 					return "", err
 				}
 			}
 
-			err = templatectr.WriteTemplate(payload.Template, isNew)
+			err = taskQueue.WriteTemplate(payload.Template, isNew)
 			if err != nil {
 				return "", err
 			}
@@ -456,10 +454,10 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	})
 
 	router.Get("/api/readTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		apiCall(w, func() (*templatectr.Template, error) {
+		apiCall(w, func() (*taskQueue.Template, error) {
 			relPlace := r.URL.Query().Get("place")
 
-			template, err := templatectr.ReadTemplate(relPlace)
+			template, err := taskQueue.ReadTemplate(relPlace)
 			if err != nil {
 				return nil, err
 			}
@@ -480,7 +478,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			err = templatectr.MoveTemplate(payload.RelFrom, payload.RelTo)
+			err = taskQueue.MoveTemplate(payload.RelFrom, payload.RelTo)
 			if err != nil {
 				return "", err
 			}
@@ -500,7 +498,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			err = templatectr.RemoveTemplate(payload.RelPlace)
+			err = taskQueue.RemoveTemplate(payload.RelPlace)
 			if err != nil {
 				return "", err
 			}

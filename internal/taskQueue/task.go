@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
-	taskstruct "goTaskQueue/internal/taskStruct"
-	templatectr "goTaskQueue/internal/templateCtr"
 	"io"
 	"log"
 	"os"
@@ -36,8 +34,23 @@ type PtyScreenSize struct {
 	Y    int `json:"y"`
 }
 
+type NewTaskBase struct {
+	Label            string `json:"label"`
+	Group            string `json:"group"`
+	IsPty            bool   `json:"isPty"`
+	IsOnlyCombined   bool   `json:"isOnlyCombined"`
+	IsSingleInstance bool   `json:"isSingleInstance"`
+	IsStartOnBoot    bool   `json:"isStartOnBoot"`
+}
+
+type TaskBase struct {
+	Command       string `json:"command"`
+	TemplatePlace string `json:"templatePlace"`
+	NewTaskBase
+}
+
 type Task struct {
-	taskstruct.TaskBase
+	TaskBase
 	Id             string `json:"id"`
 	process        *exec.Cmd
 	IsStarted      bool               `json:"isStarted"`
@@ -78,13 +91,14 @@ func (s *Task) getEnvVariables(config *cfg.Config) []string {
 		"TASK_QUEUE_ID="+s.Id,
 		"TASK_QUEUE_URL="+config.GetBrowserAddress(),
 		"TASK_TEMPLATE_PLACE="+s.TemplatePlace,
+		"TASK_TEMPLATES_PLACE="+GetTemplatesPath(),
 	)
 }
 
 func (s *Task) getWorkingDir() string {
 	var fullPlace string
 	if s.TemplatePlace != "" {
-		if place, err := templatectr.GetPlace(s.TemplatePlace); err != nil {
+		if place, err := GetPlace(s.TemplatePlace); err != nil {
 			log.Println("Get working dir error", s.TemplatePlace, err)
 		} else {
 			fullPlace = place
@@ -432,7 +446,7 @@ func (s *Task) SetLabel(label string) {
 	s.queue.Save()
 }
 
-func NewTask(id string, taskBase taskstruct.TaskBase) *Task {
+func NewTask(id string, taskBase TaskBase) *Task {
 	task := Task{
 		TaskBase:  taskBase,
 		Id:        id,
