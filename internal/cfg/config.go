@@ -117,18 +117,24 @@ func getConfigPath() string {
 	return filepath.Join(place, "config.json")
 }
 
+var PROFILE_PATH_CACHE string
+
 func GetProfilePath() string {
-	place := ""
-	for _, e := range os.Environ() {
-		pair := strings.SplitN(e, "=", 2)
-		if pair[0] == "PROFILE_PLACE" {
-			place = pair[1]
+	if PROFILE_PATH_CACHE == "" {
+		place := ""
+		for _, e := range os.Environ() {
+			pair := strings.SplitN(e, "=", 2)
+			if pair[0] == "PROFILE_PLACE" {
+				place = pair[1]
+				break
+			}
 		}
+		if place == "" {
+			place = getDefaultProfilePath()
+		}
+		PROFILE_PATH_CACHE = place
 	}
-	if place == "" {
-		place = getDefaultProfilePath()
-	}
-	return place
+	return PROFILE_PATH_CACHE
 }
 
 func getDefaultProfilePath() string {
