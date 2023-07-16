@@ -58,7 +58,6 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	}
 
 	type AddTaskPayload struct {
-		taskQueue.TaskBase
 		Command          *string           `json:"command"`
 		Label            *string           `json:"label"`
 		Group            *string           `json:"group"`
@@ -66,6 +65,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		IsOnlyCombined   *bool             `json:"isOnlyCombined"`
 		IsSingleInstance *bool             `json:"isSingleInstance"`
 		IsStartOnBoot    *bool             `json:"isStartOnBoot"`
+		TemplatePlace    string            `json:"templatePlace"`
 		TemplateId       string            `json:"templateId"`
 		Variables        map[string]string `json:"variables"`
 		IsRun            bool              `json:"isRun"`
@@ -130,10 +130,10 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				template = &taskQueue.Template{}
 			}
 
-			taskBase := payload.TaskBase
-			taskBase.TemplatePlace = template.Place
+			taskBase := taskQueue.TaskBase{}
 
 			taskBase.Command = setValue(payload.Command, template.Command)
+			taskBase.TemplatePlace = template.Place
 			taskBase.Label = setValue(payload.Label, template.Label)
 			taskBase.Group = setValue(payload.Group, template.Group)
 			taskBase.IsPty = setValue(payload.IsPty, template.IsPty)
