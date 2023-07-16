@@ -25,7 +25,18 @@ interface TemplateDialogProps {
 }
 
 const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onClose, isNew}) => {
-  const {name, variables, command, label, group, isPty, isOnlyCombined, place} = template;
+  const {
+    name,
+    variables,
+    command,
+    label,
+    group,
+    isPty,
+    isOnlyCombined,
+    place,
+    isSingleInstance,
+    isStartOnBoot,
+  } = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [isExtended, setExtended] = useState(() => isNew);
   const [isPtyEnabled, setPtyEnabled] = useState(isPty);
@@ -35,6 +46,8 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
   const refGroup = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
+  const refSingleInstance = useRef<HTMLInputElement>(null);
+  const refStartOnBoot = useRef<HTMLInputElement>(null);
   const refMap = useRef(new Map());
   variables.forEach(({value}) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -64,7 +77,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
     });
   }, [variables, isNew]);
 
-  const getCommand = useCallback<(isRun?: boolean) => AddTaskRequest>((isRun = false) => {
+  const getCommand = useCallback((isRun = false) => {
     const label = refLabel.current?.value || '';
     const command = refCommand.current?.value || '';
 
@@ -75,12 +88,27 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
     });
 
     const group = refGroup.current?.value || '';
-    const isPty = refPty.current?.checked || false;
-    const isOnlyCombined = refOnlyCombined.current?.checked || false;
+    const isPty = refPty.current?.checked;
+    const isOnlyCombined = refOnlyCombined.current?.checked;
+    const isSingleInstance = refSingleInstance.current?.checked;
+    const isStartOnBoot = refStartOnBoot.current?.checked;
 
     const templatePlace = refPlace.current;
 
-    return {command, label, group, isPty, isOnlyCombined, templatePlace, isRun, variables};
+    const payload: AddTaskRequest = {
+      command,
+      label,
+      group,
+      isPty,
+      isOnlyCombined,
+      isSingleInstance,
+      isStartOnBoot,
+      templatePlace,
+      isRun,
+      variables,
+    };
+
+    return payload;
   }, []);
 
   const handleSubmit = useCallback(
@@ -160,6 +188,26 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
               label="Combined output"
               control={
                 <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
+              }
+            />
+            {place && (
+              <FormControlLabel
+                sx={{my: 1}}
+                label="Single instance"
+                control={
+                  <Checkbox
+                    size="small"
+                    inputRef={refSingleInstance}
+                    defaultChecked={isSingleInstance}
+                  />
+                }
+              />
+            )}
+            <FormControlLabel
+              sx={{my: 1}}
+              label="Start in boot"
+              control={
+                <Checkbox size="small" inputRef={refStartOnBoot} defaultChecked={isStartOnBoot} />
               }
             />
             <TextField

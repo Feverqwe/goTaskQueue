@@ -13,6 +13,8 @@ export interface RawTemplate {
   }[];
   isPty?: boolean;
   isOnlyCombined?: boolean;
+  isSingleInstance?: boolean;
+  isStartOnBoot?: boolean;
 }
 
 export type Template = TemplateButton | TemplateFolder;
@@ -68,6 +70,8 @@ export interface Task {
   finishedAt: string;
   isPty: boolean;
   isOnlyCombined: boolean;
+  isSingleInstance: boolean;
+  isStartOnBoot: boolean;
   links: TaskLink[];
   templatePlace: string;
 }
@@ -99,6 +103,8 @@ export interface AddTaskRequest {
   group?: string;
   isPty?: boolean;
   isOnlyCombined?: boolean;
+  isSingleInstance?: boolean;
+  isStartOnBoot?: boolean;
   isRun?: boolean;
 }
 

@@ -39,7 +39,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   onClose,
   isNew,
 }) => {
-  const {place, id, name, command, label, group, isPty, isOnlyCombined} = template;
+  const {place, id, name, command, label, group, isPty, isOnlyCombined, isSingleInstance, isStartOnBoot} = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
   const refCommand = useRef<HTMLInputElement>(null);
@@ -50,6 +50,8 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   const refPty = useRef<HTMLInputElement>(null);
   const refId = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
+  const refSingleInstance = useRef<HTMLInputElement>(null);
+  const refStartOnBoot = useRef<HTMLInputElement>(null);
   const refPlace = useRef<HTMLInputElement>(null);
 
   useMemo(() => {
@@ -242,6 +244,20 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             label="Combined output"
             control={
               <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
+            }
+          />
+          <FormControlLabel
+            sx={{my: 1}}
+            label="Single instance"
+            control={
+              <Checkbox size="small" inputRef={refSingleInstance} defaultChecked={isSingleInstance} />
+            }
+          />
+          <FormControlLabel
+            sx={{my: 1}}
+            label="Start in boot"
+            control={
+              <Checkbox size="small" inputRef={refStartOnBoot} defaultChecked={isStartOnBoot} />
             }
           />
           <TextField
