@@ -58,22 +58,14 @@ export interface TaskLink {
   title: string;
 }
 
-export interface Task {
-  id: string;
-  command: string;
-  label: string;
-  group: string;
+export interface Task extends Omit<Required<RawTemplate>, 'place' | 'name' | 'variables'> {
+  templatePlace: string;
   state: TaskState;
   error: string;
   createdAt: string;
   startedAt: string;
   finishedAt: string;
-  isPty: boolean;
-  isOnlyCombined: boolean;
-  isSingleInstance: boolean;
-  isStartOnBoot: boolean;
   links: TaskLink[];
-  templatePlace: string;
 }
 
 export interface PtyScreenSize {

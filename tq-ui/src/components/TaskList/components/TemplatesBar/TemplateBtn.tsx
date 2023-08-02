@@ -1,6 +1,6 @@
 import React, {FC, SyntheticEvent, useCallback, useState} from 'react';
 import {Button, Divider} from '@mui/material';
-import { TemplateButton, TemplateFolder} from '../../../types';
+import {TemplateButton, TemplateFolder} from '../../../types';
 import DialogMenu from '../../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../../DialogMenu/DialogMenuItem';
 

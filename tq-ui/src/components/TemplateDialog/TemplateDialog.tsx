@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import {TemplateButton, AddTaskRequest} from '../types';
+import {AddTaskRequest, RawTemplate} from '../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
 
@@ -20,7 +20,7 @@ interface TemplateDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (runTask: AddTaskRequest, isNewTab?: boolean) => Promise<void>;
-  template: TemplateButton;
+  template: RawTemplate;
   isNew?: boolean;
 }
 

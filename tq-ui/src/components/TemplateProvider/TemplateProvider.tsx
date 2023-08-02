@@ -16,10 +16,7 @@ const TemplateProvider: FC<TemplateProviderProps> = ({children}) => {
   const [templateOrder, setTemplateOrder] = useState<string[]>(initTemplateOrder);
 
   const updateTemplates = useCallback(async () => {
-    const [templatesLocal, order] = await Promise.all([
-      api.templates(),
-      api.getTemplateOrder(),
-    ]);
+    const [templatesLocal, order] = await Promise.all([api.templates(), api.getTemplateOrder()]);
     setTemplateOrder(order);
     setRawTemplates(templatesLocal);
   }, []);
@@ -81,7 +78,10 @@ const TemplateProvider: FC<TemplateProviderProps> = ({children}) => {
     return rootFolder;
   }, [rawTemplates, templateOrder]);
 
-  const value = useMemo(() => ({rootFolder, templates: rawTemplates, templateOrder}), [rootFolder, rawTemplates, templateOrder]);
+  const value = useMemo(
+    () => ({rootFolder, templates: rawTemplates, templateOrder}),
+    [rootFolder, rawTemplates, templateOrder],
+  );
 
   return (
     <TemplatesUpdateCtx.Provider value={updateTemplates}>

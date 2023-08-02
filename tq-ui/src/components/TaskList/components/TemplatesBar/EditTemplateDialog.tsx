@@ -14,7 +14,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import path from 'path-browserify';
-import {Template, TemplateButton, TemplateFolder} from '../../../types';
+import {RawTemplate, Template, TemplateFolder} from '../../../types';
 import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
 import ActionButton from '../../../ActionButton/ActionButton';
 
@@ -22,12 +22,12 @@ interface TemplateDialogProps {
   folder: TemplateFolder;
   open: boolean;
   onClose: () => void;
-  onSubmit: (prevPlace: string, template: TemplateButton) => Promise<void>;
-  template: TemplateButton;
+  onSubmit: (prevPlace: string, template: RawTemplate) => Promise<void>;
+  template: RawTemplate;
   isNew?: boolean;
 }
 
-type Variable = TemplateButton['variables'][number];
+type Variable = RawTemplate['variables'][number];
 
 const variableIdMap = new WeakMap<Variable, string>();
 
@@ -39,7 +39,18 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   onClose,
   isNew,
 }) => {
-  const {place, id, name, command, label, group, isPty, isOnlyCombined, isSingleInstance, isStartOnBoot} = template;
+  const {
+    place,
+    id,
+    name,
+    command,
+    label,
+    group,
+    isPty,
+    isOnlyCombined,
+    isSingleInstance,
+    isStartOnBoot,
+  } = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
   const refCommand = useRef<HTMLInputElement>(null);
@@ -80,7 +91,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   const variableInputs = useMemo(() => {
     refMap.current.clear();
 
-    return variables.map((variable, index, arr) => {
+    return variables.map((variable, index) => {
       const {name, value, defaultValue} = variable;
       const {
         name: refName,
@@ -252,7 +263,11 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             sx={{my: 1}}
             label="Single instance"
             control={
-              <Checkbox size="small" inputRef={refSingleInstance} defaultChecked={isSingleInstance} />
+              <Checkbox
+                size="small"
+                inputRef={refSingleInstance}
+                defaultChecked={isSingleInstance}
+              />
             }
           />
           <FormControlLabel

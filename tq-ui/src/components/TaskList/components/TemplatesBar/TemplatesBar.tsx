@@ -129,9 +129,11 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
       const origName = template.name;
       let index = 0;
       let newPlace = '';
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         index++;
         newPlace = path.join(folder.place, `${origName} ${index}`);
+        // eslint-disable-next-line no-loop-func
         const found = folder.templates.some(({place}) => place === newPlace);
         if (!found) {
           break;

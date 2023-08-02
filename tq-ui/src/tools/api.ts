@@ -92,11 +92,11 @@ export const api = {
     method: 'GET',
     path: '/api/readTemplate',
   }),
-  setTemplate: action<{template: RawTemplate, prevPlace?: string}, string>({
+  setTemplate: action<{template: RawTemplate; prevPlace?: string}, string>({
     method: 'POST',
     path: '/api/setTemplate',
   }),
-  moveTemplate: action<{from: string, to: string}, string>({
+  moveTemplate: action<{from: string; to: string}, string>({
     method: 'POST',
     path: '/api/moveTemplate',
   }),

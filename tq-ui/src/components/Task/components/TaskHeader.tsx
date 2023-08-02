@@ -1,4 +1,12 @@
-import React, {FC, SyntheticEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react';
+import React, {
+  FC,
+  SyntheticEvent,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {Box, CardActionArea, Divider, IconButton, Paper, Typography} from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
@@ -10,7 +18,7 @@ import CircleIcon from '@mui/icons-material/Circle';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
-import {AddTaskRequest, Task, TaskState, TemplateButton} from '../../types';
+import {AddTaskRequest, RawTemplate, Task, TaskState} from '../../types';
 import DialogMenu from '../../DialogMenu/DialogMenu';
 import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
@@ -37,7 +45,7 @@ const TaskHeader: FC<TaskInfoProps> = ({
   const navigate = useNavigate();
   const {name} = useContext(RootStoreCtx);
   const {id, state, label, command, error, isOnlyCombined} = task;
-  const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | TemplateButton>(null);
+  const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | RawTemplate>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showConfirm, setShowConfirm] = useState<{type: string} | undefined>();
 
@@ -71,16 +79,22 @@ const TaskHeader: FC<TaskInfoProps> = ({
   }, []);
 
   const handleRestart = useCallback(() => {
-    const {label, group, command, isPty, isOnlyCombined, templatePlace} = task;
+    const {
+      templatePlace,
+      state: _a,
+      error: _b,
+      createdAt: _c,
+      startedAt: _d,
+      finishedAt: _e,
+      links: _f,
+      ...newTaskProps
+    } = task;
+
     setRestartDialogTemplate({
+      ...newTaskProps,
       place: templatePlace,
       name: 'New task',
-      label,
-      group,
       variables: [],
-      command,
-      isPty,
-      isOnlyCombined,
     });
   }, [task]);
 
