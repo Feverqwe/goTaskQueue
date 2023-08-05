@@ -27,6 +27,11 @@ type TaskLink struct {
 	Title string `json:"title"`
 }
 
+type TaskAsset struct {
+	Path  string `json:"path"`
+	IsDir bool   `json:"isDir"`
+}
+
 type PtyScreenSize struct {
 	Rows int `json:"rows"`
 	Cols int `json:"cols"`
@@ -72,6 +77,7 @@ type Task struct {
 	combinedOffset int
 	Links          []TaskLink `json:"links"`
 	queue          *Queue
+	Assets         []TaskAsset `json:"assets"`
 }
 
 func (s *Task) Run(config *cfg.Config, queue *Queue) error {
@@ -399,6 +405,39 @@ func (s *Task) DelLink(name string) {
 	index := s.getLinkIndex(name)
 	if index != -1 {
 		s.Links = append(s.Links[:index], s.Links[:index+1]...)
+	}
+	s.queue.Save()
+}
+
+func (s *Task) getAssetIndex(path string) int {
+	for idx, asset := range s.Assets {
+		if asset.Path == path {
+			return idx
+		}
+	}
+	return -1
+}
+
+func (s *Task) AddAsset(path string) (*TaskAsset, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	asset := TaskAsset{Path: path, IsDir: info.IsDir()}
+	idx := s.getAssetIndex(path)
+	if idx == -1 {
+		s.Assets = append(s.Assets, asset)
+	} else {
+		s.Assets = append(append(s.Assets[:idx], asset), s.Assets[:idx+1]...)
+	}
+	s.queue.Save()
+	return &asset, nil
+}
+
+func (s *Task) DelAsset(path string) {
+	index := s.getAssetIndex(path)
+	if index != -1 {
+		s.Assets = append(s.Assets[:index], s.Assets[:index+1]...)
 	}
 	s.queue.Save()
 }

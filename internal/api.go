@@ -86,6 +86,16 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		Name string `json:"name"`
 	}
 
+	type AddAssetPayload struct {
+		Id   string `json:"id"`
+		Path string `json:"path"`
+	}
+
+	type DelAssetPayload struct {
+		Id   string `json:"id"`
+		Path string `json:"path"`
+	}
+
 	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
 		apiCall(w, func() ([]*taskQueue.Task, error) {
 			tasks := queue.GetAll()
@@ -298,6 +308,42 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			}
 
 			task.DelLink(payload.Name)
+
+			return "ok", err
+		})
+	})
+
+	router.Post("/api/task/addAsset", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (*taskQueue.TaskAsset, error) {
+			payload, err := utils.ParseJson[AddAssetPayload](r.Body)
+			if err != nil {
+				return nil, err
+			}
+
+			task, err := queue.Get(payload.Id)
+			if err != nil {
+				return nil, err
+			}
+
+			asset, err := task.AddAsset(payload.Path)
+
+			return asset, err
+		})
+	})
+
+	router.Post("/api/task/delAsset", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := utils.ParseJson[DelAssetPayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			task, err := queue.Get(payload.Id)
+			if err != nil {
+				return "", err
+			}
+
+			task.DelAsset(payload.Path)
 
 			return "ok", err
 		})
