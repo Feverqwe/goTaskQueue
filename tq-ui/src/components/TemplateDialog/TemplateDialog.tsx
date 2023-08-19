@@ -16,15 +16,23 @@ import {AddTaskRequest, RawTemplate} from '../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
 
-interface TemplateDialogProps {
+export interface TemplateDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (runTask: AddTaskRequest, isNewTab?: boolean) => Promise<void>;
   template: RawTemplate;
   isNew?: boolean;
+  initVariables?: Partial<Record<string, string>>;
 }
 
-const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onClose, isNew}) => {
+const TemplateDialog: FC<TemplateDialogProps> = ({
+  open,
+  template,
+  onSubmit,
+  onClose,
+  isNew,
+  initVariables = {},
+}) => {
   const {
     name,
     variables,
@@ -68,14 +76,14 @@ const TemplateDialog: FC<TemplateDialogProps> = ({open, template, onSubmit, onCl
           type="text"
           fullWidth
           variant="outlined"
-          defaultValue={defaultValue}
+          defaultValue={initVariables[value] ?? defaultValue}
           InputLabelProps={{
             shrink: true,
           }}
         />
       );
     });
-  }, [variables, isNew]);
+  }, [initVariables, variables, isNew]);
 
   const getCommand = useCallback((isRun = false) => {
     const label = refLabel.current?.value || '';

@@ -97,12 +97,15 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
         name: refName,
         value: refValue,
         defaultValue: refDefaultValue,
-      } = Object.keys(variable).reduce((acc, key) => {
-        acc[key as keyof Variable] = (el: HTMLInputElement) => {
-          refMap.current.set(`${key}_${index}`, el);
-        };
-        return acc;
-      }, {} as Record<keyof Variable, (el: HTMLInputElement) => void>);
+      } = Object.keys(variable).reduce(
+        (acc, key) => {
+          acc[key as keyof Variable] = (el: HTMLInputElement) => {
+            refMap.current.set(`${key}_${index}`, el);
+          };
+          return acc;
+        },
+        {} as Record<keyof Variable, (el: HTMLInputElement) => void>,
+      );
 
       return (
         <Box py={1} key={variableIdMap.get(variable)} display="flex" alignItems="center">

@@ -6,7 +6,10 @@ export class ApiError extends Error {
 }
 
 export class HTTPError extends Error {
-  constructor(private statusCode: number, private statusMessage: string) {
+  constructor(
+    private statusCode: number,
+    private statusMessage: string,
+  ) {
     super(`Response code ${statusCode} (${statusMessage})`);
     this.name = 'HTTPError';
   }

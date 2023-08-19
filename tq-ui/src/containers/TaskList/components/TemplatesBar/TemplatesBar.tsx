@@ -1,11 +1,18 @@
-import React, {FC, SyntheticEvent, useCallback, useContext, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useContext, useEffect, useState} from 'react';
 import {Box, Button, ButtonGroup, Divider} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import {useNavigate} from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import path from 'path-browserify';
 import {api} from '../../../../tools/api';
-import {Template, TemplateButton, TemplateFolder, AddTaskRequest} from '../../../../components/types';
-import TemplateDialog from '../../../../components/TemplateDialog/TemplateDialog';
+import {
+  Template,
+  TemplateButton,
+  TemplateFolder,
+  AddTaskRequest,
+} from '../../../../components/types';
+import TemplateDialog, {
+  TemplateDialogProps,
+} from '../../../../components/TemplateDialog/TemplateDialog';
 import EditTemplateDialog from './EditTemplateDialog';
 import {TemplatesCtx} from '../../../../components/TemplateProvider/TemplatesCtx';
 import {TemplatesUpdateCtx} from '../../../../components/TemplateProvider/TemplatesUpdateCtx';
@@ -27,14 +34,39 @@ const NEW_TEMPLATE: TemplateButton = {
   isOnlyCombined: true,
 };
 
+type RunDialogParams = Partial<TemplateDialogProps> & Pick<TemplateDialogProps, 'template'>;
+
 const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const {rootFolder} = useContext(TemplatesCtx);
+  const {rootFolder, templates} = useContext(TemplatesCtx);
   const updateTemplates = useContext(TemplatesUpdateCtx);
   const [showRunMenu, setShowRunMenu] = useState(false);
-  const [runDialog, setRunDialog] = useState<{template: TemplateButton; isNew?: boolean} | null>(
-    null,
-  );
+  const [runDialog, setRunDialog] = useState<RunDialogParams | null>(null);
+
+  useEffect(() => {
+    const searchStr = location.search;
+    if (!searchStr) return;
+    const params = new URLSearchParams(searchStr);
+    switch (params.get('action')) {
+      case 'run': {
+        const place = params.get('place') || '';
+        const initVariables: Record<string, string> = {};
+        params.forEach((value, key) => {
+          if (/^var-/.test(key)) {
+            initVariables[key.slice(4)] = value;
+          }
+        });
+        const template = templates.find(({place: p}) => p === place);
+        if (template) {
+          setRunDialog({template, initVariables});
+          navigate(location.pathname, {replace: true});
+        }
+        break;
+      }
+    }
+  }, [navigate, templates, location]);
+
   const [editDialog, setEditDialog] = useState<{
     template: TemplateButton;
     isNew?: boolean;
