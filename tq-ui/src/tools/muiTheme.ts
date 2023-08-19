@@ -1,6 +1,17 @@
 import {createTheme} from '@mui/material';
 
 const theme = createTheme({
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          padding: '3px 15px',
+          fontSize: '16px',
+        }
+      }
+    }
+  },
   palette: {
     mode: 'dark',
     ...{
