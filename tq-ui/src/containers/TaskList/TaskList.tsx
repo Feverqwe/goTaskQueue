@@ -4,14 +4,14 @@ import {observer, useLocalObservable} from 'mobx-react-lite';
 import styled from '@emotion/styled';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import TemplatesBar from './components/TemplatesBar/TemplatesBar';
-import {TaskOrGroup} from '../types';
+import {TaskOrGroup} from '../../components/types';
 import {api} from '../../tools/api';
 import {ApiError, HTTPError} from '../../tools/apiRequest';
-import DisplayError from '../DisplayError';
+import DisplayError from '../../components/DisplayError';
 import {useVisibility} from '../../hooks/useVisibility';
 import {groupTasks} from './utils';
 import TaskListView from './components/TaskListView';
-import {RootStoreCtx} from '../RootStore/RootStoreCtx';
+import {RootStoreCtx} from '../../components/RootStore/RootStoreCtx';
 
 const SilenStatus = styled(Box)(() => {
   return {

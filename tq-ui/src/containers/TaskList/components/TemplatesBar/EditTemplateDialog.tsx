@@ -14,9 +14,9 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import path from 'path-browserify';
-import {RawTemplate, Template, TemplateFolder} from '../../../types';
-import {RootStoreCtx} from '../../../RootStore/RootStoreCtx';
-import ActionButton from '../../../ActionButton/ActionButton';
+import {RawTemplate, Template, TemplateFolder} from '../../../../components/types';
+import {RootStoreCtx} from '../../../../components/RootStore/RootStoreCtx';
+import ActionButton from '../../../../components/ActionButton/ActionButton';
 
 interface TemplateDialogProps {
   folder: TemplateFolder;

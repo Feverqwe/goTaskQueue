@@ -2,13 +2,13 @@ import {Box, CircularProgress, Container} from '@mui/material';
 import React, {FC, useCallback, useContext, useEffect, useRef} from 'react';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import {useLocation} from 'react-router-dom';
-import {Task, TaskState} from '../types';
+import {Task, TaskState} from '../../components/types';
 import {api} from '../../tools/api';
-import {NotificationCtx} from '../Notifications/NotificationCtx';
+import {NotificationCtx} from '../../components/Notifications/NotificationCtx';
 import {ApiError, HTTPError} from '../../tools/apiRequest';
-import DisplayError from '../DisplayError';
+import DisplayError from '../../components/DisplayError';
 import TaskView from './components/TaskView';
-import NotificationProvider from '../Notifications/NotificationProvider';
+import NotificationProvider from '../../components/Notifications/NotificationProvider';
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 

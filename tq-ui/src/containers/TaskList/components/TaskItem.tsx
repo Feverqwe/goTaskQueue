@@ -6,15 +6,15 @@ import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import {useNavigate} from 'react-router-dom';
 import CircleIcon from '@mui/icons-material/Circle';
-import TaskStatusIcon from '../../Task/components/TaskStatusIcon';
+import TaskStatusIcon from '../../TaskPage/components/TaskStatusIcon';
 import {api} from '../../../tools/api';
-import {Task, TaskState} from '../../types';
-import TaskName from '../../Task/components/TaskName';
-import TaskLinks from '../../Task/components/TaskLinks';
-import DialogMenu from '../../DialogMenu/DialogMenu';
-import LinkIcon from '../../Task/components/LinkIcon';
-import KillDialog from '../../KillDialog/KillDialog';
-import IconActionButton from '../../IconActionButton/IconActionButton';
+import {Task, TaskState} from '../../../components/types';
+import TaskName from '../../TaskPage/components/TaskName';
+import TaskLinks from '../../TaskPage/components/TaskLinks';
+import DialogMenu from '../../../components/DialogMenu/DialogMenu';
+import LinkIcon from '../../TaskPage/components/LinkIcon';
+import KillDialog from '../../../components/KillDialog/KillDialog';
+import IconActionButton from '../../../components/IconActionButton/IconActionButton';
 
 interface TaskItemProps {
   task: Task;

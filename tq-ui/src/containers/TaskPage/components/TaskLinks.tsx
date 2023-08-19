@@ -1,7 +1,7 @@
 import React, {FC} from 'react';
-import {Task} from '../../types';
+import {Task} from '../../../components/types';
 import LinkIcon from './LinkIcon';
-import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
+import DialogMenuItem from '../../../components/DialogMenu/DialogMenuItem';
 
 interface TaskLinksProps {
   task: Task;

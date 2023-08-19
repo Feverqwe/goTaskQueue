@@ -4,7 +4,7 @@ import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
-import {PtyScreenSize, Task, TaskState} from '../../types';
+import {PtyScreenSize, Task, TaskState} from '../../../components/types';
 import {waitGroup} from '../utils';
 
 import 'xterm/css/xterm.css';

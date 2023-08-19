@@ -2,11 +2,11 @@ import React, {FC, useCallback, useContext, useMemo, useState} from 'react';
 import {Box, Card, CardActionArea, Typography} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import {TaskGroup, TaskOrGroup, TaskState} from '../../types';
-import TaskStatusIcon from '../../Task/components/TaskStatusIcon';
+import {TaskGroup, TaskOrGroup, TaskState} from '../../../components/types';
+import TaskStatusIcon from '../../TaskPage/components/TaskStatusIcon';
 import TaskListView from './TaskListView';
-import {GroupStateCtx} from '../../GroupStorageProvider/GroupStateCtx';
-import {GroupStateSetCtx} from '../../GroupStorageProvider/GroupStateSetCtx';
+import {GroupStateCtx} from '../../../components/GroupStorageProvider/GroupStateCtx';
+import {GroupStateSetCtx} from '../../../components/GroupStorageProvider/GroupStateSetCtx';
 
 interface TaskGroupItemProps {
   group: TaskGroup;

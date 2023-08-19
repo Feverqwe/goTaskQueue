@@ -12,9 +12,9 @@ import {
 } from '@mui/material';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import {RawTemplate} from '../../../types';
-import ActionButton from '../../../ActionButton/ActionButton';
-import {TemplatesCtx} from '../../../TemplateProvider/TemplatesCtx';
+import {RawTemplate} from '../../../../components/types';
+import ActionButton from '../../../../components/ActionButton/ActionButton';
+import {TemplatesCtx} from '../../../../components/TemplateProvider/TemplatesCtx';
 
 interface ChangeOrderDialogProps {
   open: boolean;

@@ -1,9 +1,9 @@
 import React, {FC, SyntheticEvent, useCallback, useRef} from 'react';
 import {Box, InputAdornment, Paper, TextField} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import {Task} from '../../types';
+import {Task} from '../../../components/types';
 import {api} from '../../../tools/api';
-import IconActionButton from '../../IconActionButton/IconActionButton';
+import IconActionButton from '../../../components/IconActionButton/IconActionButton';
 
 interface TaskInfoProps {
   task: Task;

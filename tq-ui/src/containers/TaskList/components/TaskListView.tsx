@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import {TaskOrGroup} from '../../types';
+import {TaskOrGroup} from '../../../components/types';
 import TaskGroupItem from './TaskGroupItem';
 import TaskItem from './TaskItem';
 

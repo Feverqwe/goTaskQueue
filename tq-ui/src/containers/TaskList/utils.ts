@@ -1,4 +1,4 @@
-import {Task, TaskGroup, TaskOrGroup} from '../types';
+import {Task, TaskGroup, TaskOrGroup} from '../../components/types';
 
 export function groupTasks(tasks: Task[]) {
   const taskList: TaskOrGroup[] = [];

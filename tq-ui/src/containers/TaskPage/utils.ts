@@ -1,4 +1,4 @@
-import {Task} from '../types';
+import {Task} from '../../components/types';
 
 export function waitGroup() {
   let count = 0;

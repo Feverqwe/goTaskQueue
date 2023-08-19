@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useState} from 'react';
-import {Task} from '../../types';
+import {Task} from '../../../components/types';
 import TaskHeader from './TaskHeader';
 import TaskInfo from './TaskInfo';
 import TaskLog from './TaskLog';

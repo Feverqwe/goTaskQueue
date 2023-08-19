@@ -5,7 +5,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import {SvgIconProps} from '@mui/material';
-import {Task, TaskState} from '../../types';
+import {Task, TaskState} from '../../../components/types';
 
 const typeIcon = {
   [TaskState.Finished]: CheckCircleOutlineIcon,

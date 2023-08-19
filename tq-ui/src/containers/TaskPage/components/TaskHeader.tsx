@@ -18,14 +18,14 @@ import CircleIcon from '@mui/icons-material/Circle';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
-import {AddTaskRequest, RawTemplate, Task, TaskState} from '../../types';
-import DialogMenu from '../../DialogMenu/DialogMenu';
-import DialogMenuItem from '../../DialogMenu/DialogMenuItem';
+import {AddTaskRequest, RawTemplate, Task, TaskState} from '../../../components/types';
+import DialogMenu from '../../../components/DialogMenu/DialogMenu';
+import DialogMenuItem from '../../../components/DialogMenu/DialogMenuItem';
 import TaskLinks from './TaskLinks';
-import TemplateDialog from '../../TemplateDialog/TemplateDialog';
-import KillDialog from '../../KillDialog/KillDialog';
-import IconActionButton from '../../IconActionButton/IconActionButton';
-import {RootStoreCtx} from '../../RootStore/RootStoreCtx';
+import TemplateDialog from '../../../components/TemplateDialog/TemplateDialog';
+import KillDialog from '../../../components/KillDialog/KillDialog';
+import IconActionButton from '../../../components/IconActionButton/IconActionButton';
+import {RootStoreCtx} from '../../../components/RootStore/RootStoreCtx';
 
 interface TaskInfoProps {
   task: Task;

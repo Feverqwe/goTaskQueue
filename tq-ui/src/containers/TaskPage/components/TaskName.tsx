@@ -1,6 +1,6 @@
 import React, {FC} from 'react';
 import {Typography} from '@mui/material';
-import {Task} from '../../types';
+import {Task} from '../../../components/types';
 import {getTaskName} from '../utils';
 
 interface TaskNameProp {
