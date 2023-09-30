@@ -3,6 +3,7 @@ import {Box, CircularProgress, Container, IconButton} from '@mui/material';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import styled from '@emotion/styled';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import {runInAction} from 'mobx';
 import TemplatesBar from './components/TemplatesBar/TemplatesBar';
 import {TaskOrGroup} from '../../components/types';
 import {api} from '../../tools/api';
@@ -45,24 +46,29 @@ const TaskList: FC<TaskListProps> = () => {
         try {
           const taskList = await api.tasks();
           taskList.reverse();
-          this.taskList = groupTasks(taskList);
-
-          this.silentError = null;
-          this.error = null;
+          runInAction(() => {
+            this.taskList = groupTasks(taskList);
+            this.silentError = null;
+            this.error = null;
+          });
         } catch (err) {
           console.error('fetchTaskList error: %O', err);
 
-          if (isSilent) {
-            this.silentError = err as ApiError;
-          } else {
-            this.error = err as ApiError;
-          }
+          runInAction(() => {
+            if (isSilent) {
+              this.silentError = err as ApiError;
+            } else {
+              this.error = err as ApiError;
+            }
+          });
         } finally {
-          if (isSilent) {
-            this.silentLoading = false;
-          } else {
-            this.loading = false;
-          }
+          runInAction(() => {
+            if (isSilent) {
+              this.silentLoading = false;
+            } else {
+              this.loading = false;
+            }
+          });
         }
       },
     }),

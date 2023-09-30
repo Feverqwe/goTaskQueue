@@ -2,6 +2,7 @@ import {Box, CircularProgress, Container} from '@mui/material';
 import React, {FC, useCallback, useContext, useEffect, useRef} from 'react';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import {useLocation} from 'react-router-dom';
+import {runInAction} from 'mobx';
 import {Task, TaskState} from '../../components/types';
 import {api} from '../../tools/api';
 import {NotificationCtx} from '../../components/Notifications/NotificationCtx';
@@ -28,12 +29,19 @@ const TaskPage: FC = () => {
       }
       this.error = null;
       try {
-        this.task = await api.task({id});
+        const task = await api.task({id});
+        runInAction(() => {
+          this.task = task;
+        });
       } catch (err) {
         console.error('fetchTask error: %O', err);
-        this.error = err as ApiError;
+        runInAction(() => {
+          this.error = err as ApiError;
+        });
       } finally {
-        this.loading = false;
+        runInAction(() => {
+          this.loading = false;
+        });
       }
     },
   }));
