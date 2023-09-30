@@ -16,22 +16,22 @@ const theme = createTheme({
     mode: 'dark',
     ...{
       text: {
-        primary: '#fff',
+        primary: '#DFE1E5',
         secondary: 'rgba(255, 255, 255, 0.7)',
         disabled: 'rgba(255, 255, 255, 0.5)',
       },
       action: {
-        active: '#fff',
+        active: '#DFE1E5',
         hover: 'rgba(255, 255, 255, 0.08)',
         selected: 'rgba(255, 255, 255, 0.16)',
         disabled: 'rgba(255, 255, 255, 0.3)',
         disabledBackground: 'rgba(255, 255, 255, 0.12)',
       },
       background: {
-        default: '#303030',
-        paper: '#424242',
+        default: '#1E1F22',
+        paper: '#2B2D30',
       },
-      divider: 'rgba(255, 255, 255, 0.12)',
+      divider: '#313438',
     },
   },
 });
