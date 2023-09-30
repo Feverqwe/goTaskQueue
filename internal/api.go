@@ -504,6 +504,22 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
+	router.Post("/api/moveTemplateFolder", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (string, error) {
+			payload, err := utils.ParseJson[MoveTemplatePayload](r.Body)
+			if err != nil {
+				return "", err
+			}
+
+			err = taskQueue.MoveTemplateFolder(payload.RelFrom, payload.RelTo)
+			if err != nil {
+				return "", err
+			}
+
+			return "ok", nil
+		})
+	})
+
 	type RemoveTemplatePayload struct {
 		RelPlace string `json:"place"`
 	}

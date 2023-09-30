@@ -217,6 +217,42 @@ func MoveTemplate(relFrom string, relTo string) error {
 	return err
 }
 
+func MoveTemplateFolder(relFrom string, relTo string) error {
+	from, err := getPlace(relFrom)
+	if err != nil {
+		return err
+	}
+
+	to, err := getPlace(relTo)
+	if err != nil {
+		return err
+	}
+
+	dir, err := os.ReadDir(to)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+	} else if len(dir) != 0 {
+		return errors.New("to_place_not_empty")
+	}
+
+	err = os.MkdirAll(filepath.Dir(to), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(from, to)
+
+	if err == nil {
+		cleanTemplates()
+	}
+
+	FlushTemplateCache()
+
+	return err
+}
+
 func cleanTemplates() {
 	root := getTemplatesPath()
 
