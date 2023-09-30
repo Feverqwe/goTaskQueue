@@ -100,6 +100,10 @@ export const api = {
     method: 'POST',
     path: '/api/moveTemplate',
   }),
+  moveTemplateFolder: action<{from: string; to: string}, string>({
+    method: 'POST',
+    path: '/api/moveTemplateFolder',
+  }),
   removeTemplate: action<{place: string}, string>({
     method: 'POST',
     path: '/api/removeTemplate',

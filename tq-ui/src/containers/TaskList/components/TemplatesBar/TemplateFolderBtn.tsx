@@ -1,4 +1,4 @@
-import {Button, Dialog, DialogContent, DialogTitle} from '@mui/material';
+import {Button, Dialog, DialogContent, DialogTitle, Divider} from '@mui/material';
 import React, {FC, useCallback, useMemo, useState} from 'react';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import {TemplateFolder} from '../../../../components/types';
@@ -7,18 +7,19 @@ import TemplatesBarView from './TemplatesBarView';
 import DialogMenuItem from '../../../../components/DialogMenu/DialogMenuItem';
 import DialogMenu from '../../../../components/DialogMenu/DialogMenu';
 
-export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template'> {
+export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template' | 'folder'> {
   template: TemplateFolder;
   onNew: (folder: TemplateFolder) => void;
+  onMoveFolder: (folder: TemplateFolder) => void;
 }
 
 const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
-  folder,
   template,
   onClick,
   onClone,
   onDelete,
   onNew,
+  onMoveFolder,
   onEdit,
 }) => {
   const {name} = template;
@@ -57,6 +58,11 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
     handleCloseCtxMenu();
   }, [template, onNew, handleCloseCtxMenu]);
 
+  const handleMoveFolder = useCallback(() => {
+    onMoveFolder(template);
+    handleCloseCtxMenu();
+  }, [template, onMoveFolder, handleCloseCtxMenu]);
+
   return (
     <>
       <Button
@@ -70,6 +76,8 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
       </Button>
       <DialogMenu open={showCtxMenu} onClose={handleCloseCtxMenu} title={name}>
         <DialogMenuItem onClick={handleNew}>New template</DialogMenuItem>
+        <Divider />
+        <DialogMenuItem onClick={handleMoveFolder}>Rename folder</DialogMenuItem>
       </DialogMenu>
       <Dialog open={showMenu} onClose={handleCloseMenu} title={name}>
         <DialogTitle>{name}</DialogTitle>
@@ -81,6 +89,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
             onClone={onClone}
             onDelete={onDelete}
             onNew={onNew}
+            onMoveFolder={onMoveFolder}
           />
         </DialogContent>
       </Dialog>

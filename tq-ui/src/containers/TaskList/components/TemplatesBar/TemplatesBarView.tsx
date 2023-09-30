@@ -12,11 +12,11 @@ const TemplatesBarView: FC<TemplatesBarViewProps> = ({folder, ...props}) => {
 
   return (
     <>
-      {templates.map((template, index) => {
+      {templates.map((template) => {
         if (template.type === TemplateType.Folder) {
-          return <TemplateFolderBtn key={index} folder={folder} template={template} {...props} />;
+          return <TemplateFolderBtn key={template.place} template={template} {...props} />;
         }
-        return <TemplateBtn key={index} folder={folder} template={template} {...props} />;
+        return <TemplateBtn key={template.place} folder={folder} template={template} {...props} />;
       })}
     </>
   );

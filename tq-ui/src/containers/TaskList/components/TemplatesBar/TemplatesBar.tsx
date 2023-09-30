@@ -20,6 +20,7 @@ import DialogMenu from '../../../../components/DialogMenu/DialogMenu';
 import DialogMenuItem from '../../../../components/DialogMenu/DialogMenuItem';
 import TemplatesBarView from './TemplatesBarView';
 import ChangeOrderDialog from './ChangeOrderDialog';
+import MoveTemplateFolderDialog from './MoveTemplateFolderDialog';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -73,6 +74,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
     folder: TemplateFolder;
   } | null>(null);
   const [changeOrderDialog, setChangeOrderDialog] = useState<boolean>(false);
+  const [moveFolderDialog, setMoveFolderDialog] = useState<TemplateFolder | null>(null);
 
   const handleAdd = useCallback(
     async (runTask: AddTaskRequest, isNewTab = false) => {
@@ -142,6 +144,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
     setRunDialog(null);
     setEditDialog(null);
     setChangeOrderDialog(false);
+    setMoveFolderDialog(null);
   }, []);
 
   const handleRun = useCallback(() => {
@@ -174,6 +177,22 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
 
       const newTemplate = {...template, place: newPlace};
       await api.setTemplate({template: newTemplate});
+      await updateTemplates();
+    },
+    [updateTemplates],
+  );
+
+  const handleMoveFolder = useCallback(
+    async (folder: TemplateFolder) => {
+      setMoveFolderDialog(folder);
+      handleCloseMenu();
+    },
+    [handleCloseMenu],
+  );
+
+  const handleMoveTemplateFolder = useCallback(
+    async (prevPlace: string, place: string) => {
+      await api.moveTemplateFolder({from: prevPlace, to: place});
       await updateTemplates();
     },
     [updateTemplates],
@@ -216,6 +235,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
           onEdit={handleEditTemplate}
           onDelete={handleDeleteTemplate}
           onClone={handleCloneTemplate}
+          onMoveFolder={handleMoveFolder}
         />
       </Box>
       {showRunMenu && (
@@ -249,6 +269,14 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
         <ChangeOrderDialog
           open={true}
           onSubmit={handleChangeOrder}
+          onClose={handleCloseTemplateDlg}
+        />
+      )}
+      {moveFolderDialog && (
+        <MoveTemplateFolderDialog
+          open={true}
+          folder={moveFolderDialog}
+          onSubmit={handleMoveTemplateFolder}
           onClose={handleCloseTemplateDlg}
         />
       )}
