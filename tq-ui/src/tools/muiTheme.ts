@@ -8,9 +8,9 @@ const theme = createTheme({
           textTransform: 'none',
           padding: '3px 15px',
           fontSize: '16px',
-        }
-      }
-    }
+        },
+      },
+    },
   },
   palette: {
     mode: 'dark',

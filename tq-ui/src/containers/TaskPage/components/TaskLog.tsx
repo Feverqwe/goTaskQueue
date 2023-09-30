@@ -2,6 +2,7 @@ import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from 'reac
 import {Alert, Box, Button, Snackbar} from '@mui/material';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
+import {WebLinksAddon} from 'xterm-addon-web-links';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
 import {PtyScreenSize, Task, TaskState} from '../../../components/types';
@@ -38,6 +39,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     const fitAddon = new FitAddon();
 
     terminal.loadAddon(fitAddon);
+    terminal.loadAddon(new WebLinksAddon());
 
     terminal.attachCustomKeyEventHandler((event) => {
       if (event.type === 'keydown') {
