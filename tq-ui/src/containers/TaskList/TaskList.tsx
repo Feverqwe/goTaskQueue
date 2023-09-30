@@ -98,7 +98,9 @@ const TaskList: FC<TaskListProps> = () => {
 
   return (
     <Container maxWidth={false} disableGutters={true}>
-      <TemplatesBar onUpdate={handleUpdate} />
+      <Box pt={1}>
+        <TemplatesBar onUpdate={handleUpdate} />
+      </Box>
       <>
         {loading && (
           <Box display="flex" justifyContent="center">
