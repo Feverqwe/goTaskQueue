@@ -10,6 +10,7 @@ import {waitGroup} from '../utils';
 
 import 'xterm/css/xterm.css';
 import './XTerm.css';
+import {Command, InputCommand} from './constants';
 
 interface TaskLogProps {
   task: Task;
@@ -54,11 +55,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       return true;
     });
 
-    const resizeObserver = new ResizeObserver(
-      throttle(() => {
-        fitAddon.fit();
-      }, 100),
-    );
+    const resizeObserver = new ResizeObserver(throttle(() => fitAddon.fit(), 100));
 
     let ws: WebSocket;
     let isOpen = false;
@@ -95,29 +92,30 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       running = false;
     };
 
-    const writeData = (dataType: string, data: Uint8Array) => {
-      if (dataType === 'h') {
+    const writeData = (dataType: InputCommand, data: Uint8Array) => {
+      if (dataType === InputCommand.History) {
         history.push(data);
-      } else if (dataType === 'a') {
+      } else if (dataType === InputCommand.Actual) {
         queue.push(data);
       }
       nextData();
     };
 
-    const sendCommand = (type: 'ping' | 'in' | 'resize', data: unknown = '') => {
+    const sendCommand = (type: Command, data: string | PtyScreenSize = '') => {
       if (!isOpen) return;
       let payload = '';
       switch (type) {
-        case 'ping': {
-          payload = 'p';
+        case Command.Ping: {
+          payload = type;
           break;
         }
-        case 'in': {
-          payload = `i${data}`;
+        case Command.Input: {
+          payload = `${type}${data}`;
           break;
         }
-        case 'resize': {
-          payload = `r${JSON.stringify(data)}`;
+        case Command.Resize: {
+          payload = `${type}${JSON.stringify(data)}`;
+          break;
         }
       }
       ws.send(payload);
@@ -132,7 +130,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
           char = '\r';
         }
       }
-      sendCommand('in', char);
+      sendCommand(Command.Input, char);
     });
 
     const handleResize = (cols: number, rows: number) => {
@@ -147,7 +145,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
         cols,
         rows,
       };
-      sendCommand('resize', screenSize);
+      sendCommand(Command.Resize, screenSize);
     };
 
     terminal.onResize(({cols, rows}) => {
@@ -172,7 +170,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
           const u8a = new Uint8Array(buffer);
           const data = u8a.slice(1);
           const dataType = String.fromCharCode(u8a[0]);
-          writeData(dataType, data);
+          writeData(dataType as InputCommand, data);
         };
       },
       wsClose: () => {
@@ -213,7 +211,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     // when ws closed do stop interval
     if (!isOpen) return;
     const intervalId = setInterval(() => {
-      scope.wsSend('ping');
+      scope.wsSend(Command.Ping);
     }, 30 * 1000);
     return () => clearInterval(intervalId);
   }, [scope, isOpen]);
