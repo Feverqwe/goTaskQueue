@@ -15,6 +15,8 @@ type ChunkReader struct {
 	tr         Transfromer
 	lastReader io.ReadCloser
 	m          sync.Mutex
+	reverse    bool
+	delta      int
 }
 
 func (s *ChunkReader) Read(p []byte) (int, error) {
@@ -25,14 +27,21 @@ func (s *ChunkReader) Read(p []byte) (int, error) {
 	chunks := *s.chunks
 	s.chM.RUnlock()
 
-	if s.index < len(chunks) {
+	var ok bool
+	if s.reverse {
+		ok = s.index >= 0
+	} else {
+		ok = s.index < len(chunks)
+	}
+
+	if ok {
 		if s.lastReader == nil {
 			c := chunks[s.index]
 			s.lastReader = s.tr(c)
 		}
 		n, err := s.lastReader.Read(p)
 		if err == io.EOF {
-			s.index++
+			s.index += s.delta
 			s.lastReader = nil
 			err = nil
 		}
@@ -49,14 +58,26 @@ func (s *ChunkReader) Close() error {
 	return nil
 }
 
-func NewChunkReader(chunks *[][]byte, t Transfromer, m *sync.RWMutex) *ChunkReader {
+func NewChunkReader(chunks *[][]byte, t Transfromer, m *sync.RWMutex, reverse bool) *ChunkReader {
 	if m == nil {
 		m = &sync.RWMutex{}
 	}
+	delta := 1
+	index := 0
+	if reverse {
+		delta = -1
+		m.RLock()
+		index = len(*chunks) - 1
+		m.RUnlock()
+	}
+
 	r := &ChunkReader{
-		chunks: chunks,
-		tr:     t,
-		chM:    m,
+		chunks:  chunks,
+		tr:      t,
+		chM:     m,
+		reverse: reverse,
+		index:   index,
+		delta:   delta,
 	}
 	return r
 }
