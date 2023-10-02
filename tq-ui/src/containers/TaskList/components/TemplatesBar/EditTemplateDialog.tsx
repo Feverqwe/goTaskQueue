@@ -41,6 +41,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
 }) => {
   const {
     place,
+    id,
     name,
     command,
     label,
@@ -58,6 +59,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   const refGroup = useRef<HTMLInputElement>(null);
   const refName = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
+  const refId = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
   const refSingleInstance = useRef<HTMLInputElement>(null);
   const refStartOnBoot = useRef<HTMLInputElement>(null);
@@ -178,6 +180,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
       label: refLabel.current?.value || '',
       group: refGroup.current?.value || '',
       name,
+      id: refId.current?.value || '',
       variables: variables.map((item, index) => {
         return Object.keys(item).reduce((acc, key) => {
           const value = map.get(`${key}_${index}`)?.value;
@@ -296,6 +299,19 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             label="Group"
             defaultValue={group || ''}
             inputProps={{ref: refGroup}}
+            fullWidth
+            type="text"
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            sx={{my: 1}}
+            size="small"
+            label="Id"
+            defaultValue={id || ''}
+            inputProps={{ref: refId}}
             fullWidth
             type="text"
             variant="outlined"
