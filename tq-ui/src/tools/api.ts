@@ -84,10 +84,6 @@ export const api = {
     method: 'GET',
     path: '/api/templates',
   }),
-  getTemplate: action<{id: string}, RawTemplate>({
-    method: 'GET',
-    path: '/api/getTemplate',
-  }),
   readTemplate: action<{place: string}, RawTemplate>({
     method: 'GET',
     path: '/api/readTemplate',

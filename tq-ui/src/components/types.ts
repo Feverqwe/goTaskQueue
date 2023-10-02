@@ -88,7 +88,6 @@ export interface TaskId {
 
 export interface AddTaskRequest {
   templatePlace?: string;
-  templateId?: string;
   variables?: Record<string, string>;
   command?: string;
   label?: string;
