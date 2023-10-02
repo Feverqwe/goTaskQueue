@@ -1,0 +1,1 @@
+yt-dlp "{url}" --no-mtime -f "bestaudio[ext=m4a]/bestaudio" --retries infinite

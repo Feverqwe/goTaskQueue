@@ -12,6 +12,7 @@ import (
 	"goTaskQueue/internal/mutex"
 	"goTaskQueue/internal/powerCtr"
 	"goTaskQueue/internal/taskQueue"
+	taskqueue "goTaskQueue/internal/taskQueue"
 	"goTaskQueue/internal/trayIcon"
 	"goTaskQueue/internal/utils"
 	"io"
@@ -36,8 +37,10 @@ func main() {
 
 	var config = cfg.LoadConfig()
 
+	taskqueue.InitTemplates()
+
 	var powerControl = powerCtr.GetPowerControl()
-	var taskQueue = taskQueue.LoadQueue()
+	var taskQueue = taskqueue.LoadQueue()
 	var memStorage = memstorage.GetMemStorage()
 
 	callChan := make(chan string)

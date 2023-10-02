@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"goTaskQueue/assets"
 	"goTaskQueue/internal/cfg"
 	"goTaskQueue/internal/utils"
 	"log"
@@ -26,7 +27,6 @@ type Template struct {
 	Command string `json:"command"`
 
 	Name      string             `json:"name"`
-	Id        string             `json:"id"`
 	Variables []TemplateVariable `json:"variables"`
 
 	NewTaskBase
@@ -313,17 +313,6 @@ func FlushTemplateCache() {
 	TEMPLATES_CACHE = nil
 }
 
-func GetTemplate(id string) (*Template, error) {
-	templates := GetTemplates()
-	for i := 0; i < len(templates); i++ {
-		template := templates[i]
-		if template.Id == id {
-			return &template, nil
-		}
-	}
-	return nil, errors.New("template_not_found")
-}
-
 func getRelPlace(place string) (string, error) {
 	root := getTemplatesPath()
 
@@ -367,4 +356,38 @@ func containFile(dir []os.DirEntry, name string) bool {
 		}
 	}
 	return false
+}
+
+func copyDefaultTemplates(templatesPath string) error {
+	files := assets.AssetNames()
+	prefix := "templates/"
+	for _, assetName := range files {
+		if !strings.HasPrefix(assetName, prefix) {
+			continue
+		}
+		data, err := assets.Asset(assetName)
+		if err == nil {
+			sourcePath := assetName[len(prefix):]
+			fullPath := filepath.Join(templatesPath, sourcePath)
+			os.MkdirAll(filepath.Dir(fullPath), 0755)
+			err = os.WriteFile(fullPath, data, 0644)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func InitTemplates() {
+	place := getTemplatesPath()
+	_, err := os.Stat(place)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = copyDefaultTemplates(place)
+		}
+	}
+	if err != nil {
+		log.Println("Init templates error", err)
+	}
 }

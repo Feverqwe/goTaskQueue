@@ -1,0 +1,1 @@
+{"place":"","command":"","name":"Youtube audio","label":"Youtube [A] {url}","group":"","variables":[{"name":"URL","value":"url","defaultValue":""}],"isPty":false,"isOnlyCombined":true}
