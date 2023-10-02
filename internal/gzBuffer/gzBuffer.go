@@ -51,60 +51,33 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 
 	readLen -= len(buf)
 
-	i := len(zChunks) - 1
-	var zcR *bytes.Reader
-	for readLen > 0 && i >= 0 {
-		idx := i
-		i -= 1
-		zc := zChunks[idx]
-		if zcR == nil {
-			zcR = bytes.NewReader(nil)
-		}
-		zcR.Reset(zc)
-		// fmt.Println("read chunk idx", idx, ch.len())
-		zr := flate.NewReader(zcR)
-		// fmt.Println("readLastBytes", idx, off-offset)
-		chunk, err := readLastBytes(zr, readLen)
+	if readLen > 0 {
+		transformer := getChunkTransformer()
+		chR := NewChunkReader(&zChunks, transformer, nil)
+		cbuf, err := readLastBytes(chR, readLen)
 		if err != nil {
 			return nil, err
 		}
-		// fmt.Println("Prepand chunk", len(chunk))
-		buf = append(chunk, buf...)
-		readLen -= len(chunk)
+
+		buf = append(buf, cbuf...)
+		readLen -= len(cbuf)
 	}
 
 	return buf, nil
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
-	var buf []byte
-	r := bytes.NewReader(nil)
-	i := 0
-	for {
-		s.mu.RLock()
-		ok := i < len(s.zChunks)
-		s.mu.RUnlock()
-		if !ok {
-			break
-		}
-
-		s.mu.RLock()
-		buf = s.zChunks[i]
-		s.mu.RUnlock()
-
-		r.Reset(buf)
-		i++
-		zr := flate.NewReader(r)
-		if _, err := io.Copy(w, zr); err != nil {
-			return err
-		}
+	transformer := getChunkTransformer()
+	chR := NewChunkReader(&s.zChunks, transformer, &s.mu)
+	if _, err := io.Copy(w, chR); err != nil {
+		return err
 	}
 
 	s.mu.RLock()
-	buf = s.buf
+	buf := s.buf
 	s.mu.RUnlock()
 
-	r.Reset(buf)
+	r := bytes.NewReader(buf)
 	if _, err := io.Copy(w, r); err != nil {
 		return err
 	}
@@ -297,6 +270,17 @@ func readLastBytes(r io.ReadCloser, maxLen int) ([]byte, error) {
 			}
 			return frag, err
 		}
+	}
+}
+
+func getChunkTransformer() func(zc []byte) io.ReadCloser {
+	var zcR *bytes.Reader
+	return func(zc []byte) io.ReadCloser {
+		if zcR == nil {
+			zcR = bytes.NewReader(nil)
+		}
+		zcR.Reset(zc)
+		return flate.NewReader(zcR)
 	}
 }
 
