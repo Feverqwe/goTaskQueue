@@ -66,6 +66,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		IsSingleInstance *bool             `json:"isSingleInstance"`
 		IsStartOnBoot    *bool             `json:"isStartOnBoot"`
 		TemplatePlace    string            `json:"templatePlace"`
+		TemplateId       string            `json:"templateId"`
 		Variables        map[string]string `json:"variables"`
 		IsRun            bool              `json:"isRun"`
 	}
@@ -127,6 +128,12 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				template, err = taskQueue.ReadTemplate(payload.TemplatePlace)
 				if err != nil {
 					return nil, fmt.Errorf("template not found by place %v", payload.TemplatePlace)
+				}
+			}
+			if template == nil && payload.TemplateId != "" {
+				template, err = taskQueue.GetTemplate(payload.TemplateId)
+				if err != nil {
+					return nil, fmt.Errorf("template not found by id %v", payload.TemplateId)
 				}
 			}
 			if template == nil {
@@ -417,6 +424,19 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			templates := taskQueue.GetTemplates()
 
 			return templates, nil
+		})
+	})
+
+	router.Get("/api/getTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+		apiCall(w, func() (*taskQueue.Template, error) {
+			id := r.URL.Query().Get("id")
+
+			template, err := taskQueue.GetTemplate(id)
+			if err != nil {
+				return nil, err
+			}
+
+			return template, nil
 		})
 	})
 

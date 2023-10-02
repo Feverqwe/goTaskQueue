@@ -27,6 +27,7 @@ type Template struct {
 	Command string `json:"command"`
 
 	Name      string             `json:"name"`
+	Id        string             `json:"id"`
 	Variables []TemplateVariable `json:"variables"`
 
 	NewTaskBase
@@ -311,6 +312,17 @@ func GetTemplates() []Template {
 
 func FlushTemplateCache() {
 	TEMPLATES_CACHE = nil
+}
+
+func GetTemplate(id string) (*Template, error) {
+	templates := GetTemplates()
+	for i := 0; i < len(templates); i++ {
+		template := templates[i]
+		if template.Id == id {
+			return &template, nil
+		}
+	}
+	return nil, errors.New("template_not_found")
 }
 
 func getRelPlace(place string) (string, error) {
