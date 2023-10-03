@@ -14,15 +14,11 @@ type ChunkReader struct {
 	chM        *sync.RWMutex
 	tr         Transfromer
 	lastReader io.ReadCloser
-	m          sync.Mutex
 	reverse    bool
 	delta      int
 }
 
 func (s *ChunkReader) Read(p []byte) (int, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-
 	s.chM.RLock()
 	chunks := *s.chunks
 	s.chM.RUnlock()
@@ -51,9 +47,6 @@ func (s *ChunkReader) Read(p []byte) (int, error) {
 }
 
 func (s *ChunkReader) Close() error {
-	s.m.Lock()
-	defer s.m.Unlock()
-
 	s.lastReader = nil
 	return nil
 }
