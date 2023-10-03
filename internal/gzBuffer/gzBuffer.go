@@ -56,15 +56,15 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 	readLen -= len(buf)
 
 	i := len(cChunks) - 1
-	transformer := getChunkTransformer()
+	extractor := getChunkExtractor()
 	for readLen > 0 && i >= 0 {
 		idx := i
 		i -= 1
-		zc := cChunks[idx].data
+		cc := cChunks[idx].data
 		// fmt.Println("read chunk idx", idx, ch.len())
-		zr := transformer(zc)
+		cr := extractor(cc)
 		// fmt.Println("readLastBytes", idx, off-offset)
-		chunk, err := readLastBytes(zr, readLen)
+		chunk, err := readLastBytes(cr, readLen)
 		if err != nil {
 			return nil, err
 		}
@@ -77,8 +77,8 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
-	transformer := getChunkTransformer()
-	chR := NewChunkReader(&s.cChunks, transformer, &s.mu)
+	extractor := getChunkExtractor()
+	chR := NewChunkReader(&s.cChunks, extractor, &s.mu)
 	if _, err := io.Copy(w, chR); err != nil {
 		return err
 	}
@@ -115,31 +115,31 @@ func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 		idx := i
 		i -= 1
 		cChunk := cChunks[idx]
-		zc := cChunk.data
-		zcSize := cChunk.size
+		cc := cChunk.data
+		ccSize := cChunk.size
 
-		if !approx && readSize < zcSize {
-			zcSize = readSize
+		if !approx && readSize < ccSize {
+			ccSize = readSize
 			var err error
-			zc, err = truncateChunkR(zc, zcSize)
+			cc, err = truncateChunkR(cc, ccSize)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		newCChunk := CChunk{zc, zcSize}
+		newCChunk := CChunk{cc, ccSize}
 
 		chunks = append([]CChunk{newCChunk}, chunks...)
-		newOffset += zcSize
-		readSize -= zcSize
+		newOffset += ccSize
+		readSize -= ccSize
 	}
 
-	zbuf := NewGzBuffer(s.maxBufSize)
-	zbuf.buf = buf
-	zbuf.cChunks = chunks
-	zbuf.offset = newOffset
+	cbuf := NewGzBuffer(s.maxBufSize)
+	cbuf.buf = buf
+	cbuf.cChunks = chunks
+	cbuf.offset = newOffset
 
-	return zbuf, nil
+	return cbuf, nil
 }
 
 func (s *GzBuffer) Len() int {
@@ -174,15 +174,15 @@ func (s *GzBuffer) runCompress() {
 }
 
 func (s *GzBuffer) compress() error {
-	var zw *flate.Writer
+	var cw *flate.Writer
 	for {
 		size := s.GetCompressSize()
 		if size == 0 {
 			break
 		}
-		if zw == nil {
+		if cw == nil {
 			var err error
-			zw, err = flate.NewWriter(nil, flate.BestCompression)
+			cw, err = flate.NewWriter(nil, flate.BestCompression)
 			if err != nil {
 				return err
 			}
@@ -192,12 +192,12 @@ func (s *GzBuffer) compress() error {
 		buf := s.buf[0:size]
 		s.mu.RUnlock()
 
-		zc, err := compress(zw, buf)
+		cc, err := compress(cw, buf)
 		if err != nil {
 			return err
 		}
 
-		cChunk := CChunk{zc, size}
+		cChunk := CChunk{cc, size}
 
 		s.mu.Lock()
 		s.cChunks = append(s.cChunks, cChunk)
@@ -227,35 +227,34 @@ func (s *GzBuffer) getCompressSize() int {
 	return size
 }
 
-func compress(zw *flate.Writer, chunk []byte) ([]byte, error) {
+func compress(cw *flate.Writer, chunk []byte) ([]byte, error) {
 	// fmt.Println("compress")
 	var b bytes.Buffer
-	zw.Reset(&b)
-	if _, err := zw.Write(chunk); err != nil {
+	cw.Reset(&b)
+	if _, err := cw.Write(chunk); err != nil {
 		return nil, err
 	}
-	if err := zw.Close(); err != nil {
+	if err := cw.Close(); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
 }
 
-func truncateChunkR(zc []byte, size int) ([]byte, error) {
-	zcR := bytes.NewReader(zc)
-	zr := flate.NewReader(zcR)
-	zw, err := flate.NewWriter(nil, flate.BestCompression)
+func truncateChunkR(cc []byte, size int) ([]byte, error) {
+	cr := getChunkExtractor()(cc)
+	cw, err := flate.NewWriter(nil, flate.BestCompression)
 	if err != nil {
 		return nil, err
 	}
-	chunk, err := readLastBytes(zr, size)
+	chunk, err := readLastBytes(cr, size)
 	if err != nil {
 		return nil, err
 	}
-	zc, err = compress(zw, chunk)
+	cc, err = compress(cw, chunk)
 	if err != nil {
 		return nil, err
 	}
-	return zc, nil
+	return cc, nil
 }
 
 func readLastBytes(r io.Reader, maxLen int) ([]byte, error) {
@@ -283,20 +282,20 @@ func readLastBytes(r io.Reader, maxLen int) ([]byte, error) {
 	}
 }
 
-func getChunkTransformer() func(zc []byte) io.ReadCloser {
-	var zcR *bytes.Reader
-	return func(zc []byte) io.ReadCloser {
-		if zcR == nil {
-			zcR = bytes.NewReader(nil)
+func getChunkExtractor() func(cc []byte) io.ReadCloser {
+	var ccR *bytes.Reader
+	return func(cc []byte) io.ReadCloser {
+		if ccR == nil {
+			ccR = bytes.NewReader(nil)
 		}
-		zcR.Reset(zc)
-		return flate.NewReader(zcR)
+		ccR.Reset(cc)
+		return flate.NewReader(ccR)
 	}
 }
 
 func NewGzBuffer(maxBufSize int) *GzBuffer {
-	zbuf := &GzBuffer{
+	cbuf := &GzBuffer{
 		maxBufSize: maxBufSize,
 	}
-	return zbuf
+	return cbuf
 }
