@@ -11,13 +11,17 @@ import (
 
 const ChunkSize = 256 * 1024
 
+type CChunk struct {
+	data []byte
+	size int
+}
+
 type GzBuffer struct {
 	buf        []byte
 	offset     int
 	mu         sync.RWMutex
 	cmu        sync.Mutex
-	zChunks    [][]byte
-	zSizes     []int
+	cChunks    []CChunk
 	finished   bool
 	maxBufSize int
 }
@@ -34,7 +38,7 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 	s.mu.RLock()
 	size := s.len()
 	buf := s.buf
-	zChunks := s.zChunks
+	cChunks := s.cChunks
 	s.mu.RUnlock()
 
 	newSize := size - offset
@@ -51,16 +55,22 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 
 	readLen -= len(buf)
 
-	if readLen > 0 {
-		transformer := getChunkTransformer()
-		chR := NewChunkReader(&zChunks, transformer, nil)
-		cbuf, err := readLastBytes(chR, readLen)
+	i := len(cChunks) - 1
+	transformer := getChunkTransformer()
+	for readLen > 0 && i >= 0 {
+		idx := i
+		i -= 1
+		zc := cChunks[idx].data
+		// fmt.Println("read chunk idx", idx, ch.len())
+		zr := transformer(zc)
+		// fmt.Println("readLastBytes", idx, off-offset)
+		chunk, err := readLastBytes(zr, readLen)
 		if err != nil {
 			return nil, err
 		}
-
-		buf = append(buf, cbuf...)
-		readLen -= len(cbuf)
+		// fmt.Println("Prepand chunk", len(chunk))
+		buf = append(chunk, buf...)
+		readLen -= len(chunk)
 	}
 
 	return buf, nil
@@ -68,7 +78,7 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
 	transformer := getChunkTransformer()
-	chR := NewChunkReader(&s.zChunks, transformer, &s.mu)
+	chR := NewChunkReader(&s.cChunks, transformer, &s.mu)
 	if _, err := io.Copy(w, chR); err != nil {
 		return err
 	}
@@ -89,25 +99,24 @@ func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 	s.mu.RLock()
 	newSize := s.len() - offset
 	buf := s.buf
-	zChunks := s.zChunks
-	zSizes := s.zSizes
+	cChunks := s.cChunks
 	s.mu.RUnlock()
 
-	chunks := make([][]byte, 0)
-	sizes := make([]int, 0)
+	chunks := make([]CChunk, 0)
 	newOffset := 0
 
 	if newSize < len(buf) {
 		buf = buf[len(buf)-newSize:]
 	}
 
-	i := len(zChunks) - 1
+	i := len(cChunks) - 1
 	readSize := newSize - len(buf)
 	for readSize > 0 && i >= 0 {
 		idx := i
 		i -= 1
-		zc := zChunks[idx]
-		zcSize := zSizes[idx]
+		cChunk := cChunks[idx]
+		zc := cChunk.data
+		zcSize := cChunk.size
 
 		if !approx && readSize < zcSize {
 			zcSize = readSize
@@ -118,16 +127,16 @@ func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 			}
 		}
 
-		chunks = append([][]byte{zc}, chunks...)
-		sizes = append([]int{zcSize}, sizes...)
+		newCChunk := CChunk{zc, zcSize}
+
+		chunks = append([]CChunk{newCChunk}, chunks...)
 		newOffset += zcSize
 		readSize -= zcSize
 	}
 
 	zbuf := NewGzBuffer(s.maxBufSize)
 	zbuf.buf = buf
-	zbuf.zChunks = chunks
-	zbuf.zSizes = sizes
+	zbuf.cChunks = chunks
 	zbuf.offset = newOffset
 
 	return zbuf, nil
@@ -188,9 +197,10 @@ func (s *GzBuffer) compress() error {
 			return err
 		}
 
+		cChunk := CChunk{zc, size}
+
 		s.mu.Lock()
-		s.zChunks = append(s.zChunks, zc)
-		s.zSizes = append(s.zSizes, size)
+		s.cChunks = append(s.cChunks, cChunk)
 		s.buf = s.buf[size:]
 		s.offset += size
 		s.mu.Unlock()
