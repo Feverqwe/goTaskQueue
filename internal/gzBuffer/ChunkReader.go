@@ -8,7 +8,7 @@ import (
 type Transfromer func(chunk []byte) io.ReadCloser
 
 type ChunkReader struct {
-	io.ReadCloser
+	io.Reader
 	index      int
 	chunks     *[][]byte
 	chM        *sync.RWMutex
@@ -44,11 +44,6 @@ func (s *ChunkReader) Read(p []byte) (int, error) {
 		return n, err
 	}
 	return 0, io.EOF
-}
-
-func (s *ChunkReader) Close() error {
-	s.lastReader = nil
-	return nil
 }
 
 func NewChunkReader(chunks *[][]byte, t Transfromer, m *sync.RWMutex, reverse bool) *ChunkReader {

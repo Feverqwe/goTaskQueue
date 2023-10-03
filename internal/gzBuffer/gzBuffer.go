@@ -248,7 +248,7 @@ func truncateChunkR(zc []byte, size int) ([]byte, error) {
 	return zc, nil
 }
 
-func readLastBytes(r io.ReadCloser, maxLen int) ([]byte, error) {
+func readLastBytes(r io.Reader, maxLen int) ([]byte, error) {
 	var err error
 	var fragLen int
 	frag := make([]byte, 0, 512)
