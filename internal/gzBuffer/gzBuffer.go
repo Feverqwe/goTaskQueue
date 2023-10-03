@@ -53,7 +53,7 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 
 	if readLen > 0 {
 		transformer := getChunkTransformer()
-		chR := NewChunkReader(&zChunks, transformer, nil, true)
+		chR := NewChunkReader(&zChunks, transformer, nil)
 		cbuf, err := readLastBytes(chR, readLen)
 		if err != nil {
 			return nil, err
@@ -68,7 +68,7 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
 	transformer := getChunkTransformer()
-	chR := NewChunkReader(&s.zChunks, transformer, &s.mu, false)
+	chR := NewChunkReader(&s.zChunks, transformer, &s.mu)
 	if _, err := io.Copy(w, chR); err != nil {
 		return err
 	}
