@@ -313,7 +313,7 @@ func (s *Task) ReadCombined(offset int) (int, []byte, error) {
 		fmt.Println("skip", combinedOffset-offset)
 		offset = combinedOffset
 	}
-	fragment, err := combined.Read(offset - combinedOffset)
+	fragment, err := combined.ReadAt(offset - combinedOffset)
 	if err != nil {
 		return 0, nil, err
 	}

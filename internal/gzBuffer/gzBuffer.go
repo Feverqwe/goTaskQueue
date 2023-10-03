@@ -33,7 +33,7 @@ func (s *GzBuffer) Write(data []byte) {
 	s.runCompress()
 }
 
-func (s *GzBuffer) Read(offset int) ([]byte, error) {
+func (s *GzBuffer) ReadAt(offset int) ([]byte, error) {
 	// fmt.Println("read", offset, s.offset)
 	s.mu.RLock()
 	size := s.len()
@@ -55,20 +55,17 @@ func (s *GzBuffer) Read(offset int) ([]byte, error) {
 
 	readLen -= len(buf)
 
-	i := len(cChunks) - 1
-	extractor := getChunkExtractor()
-	for readLen > 0 && i >= 0 {
-		idx := i
-		i -= 1
-		cc := cChunks[idx].data
-		// fmt.Println("read chunk idx", idx, ch.len())
-		cr := extractor(cc)
-		// fmt.Println("readLastBytes", idx, off-offset)
-		chunk, err := readLastBytes(cr, readLen)
+	if readLen > 0 {
+		extractor := getChunkExtractor()
+		chR := NewChunkReader(&cChunks, extractor, nil)
+		err := chR.Seek(offset)
 		if err != nil {
 			return nil, err
 		}
-		// fmt.Println("Prepand chunk", len(chunk))
+		chunk, err := io.ReadAll(chR)
+		if err != nil {
+			return nil, err
+		}
 		buf = append(chunk, buf...)
 		readLen -= len(chunk)
 	}

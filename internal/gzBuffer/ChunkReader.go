@@ -1,6 +1,7 @@
 package gzbuffer
 
 import (
+	"errors"
 	"io"
 	"sync"
 )
@@ -35,6 +36,40 @@ func (s *ChunkReader) Read(p []byte) (int, error) {
 		return n, err
 	}
 	return 0, io.EOF
+}
+
+func (s *ChunkReader) Seek(off int) error {
+	s.chM.RLock()
+	chunks := *s.chunks
+	s.chM.RUnlock()
+
+	var found bool
+	var left int
+	for i, c := range chunks {
+		nextLeft := left + c.size
+		if nextLeft > off {
+			s.index = i
+			found = true
+			break
+		} else {
+			left = nextLeft
+		}
+	}
+	if !found {
+		return errors.New("seek_offset_too_big")
+	}
+
+	chunk := chunks[s.index]
+	skip := int(off - left)
+	s.lastReader = s.tr(chunk.data)
+	for skip > 0 {
+		n, err := s.lastReader.Read(make([]byte, skip))
+		skip -= n
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func NewChunkReader(chunks *[]CChunk, t Transfromer, m *sync.RWMutex) *ChunkReader {
