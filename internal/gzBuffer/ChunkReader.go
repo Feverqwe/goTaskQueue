@@ -20,15 +20,15 @@ type ChunkReader struct {
 }
 
 func (s *ChunkReader) Read(p []byte) (int, error) {
-	s.chM.RLock()
-	chunks := *s.chunks
-	s.chM.RUnlock()
-
-	if s.index >= len(chunks) {
-		return 0, io.EOF
-	}
-
 	if s.lastReader == nil {
+		s.chM.RLock()
+		chunks := *s.chunks
+		s.chM.RUnlock()
+
+		if s.index >= len(chunks) {
+			return 0, io.EOF
+		}
+
 		c := chunks[s.index]
 		s.lastReader = s.tr(c.data)
 	}
