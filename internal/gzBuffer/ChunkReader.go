@@ -68,7 +68,7 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 	var left int
 	for i, c := range chunks {
 		nextLeft := left + c.size
-		if nextLeft > off {
+		if nextLeft >= off {
 			s.index = i
 			break
 		}

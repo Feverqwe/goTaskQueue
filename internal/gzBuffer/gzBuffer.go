@@ -39,41 +39,35 @@ func (s *GzBuffer) ReadAt(offset int) ([]byte, error) {
 	size := s.len()
 	buf := s.buf
 	chunks := s.chunks
+	chunksSize := s.chunksSize
 	s.mu.RUnlock()
 
-	newSize := size - offset
-	if newSize < 0 {
+	if size < offset {
 		fmt.Println("Read offset more than len", offset, size)
 		return nil, errors.New("read_icorrect_offset")
 	}
 
-	readLen := newSize
+	bufferOffset := 0
+	chunksOffset := 0
 
-	if len(buf) > readLen {
-		buf = buf[len(buf)-readLen:]
+	if offset > chunksSize {
+		bufferOffset = offset - chunksSize
+		chunksOffset = chunksSize
+	} else {
+		chunksOffset = offset
 	}
 
-	readLen -= len(buf)
+	dw := bytes.NewBuffer([]byte{})
 
-	i := len(chunks) - 1
-	extractor := getChunkExtractor()
-	for readLen > 0 && i >= 0 {
-		idx := i
-		i -= 1
-		cc := chunks[idx].data
-		// fmt.Println("read chunk idx", idx, ch.len())
-		cr := extractor(cc)
-		// fmt.Println("readLastBytes", idx, off-offset)
-		chunk, err := readLastBytes(cr, readLen)
-		if err != nil {
-			return nil, err
-		}
-		// fmt.Println("Prepand chunk", len(chunk))
-		buf = append(chunk, buf...)
-		readLen -= len(chunk)
+	if chunksOffset < chunksSize {
+		chR := NewChunkReader(&chunks, &chunksSize, getChunkExtractor(), nil)
+		chR.Seek(chunksOffset, 0)
+		io.Copy(dw, chR)
 	}
 
-	return buf, nil
+	io.Copy(dw, bytes.NewReader(buf[bufferOffset:]))
+
+	return dw.Bytes(), nil
 }
 
 func (s *GzBuffer) PipeTo(w io.Writer) error {
