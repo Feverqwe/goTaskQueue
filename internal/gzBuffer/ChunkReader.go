@@ -9,7 +9,7 @@ import (
 type Transfromer func(chunk []byte) io.ReadCloser
 
 type ChunkReader struct {
-	io.Reader
+	io.ReadCloser
 	index      int
 	offset     int
 	chunks     *[]CChunk
@@ -36,8 +36,7 @@ func (s *ChunkReader) Read(p []byte) (int, error) {
 	n, err := s.lastReader.Read(p)
 	if err == io.EOF {
 		s.index++
-		s.lastReader = nil
-		err = nil
+		err = s.resetLastReader()
 	}
 	s.offset += n
 	return n, err
@@ -77,6 +76,11 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 
 	chunk := chunks[s.index]
 	s.offset = off
+
+	err := s.resetLastReader()
+	if err != nil {
+		return err
+	}
 	s.lastReader = s.tr(chunk.data)
 
 	chunkOffset := off - left
@@ -89,6 +93,19 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 	}
 
 	return nil
+}
+
+func (s *ChunkReader) Close() error {
+	return s.resetLastReader()
+}
+
+func (s *ChunkReader) resetLastReader() error {
+	var err error
+	if s.lastReader != nil {
+		err = s.lastReader.Close()
+		s.lastReader = nil
+	}
+	return err
 }
 
 func NewChunkReader(chunks *[]CChunk, chunksSize *int, t Transfromer, m *sync.RWMutex) *ChunkReader {

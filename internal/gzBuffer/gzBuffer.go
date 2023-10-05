@@ -61,11 +61,16 @@ func (s *GzBuffer) ReadAt(offset int) ([]byte, error) {
 
 	if chunksOffset < chunksSize {
 		chR := NewChunkReader(&chunks, &chunksSize, getChunkExtractor(), nil)
+		defer chR.Close()
 		chR.Seek(chunksOffset, 0)
-		io.Copy(dw, chR)
+		if _, err := io.Copy(dw, chR); err != nil {
+			return nil, err
+		}
 	}
 
-	io.Copy(dw, bytes.NewReader(buf[bufferOffset:]))
+	if _, err := io.Copy(dw, bytes.NewReader(buf[bufferOffset:])); err != nil {
+		return nil, err
+	}
 
 	return dw.Bytes(), nil
 }
@@ -73,6 +78,7 @@ func (s *GzBuffer) ReadAt(offset int) ([]byte, error) {
 func (s *GzBuffer) PipeTo(w io.Writer) error {
 	extractor := getChunkExtractor()
 	chR := NewChunkReader(&s.chunks, &s.chunksSize, extractor, &s.mu)
+	defer chR.Close()
 	if _, err := io.Copy(w, chR); err != nil {
 		return err
 	}
