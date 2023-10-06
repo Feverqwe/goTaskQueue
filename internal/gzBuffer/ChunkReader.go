@@ -20,6 +20,7 @@ type ChunkReader struct {
 }
 
 func (s *ChunkReader) Read(p []byte) (int, error) {
+	// log.Println("read")
 	if s.lastReader == nil {
 		s.chM.RLock()
 		chunks := *s.chunks
@@ -43,6 +44,7 @@ func (s *ChunkReader) Read(p []byte) (int, error) {
 }
 
 func (s *ChunkReader) Seek(delta int, whense int) error {
+	// log.Println("seek", delta, whense)
 	s.chM.RLock()
 	chunks := *s.chunks
 	size := *s.size
@@ -65,13 +67,27 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 	}
 
 	var left int
-	for i, c := range chunks {
-		nextLeft := left + c.size
-		if nextLeft >= off {
-			s.index = i
-			break
+	if off > size/2 {
+		left = size
+		i := len(chunks) - 1
+		for i >= 0 {
+			left -= chunks[i].size
+			if left < off {
+				s.index = i
+				break
+			}
+			i--
 		}
-		left = nextLeft
+	} else {
+		left = 0
+		for i, c := range chunks {
+			nextLeft := left + c.size
+			if nextLeft >= off {
+				s.index = i
+				break
+			}
+			left = nextLeft
+		}
 	}
 
 	chunk := chunks[s.index]
@@ -96,6 +112,7 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 }
 
 func (s *ChunkReader) Close() error {
+	// log.Println("close")
 	return s.resetLastReader()
 }
 
