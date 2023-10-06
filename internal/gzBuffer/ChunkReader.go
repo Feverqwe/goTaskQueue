@@ -107,9 +107,8 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 	}
 
 	chunkOffset := off - left
-	for chunkOffset > 0 {
-		n, err := s.lastReader.Read(make([]byte, chunkOffset))
-		chunkOffset -= n
+	if chunkOffset > 0 {
+		_, err := io.ReadFull(s.lastReader, make([]byte, chunkOffset))
 		if err != nil {
 			return err
 		}
