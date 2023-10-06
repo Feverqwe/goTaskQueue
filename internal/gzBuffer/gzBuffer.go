@@ -186,6 +186,7 @@ func (s *GzBuffer) compress() error {
 			if err != nil {
 				return err
 			}
+			defer cw.Close()
 		}
 
 		s.mu.RLock()
@@ -241,11 +242,16 @@ func compress(cw *flate.Writer, chunk []byte) ([]byte, error) {
 }
 
 func truncateChunkR(cc []byte, size int) ([]byte, error) {
-	cr := getChunkExtractor()(cc)
+	cr, err := getChunkExtractor()(cc)
+	if err != nil {
+		return nil, err
+	}
+	defer cr.Close()
 	cw, err := flate.NewWriter(nil, flate.BestCompression)
 	if err != nil {
 		return nil, err
 	}
+	defer cw.Close()
 	data, err := readLastBytes(cr, size)
 	if err != nil {
 		return nil, err
@@ -282,14 +288,19 @@ func readLastBytes(r io.Reader, maxLen int) ([]byte, error) {
 	}
 }
 
-func getChunkExtractor() func(cc []byte) io.ReadCloser {
+func getChunkExtractor() func(cc []byte) (io.ReadCloser, error) {
 	var r *bytes.Reader
-	return func(cc []byte) io.ReadCloser {
+	var cr io.ReadCloser
+	return func(cc []byte) (io.ReadCloser, error) {
 		if r == nil {
 			r = bytes.NewReader(nil)
 		}
 		r.Reset(cc)
-		return flate.NewReader(r)
+		if cr == nil {
+			cr = flate.NewReader(nil)
+		}
+		err := cr.(flate.Resetter).Reset(r, nil)
+		return cr, err
 	}
 }
 

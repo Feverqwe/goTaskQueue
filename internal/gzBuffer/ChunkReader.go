@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type Transfromer func(chunk []byte) io.ReadCloser
+type Transfromer func(chunk []byte) (io.ReadCloser, error)
 
 type ChunkReader struct {
 	io.ReadCloser
@@ -31,7 +31,11 @@ func (s *ChunkReader) Read(p []byte) (int, error) {
 		}
 
 		c := chunks[s.index]
-		s.lastReader = s.tr(c.data)
+		var err error
+		s.lastReader, err = s.tr(c.data)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	n, err := s.lastReader.Read(p)
@@ -97,7 +101,10 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 	if err != nil {
 		return err
 	}
-	s.lastReader = s.tr(chunk.data)
+	s.lastReader, err = s.tr(chunk.data)
+	if err != nil {
+		return err
+	}
 
 	chunkOffset := off - left
 	for chunkOffset > 0 {
