@@ -186,7 +186,6 @@ func (s *GzBuffer) compress() error {
 			if err != nil {
 				return err
 			}
-			defer cw.Close()
 		}
 
 		s.mu.RLock()
@@ -251,7 +250,6 @@ func truncateChunkR(cc []byte, size int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer cw.Close()
 	data, err := readLastBytes(cr, size)
 	if err != nil {
 		return nil, err
