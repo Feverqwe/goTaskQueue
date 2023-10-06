@@ -10,7 +10,7 @@ function action<RequestParams = unknown, ResponseData = unknown>({
   method = 'GET',
   path,
 }: ActionParams) {
-  return async (params: RequestParams): Promise<ResponseData> => {
+  return async (params: RequestParams, options?: Partial<RequestInit>): Promise<ResponseData> => {
     let query = '';
     let body;
     if (method === 'POST') {
@@ -20,6 +20,7 @@ function action<RequestParams = unknown, ResponseData = unknown>({
     }
 
     return fetch(path + (query ? `?${query}` : ''), {
+      ...options,
       method,
       body,
     }).then(handleApiResponse<ResponseData>);

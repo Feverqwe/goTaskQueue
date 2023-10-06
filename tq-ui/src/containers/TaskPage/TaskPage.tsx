@@ -1,5 +1,5 @@
 import {Box, CircularProgress, Container} from '@mui/material';
-import React, {FC, useCallback, useContext, useEffect, useRef} from 'react';
+import React, {FC, useCallback, useContext, useEffect, useMemo, useRef} from 'react';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import {useLocation} from 'react-router-dom';
 import {runInAction} from 'mobx';
@@ -15,36 +15,51 @@ const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled]
 
 const TaskPage: FC = () => {
   const location = useLocation();
-  const id = new URLSearchParams(location.search).get('id');
+  const id = useMemo(() => new URLSearchParams(location.search).get('id'), [location.search]);
   const notification = useContext(NotificationCtx);
-  const refTask = useRef<Task>();
 
-  const {task, loading, error, fetchTask} = useLocalObservable(() => ({
+  const {task, loading, silent, error, fetchTask} = useLocalObservable(() => ({
     task: null as null | Task,
     loading: true,
     error: null as null | HTTPError | ApiError | TypeError,
+    silent: false,
+    abortController: null as null | AbortController,
     async fetchTask(id: string, silent = false) {
-      if (!silent) {
-        this.loading = true;
+      if (this.abortController) {
+        this.abortController.abort();
       }
+
+      this.silent = silent;
+      this.loading = true;
       this.error = null;
+      const abortController = new AbortController();
+      this.abortController = abortController;
       try {
-        const task = await api.task({id});
+        const task = await api.task(
+          {id},
+          {
+            signal: this.abortController.signal,
+          },
+        );
         runInAction(() => {
           this.task = task;
         });
       } catch (err) {
         console.error('fetchTask error: %O', err);
         runInAction(() => {
+          if (this.abortController !== abortController) return;
           this.error = err as ApiError;
         });
       } finally {
         runInAction(() => {
+          if (this.abortController !== abortController) return;
           this.loading = false;
         });
       }
     },
   }));
+
+  const refTask = useRef<Task>();
   refTask.current = task || undefined;
 
   const handleUpdate = useCallback(() => {
@@ -89,7 +104,7 @@ const TaskPage: FC = () => {
         disableGutters={true}
         sx={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
-        {loading && (
+        {!silent && loading && (
           <Box p={1} display="flex" justifyContent="center">
             <CircularProgress />
           </Box>
@@ -99,7 +114,7 @@ const TaskPage: FC = () => {
             <DisplayError error={error} onRetry={handleRetry} back={true} />
           </Box>
         )}
-        {!error && task && <TaskView task={task} onUpdate={handleUpdate} />}
+        {(silent || !error) && task && <TaskView task={task} onUpdate={handleUpdate} />}
       </Container>
     </NotificationProvider>
   );

@@ -29,45 +29,41 @@ const TaskList: FC<TaskListProps> = () => {
   const refInit = useRef(true);
   const {name} = useContext(RootStoreCtx);
 
-  const {loading, silentLoading, error, silentError, taskList, fetchTaskList} = useLocalObservable(
+  const {loading, silent, error, taskList, fetchTaskList} = useLocalObservable(
     () => ({
-      silentLoading: false,
-      silentError: null as null | HTTPError | ApiError | TypeError,
+      silent: false,
       loading: true,
       error: null as null | HTTPError | ApiError | TypeError,
       taskList: null as null | TaskOrGroup[],
+      abortController: null as null | AbortController,
       async fetchTaskList(isSilent = false) {
-        if (isSilent) {
-          this.silentLoading = true;
-        } else {
-          this.loading = true;
+        if (this.abortController) {
+          this.abortController.abort();
         }
 
+        this.silent = isSilent;
+        this.loading = true;
+        this.error = null;
+        const abortController = new AbortController();
+        this.abortController = abortController;
         try {
-          const taskList = await api.tasks();
+          const taskList = await api.tasks(undefined, {
+            signal: this.abortController.signal,
+          });
           taskList.reverse();
           runInAction(() => {
             this.taskList = groupTasks(taskList);
-            this.silentError = null;
-            this.error = null;
           });
         } catch (err) {
           console.error('fetchTaskList error: %O', err);
-
           runInAction(() => {
-            if (isSilent) {
-              this.silentError = err as ApiError;
-            } else {
-              this.error = err as ApiError;
-            }
+            if (this.abortController !== abortController) return;
+            this.error = err as ApiError;
           });
         } finally {
           runInAction(() => {
-            if (isSilent) {
-              this.silentLoading = false;
-            } else {
-              this.loading = false;
-            }
+            if (this.abortController !== abortController) return;
+            this.loading = false;
           });
         }
       },
@@ -108,28 +104,28 @@ const TaskList: FC<TaskListProps> = () => {
         <TemplatesBar onUpdate={handleUpdate} />
       </Box>
       <>
-        {loading && (
+        {!silent && loading && (
           <Box display="flex" justifyContent="center">
             <CircularProgress />
           </Box>
         )}
-        {!loading && error && (
+        {!silent && error && (
           <Box display="flex" justifyContent="center">
             <DisplayError error={error} onRetry={handleRetry} />
           </Box>
         )}
-        {!loading && !error && taskList && (
+        {(silent || (!error && !loading)) && taskList && (
           <TaskListView taskList={taskList} onUpdate={handleUpdate} />
         )}
       </>
-      {silentLoading && (
+      {silent && loading && (
         <SilenStatus>
           <Box m={1} display="flex">
             <CircularProgress size={20} />
           </Box>
         </SilenStatus>
       )}
-      {!silentLoading && silentError && (
+      {silent && error && (
         <SilenStatus>
           <IconButton size="small" color="warning" onClick={handleUpdate}>
             <ErrorOutlineIcon />
