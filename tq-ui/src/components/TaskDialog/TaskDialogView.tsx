@@ -12,7 +12,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import {Task} from '../types';
 import {api} from '../../tools/api';
 import IconActionButton from '../IconActionButton/IconActionButton';
-import TaskName from '../../containers/TaskPage/components/TaskName';
+import {getTaskName} from '../../containers/TaskPage/utils';
 
 interface TaskDialogViewProps {
   task: Task;
@@ -53,13 +53,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate}) => {
       <DialogTitle>
         {!isEditTitle && (
           <Box display="flex" alignItems="center">
-            <Box sx={{whiteSpace: 'nowrap', overflow: 'hidden'}}>
-              <TaskName
-                task={task}
-                variant="h5"
-                sx={{textOverflow: 'ellipsis', overflow: 'hidden'}}
-              />
-            </Box>
+            <Box sx={{whiteSpace: 'nowrap', overflow: 'hidden'}}>{getTaskName(task)}</Box>
             <IconButton onClick={handleEdit} sx={{ml: 1}}>
               <EditIcon />
             </IconButton>
@@ -88,23 +82,22 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate}) => {
         )}
       </DialogTitle>
       <DialogContent>
-        <Box my={1}>
-          <TextField
-            size="small"
-            variant="outlined"
-            value={command}
-            label="Command"
-            fullWidth
-            multiline
-            maxRows={3}
-            InputProps={{readOnly: true}}
-            inputProps={{ref: refCommand}}
-            onFocus={handleCommandFocus}
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-        </Box>
+        <TextField
+          sx={{my: 1}}
+          size="small"
+          variant="outlined"
+          value={command}
+          label="Command"
+          fullWidth
+          multiline
+          maxRows={3}
+          InputProps={{readOnly: true}}
+          inputProps={{ref: refCommand}}
+          onFocus={handleCommandFocus}
+          InputLabelProps={{
+            shrink: true,
+          }}
+        />
       </DialogContent>
     </>
   );
