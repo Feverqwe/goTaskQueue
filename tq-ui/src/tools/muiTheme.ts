@@ -2,7 +2,20 @@ import {createTheme} from '@mui/material';
 
 const theme = createTheme({
   components: {
+    MuiButtonBase: {
+      defaultProps: {
+        disableRipple: true,
+      },
+    },
+    MuiButtonGroup: {
+      defaultProps: {
+        disableRipple: true,
+      },
+    },
     MuiButton: {
+      defaultProps: {
+        disableRipple: true,
+      },
       styleOverrides: {
         root: {
           textTransform: 'none',

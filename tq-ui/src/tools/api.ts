@@ -10,6 +10,7 @@ function action<RequestParams = unknown, ResponseData = unknown>({
   method = 'GET',
   path,
 }: ActionParams) {
+  // eslint-disable-next-line no-undef
   return async (params: RequestParams, options?: Partial<RequestInit>): Promise<ResponseData> => {
     let query = '';
     let body;

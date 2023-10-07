@@ -1,15 +1,13 @@
 import {Box, CircularProgress, Container} from '@mui/material';
 import React, {FC, useCallback, useContext, useEffect, useMemo, useRef} from 'react';
-import {observer, useLocalObservable} from 'mobx-react-lite';
+import {observer} from 'mobx-react-lite';
 import {useLocation} from 'react-router-dom';
-import {runInAction} from 'mobx';
-import {Task, TaskState} from '../../components/types';
-import {api} from '../../tools/api';
+import {TaskState} from '../../components/types';
 import {NotificationCtx} from '../../components/Notifications/NotificationCtx';
-import {ApiError, HTTPError} from '../../tools/apiRequest';
 import DisplayError from '../../components/DisplayError';
 import TaskView from './components/TaskView';
 import NotificationProvider from '../../components/Notifications/NotificationProvider';
+import useTaskStore from '../../hooks/useTaskStore';
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
@@ -18,52 +16,14 @@ const TaskPage: FC = () => {
   const id = useMemo(() => new URLSearchParams(location.search).get('id'), [location.search]);
   const notification = useContext(NotificationCtx);
 
-  const {task, loading, silent, error, fetchTask} = useLocalObservable(() => ({
-    task: null as null | Task,
-    loading: true,
-    error: null as null | HTTPError | ApiError | TypeError,
-    silent: false,
-    abortController: null as null | AbortController,
-    async fetchTask(id: string, silent = false) {
-      if (this.abortController) {
-        this.abortController.abort();
-      }
+  const taskStore = useTaskStore();
+  const {task, loading, silent, error, fetchTask} = taskStore;
 
-      this.silent = silent;
-      this.loading = true;
-      this.error = null;
-      const abortController = new AbortController();
-      this.abortController = abortController;
-      try {
-        const task = await api.task(
-          {id},
-          {
-            signal: this.abortController.signal,
-          },
-        );
-        runInAction(() => {
-          this.task = task;
-        });
-      } catch (err) {
-        console.error('fetchTask error: %O', err);
-        runInAction(() => {
-          if (this.abortController !== abortController) return;
-          this.error = err as ApiError;
-        });
-      } finally {
-        runInAction(() => {
-          if (this.abortController !== abortController) return;
-          this.loading = false;
-        });
-      }
-    },
-  }));
-
-  const refTask = useRef<Task>();
-  refTask.current = task || undefined;
+  const refTaskStore = useRef(taskStore);
+  refTaskStore.current = taskStore;
 
   const handleUpdate = useCallback(() => {
-    const task = refTask.current;
+    const {task} = refTaskStore.current;
     if (!task) return;
     fetchTask(task.id, true);
   }, [fetchTask]);
@@ -78,13 +38,14 @@ const TaskPage: FC = () => {
   useEffect(() => {
     if (!id) return;
     fetchTask(id);
+    return () => refTaskStore.current.abortController?.abort();
   }, [id, fetchTask]);
 
   useEffect(() => {
     const taskState = task?.state;
     if (!taskState || completeStates.includes(taskState)) return () => {};
     return () => {
-      const currentTask = refTask.current;
+      const currentTask = refTaskStore.current.task;
       if (currentTask && completeStates.includes(currentTask.state)) {
         notification(currentTask);
       }

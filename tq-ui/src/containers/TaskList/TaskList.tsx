@@ -1,17 +1,13 @@
 import React, {FC, useCallback, useContext, useEffect, useMemo, useRef} from 'react';
 import {Box, CircularProgress, Container} from '@mui/material';
-import {observer, useLocalObservable} from 'mobx-react-lite';
-import {runInAction} from 'mobx';
+import {observer} from 'mobx-react-lite';
 import TemplatesBar from './components/TemplatesBar/TemplatesBar';
-import {TaskOrGroup} from '../../components/types';
-import {api} from '../../tools/api';
-import {ApiError, HTTPError} from '../../tools/apiRequest';
 import DisplayError from '../../components/DisplayError';
 import {useVisibility} from '../../hooks/useVisibility';
-import {groupTasks} from './utils';
 import TaskListView from './components/TaskListView';
 import {RootStoreCtx} from '../../components/RootStore/RootStoreCtx';
 import SilentStatus from '../../components/SilentStatus/SilentStatus';
+import useTaskListStore from '../../hooks/useTaskListStore';
 
 interface TaskListProps {}
 
@@ -20,44 +16,12 @@ const TaskList: FC<TaskListProps> = () => {
   const refInit = useRef(true);
   const {name} = useContext(RootStoreCtx);
 
-  const {loading, silent, error, taskList, fetchTaskList} = useLocalObservable(() => ({
-    silent: false,
-    loading: true,
-    error: null as null | HTTPError | ApiError | TypeError,
-    taskList: null as null | TaskOrGroup[],
-    abortController: null as null | AbortController,
-    async fetchTaskList(isSilent = false) {
-      if (this.abortController) {
-        this.abortController.abort();
-      }
+  const taskListStore = useTaskListStore();
 
-      this.silent = isSilent;
-      this.loading = true;
-      this.error = null;
-      const abortController = new AbortController();
-      this.abortController = abortController;
-      try {
-        const taskList = await api.tasks(undefined, {
-          signal: this.abortController.signal,
-        });
-        taskList.reverse();
-        runInAction(() => {
-          this.taskList = groupTasks(taskList);
-        });
-      } catch (err) {
-        console.error('fetchTaskList error: %O', err);
-        runInAction(() => {
-          if (this.abortController !== abortController) return;
-          this.error = err as ApiError;
-        });
-      } finally {
-        runInAction(() => {
-          if (this.abortController !== abortController) return;
-          this.loading = false;
-        });
-      }
-    },
-  }));
+  const {loading, silent, error, taskList, fetchTaskList} = taskListStore;
+
+  const refTaskListStore = useRef(taskListStore);
+  refTaskListStore.current = taskListStore;
 
   useMemo(() => {
     document.title = name;
@@ -69,6 +33,7 @@ const TaskList: FC<TaskListProps> = () => {
 
   useEffect(() => {
     fetchTaskList();
+    return () => refTaskListStore.current.abortController?.abort();
   }, [fetchTaskList]);
 
   useEffect(() => {
@@ -107,8 +72,8 @@ const TaskList: FC<TaskListProps> = () => {
           <TaskListView taskList={taskList} onUpdate={handleUpdate} />
         )}
       </>
-      {silent && loading && <SilentStatus status={'loading'} />}
-      {silent && error && <SilentStatus status={'error'} onRetry={handleUpdate} />}
+      {silent && loading && <SilentStatus status="loading" />}
+      {silent && error && <SilentStatus status="error" onRetry={handleUpdate} />}
     </Container>
   );
 };
