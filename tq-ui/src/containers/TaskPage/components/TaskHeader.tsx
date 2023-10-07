@@ -26,23 +26,28 @@ import TemplateDialog from '../../../components/TemplateDialog/TemplateDialog';
 import KillDialog from '../../../components/KillDialog/KillDialog';
 import IconActionButton from '../../../components/IconActionButton/IconActionButton';
 import {RootStoreCtx} from '../../../components/RootStore/RootStoreCtx';
-import TaskDialog from '../../../components/TaskDialog/TaskDialog';
 
 interface TaskInfoProps {
   task: Task;
   remapNewLine: boolean;
   onToggleRemapNewLine: () => void;
+  onToggleInfo: () => void;
   onUpdate: () => void;
 }
 
-const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onUpdate}) => {
+const TaskHeader: FC<TaskInfoProps> = ({
+  task,
+  remapNewLine,
+  onToggleRemapNewLine,
+  onToggleInfo,
+  onUpdate,
+}) => {
   const navigate = useNavigate();
   const {name} = useContext(RootStoreCtx);
   const {id, state, label, command, error, isOnlyCombined} = task;
   const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | RawTemplate>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showConfirm, setShowConfirm] = useState<{type: string} | undefined>();
-  const [showTaskDialog, setTaskDialog] = useState<{taskId: string} | undefined>();
 
   useMemo(() => {
     document.title = `Task ${label || command} — ${name}`;
@@ -73,10 +78,6 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
     setShowMenu(false);
   }, []);
 
-  const handleCloseDialog = useCallback(() => {
-    setTaskDialog(undefined);
-  }, []);
-
   const handleRestart = useCallback(() => {
     const {
       templatePlace,
@@ -98,8 +99,8 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
   }, [task]);
 
   const handleTitleClick = useCallback(() => {
-    setTaskDialog({taskId: id});
-  }, [id]);
+    onToggleInfo();
+  }, [onToggleInfo]);
 
   const handleRestartTask = useCallback(
     async (runTask: AddTaskRequest) => {
@@ -264,14 +265,6 @@ const TaskHeader: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine
           open={true}
           onSubmit={handleStopConfirmSubmit}
           onClose={handleConfirmClose}
-        />
-      )}
-      {showTaskDialog && (
-        <TaskDialog
-          {...showTaskDialog}
-          open={true}
-          onClose={handleCloseDialog}
-          onUpdate={onUpdate}
         />
       )}
     </>

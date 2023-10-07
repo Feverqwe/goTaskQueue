@@ -59,12 +59,15 @@ const TaskDialog: FC<TaskDialogProps> = (props) => {
           <DisplayError error={error} onRetry={handleRetry} back={true} />
         </Box>
       )}
-      {(silent || !error) && task && <TaskDialogView task={task} onUpdate={handleUpdate} />}
-      <DialogActions>
-        <Button variant="outlined" onClick={onClose}>
-          Close
-        </Button>
-      </DialogActions>
+      {(silent || !error) && task ? (
+        <TaskDialogView task={task} onUpdate={handleUpdate} onClose={onClose} />
+      ) : (
+        <DialogActions>
+          <Button variant="outlined" onClick={onClose}>
+            Close
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };
