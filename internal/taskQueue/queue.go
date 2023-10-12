@@ -52,7 +52,7 @@ func (s *Queue) Clone(config *cfg.Config, id string) (*Task, error) {
 	return task, nil
 }
 
-func (s *Queue) Del(id string) error {
+func (s *Queue) Del(config *cfg.Config, id string) error {
 	task, err := s.Get(id)
 	if err != nil {
 		return err
@@ -73,6 +73,13 @@ func (s *Queue) Del(id string) error {
 	delete(s.idTask, task.Id)
 
 	s.Save()
+
+	go func() {
+		err := CleanLogs(config, s)
+		if err != nil {
+			log.Println("Clean logs error", err)
+		}
+	}()
 
 	return nil
 }

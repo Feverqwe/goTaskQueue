@@ -111,7 +111,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			err = queue.Del(payload.Id)
+			err = queue.Del(config, payload.Id)
 
 			return "ok", err
 		})
