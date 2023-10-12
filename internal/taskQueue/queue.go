@@ -31,23 +31,23 @@ func (s *Queue) Get(id string) (*Task, error) {
 	return task, nil
 }
 
-func (s *Queue) Add(taskBase TaskBase) *Task {
+func (s *Queue) Add(config *cfg.Config, taskBase TaskBase) *Task {
 	id := s.getId()
 	task := NewTask(id, taskBase)
 	s.Tasks = append(s.Tasks, task)
 	s.idTask[task.Id] = task
-	task.Init(s)
+	task.Init(config, s)
 	s.Save()
 	return task
 }
 
-func (s *Queue) Clone(id string) (*Task, error) {
+func (s *Queue) Clone(config *cfg.Config, id string) (*Task, error) {
 	origTask, err := s.Get(id)
 	if err != nil {
 		return nil, err
 	}
 
-	task := s.Add(origTask.TaskBase)
+	task := s.Add(config, origTask.TaskBase)
 
 	return task, nil
 }
@@ -126,7 +126,7 @@ func (s *Queue) RunOnBoot(config *cfg.Config) {
 	}
 
 	for _, id := range ids {
-		task, err := s.Clone(id)
+		task, err := s.Clone(config, id)
 		if err == nil {
 			err = task.Run(config, s)
 		}
@@ -136,7 +136,7 @@ func (s *Queue) RunOnBoot(config *cfg.Config) {
 	}
 }
 
-func LoadQueue() *Queue {
+func LoadQueue(config *cfg.Config) *Queue {
 	queue := NewQueue()
 
 	path := getQueuePath()
@@ -150,7 +150,7 @@ func LoadQueue() *Queue {
 
 	for _, task := range queue.Tasks {
 		queue.idTask[task.Id] = task
-		task.Init(queue)
+		task.Init(config, queue)
 	}
 
 	go func() {

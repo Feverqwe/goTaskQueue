@@ -5,6 +5,7 @@ import (
 	"compress/flate"
 	"errors"
 	"fmt"
+	"goTaskQueue/internal/shared"
 	"io"
 	"sync"
 )
@@ -21,19 +22,38 @@ type GzBuffer struct {
 	mu         sync.RWMutex
 	cmu        sync.Mutex
 	chunks     []CChunk
-	chunksSize int
+	chunksSize int64
 	finished   bool
 	maxBufSize int
 }
 
-func (s *GzBuffer) Write(data []byte) {
+func (s *GzBuffer) GetDataStore() *shared.DataStore {
+	return &shared.DataStore{
+		Write:  s.Write,
+		ReadAt: s.ReadAt,
+		PipeTo: s.PipeTo,
+		Slice: func(i int64, b bool) (*shared.DataStore, error) {
+			ds, err := s.Slice(i, b)
+			if err != nil {
+				return nil, err
+			}
+			return ds.GetDataStore(), nil
+		},
+		Len:   s.Len,
+		Close: s.Close,
+	}
+}
+
+func (s *GzBuffer) Write(data []byte) (n int, err error) {
 	s.mu.Lock()
+	n = len(data)
 	s.buf = append(s.buf, data...)
 	s.mu.Unlock()
 	s.runCompress()
+	return
 }
 
-func (s *GzBuffer) ReadAt(offset int) ([]byte, error) {
+func (s *GzBuffer) ReadAt(offset int64) ([]byte, error) {
 	// fmt.Println("read", offset, s.offset)
 	s.mu.RLock()
 	size := s.len()
@@ -48,10 +68,9 @@ func (s *GzBuffer) ReadAt(offset int) ([]byte, error) {
 	}
 
 	bufferOffset := 0
-	chunksOffset := 0
-
+	chunksOffset := int64(0)
 	if offset > chunksSize {
-		bufferOffset = offset - chunksSize
+		bufferOffset = int(offset - chunksSize)
 		chunksOffset = chunksSize
 	} else {
 		chunksOffset = offset
@@ -94,7 +113,7 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 	return nil
 }
 
-func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
+func (s *GzBuffer) Slice(offset int64, approx bool) (*GzBuffer, error) {
 	// fmt.Println("Slice", offset)
 	s.mu.RLock()
 	newSize := s.len() - offset
@@ -103,14 +122,14 @@ func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 	s.mu.RUnlock()
 
 	newChunks := make([]CChunk, 0)
-	newChunksSize := 0
+	newChunksSize := int64(0)
 
-	if newSize < len(buf) {
-		buf = buf[len(buf)-newSize:]
+	if newSize < int64(len(buf)) {
+		buf = buf[int64(len(buf))-newSize:]
 	}
 
 	i := len(chunks) - 1
-	readSize := newSize - len(buf)
+	readSize := newSize - int64(len(buf))
 	for readSize > 0 && i >= 0 {
 		idx := i
 		i -= 1
@@ -118,8 +137,8 @@ func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 		cc := cChunk.data
 		ccSize := cChunk.size
 
-		if !approx && readSize < ccSize {
-			ccSize = readSize
+		if !approx && readSize < int64(ccSize) {
+			ccSize = int(readSize)
 			var err error
 			cc, err = truncateChunkR(cc, ccSize)
 			if err != nil {
@@ -130,8 +149,8 @@ func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 		newCChunk := CChunk{cc, ccSize}
 
 		newChunks = append([]CChunk{newCChunk}, newChunks...)
-		newChunksSize += ccSize
-		readSize -= ccSize
+		newChunksSize += int64(ccSize)
+		readSize -= int64(ccSize)
 	}
 
 	cbuf := NewGzBuffer(s.maxBufSize)
@@ -142,20 +161,21 @@ func (s *GzBuffer) Slice(offset int, approx bool) (*GzBuffer, error) {
 	return cbuf, nil
 }
 
-func (s *GzBuffer) Len() int {
+func (s *GzBuffer) Len() int64 {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.len()
 }
 
-func (s *GzBuffer) len() int {
-	return s.chunksSize + len(s.buf)
+func (s *GzBuffer) len() int64 {
+	return s.chunksSize + int64(len(s.buf))
 }
 
-func (s *GzBuffer) Finish() {
+func (s *GzBuffer) Close() error {
 	// fmt.Println("finish")
 	s.finished = true
 	s.runCompress()
+	return nil
 }
 
 func (s *GzBuffer) runCompress() {
@@ -202,7 +222,7 @@ func (s *GzBuffer) compress() error {
 		s.mu.Lock()
 		s.buf = s.buf[size:]
 		s.chunks = append(s.chunks, chunk)
-		s.chunksSize += size
+		s.chunksSize += int64(size)
 		s.mu.Unlock()
 	}
 	return nil

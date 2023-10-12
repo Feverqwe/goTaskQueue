@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"goTaskQueue/internal/cfg"
-	gzbuffer "goTaskQueue/internal/gzBuffer"
 	memstorage "goTaskQueue/internal/memStorage"
+	"goTaskQueue/internal/shared"
 	"goTaskQueue/internal/taskQueue"
 	"goTaskQueue/internal/utils"
 	"net/http"
@@ -65,6 +65,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		IsOnlyCombined   *bool             `json:"isOnlyCombined"`
 		IsSingleInstance *bool             `json:"isSingleInstance"`
 		IsStartOnBoot    *bool             `json:"isStartOnBoot"`
+		IsWriteLogs      *bool             `json:"isWriteLogs"`
 		TemplatePlace    string            `json:"templatePlace"`
 		TemplateId       string            `json:"templateId"`
 		Variables        map[string]string `json:"variables"`
@@ -150,6 +151,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			taskBase.IsOnlyCombined = setValue(payload.IsOnlyCombined, template.IsOnlyCombined)
 			taskBase.IsSingleInstance = setValue(payload.IsSingleInstance, template.IsSingleInstance)
 			taskBase.IsStartOnBoot = setValue(payload.IsStartOnBoot, template.IsStartOnBoot)
+			taskBase.IsWriteLogs = setValue(payload.IsWriteLogs, template.IsWriteLogs)
 
 			for _, variable := range template.Variables {
 				old := fmt.Sprintf("{%v}", variable.Value)
@@ -161,7 +163,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				taskBase.Label = strings.ReplaceAll(taskBase.Label, old, value)
 			}
 
-			task := queue.Add(taskBase)
+			task := queue.Add(config, taskBase)
 
 			if payload.IsRun {
 				err := task.Run(config, queue)
@@ -181,7 +183,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return nil, err
 			}
 
-			task, err := queue.Clone(payload.Id)
+			task, err := queue.Clone(config, payload.Id)
 
 			if payload.IsRun {
 				err = task.Run(config, queue)
@@ -401,7 +403,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			return
 		}
 
-		var data *gzbuffer.GzBuffer
+		var data *shared.DataStore
 		if logType == "stdout" && task.Stdout != nil {
 			data = task.Stdout
 		} else if logType == "stderr" && task.Stderr != nil {

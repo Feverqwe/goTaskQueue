@@ -11,9 +11,9 @@ type Transfromer func(chunk []byte) (io.ReadCloser, error)
 type ChunkReader struct {
 	io.ReadCloser
 	index      int
-	offset     int
+	offset     int64
 	chunks     *[]CChunk
-	size       *int
+	size       *int64
 	chM        *sync.RWMutex
 	tr         Transfromer
 	lastReader io.ReadCloser
@@ -43,18 +43,18 @@ func (s *ChunkReader) Read(p []byte) (int, error) {
 		s.index++
 		err = s.resetLastReader()
 	}
-	s.offset += n
+	s.offset += int64(n)
 	return n, err
 }
 
-func (s *ChunkReader) Seek(delta int, whense int) error {
+func (s *ChunkReader) Seek(delta int64, whense int) error {
 	// log.Println("seek", delta, whense)
 	s.chM.RLock()
 	chunks := *s.chunks
 	size := *s.size
 	s.chM.RUnlock()
 
-	var off int
+	var off int64
 	switch whense {
 	case 0:
 		// 0 means relative to the origin of the file
@@ -70,12 +70,12 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 		return errors.New("offset_more_than_size")
 	}
 
-	var left int
+	var left int64
 	if off > size/2 {
 		left = size
 		i := len(chunks) - 1
 		for i >= 0 {
-			left -= chunks[i].size
+			left -= int64(chunks[i].size)
 			if left < off {
 				s.index = i
 				break
@@ -85,7 +85,7 @@ func (s *ChunkReader) Seek(delta int, whense int) error {
 	} else {
 		left = 0
 		for i, c := range chunks {
-			nextLeft := left + c.size
+			nextLeft := left + int64(c.size)
 			if nextLeft >= off {
 				s.index = i
 				break
@@ -131,7 +131,7 @@ func (s *ChunkReader) resetLastReader() error {
 	return err
 }
 
-func NewChunkReader(chunks *[]CChunk, chunksSize *int, t Transfromer, m *sync.RWMutex) *ChunkReader {
+func NewChunkReader(chunks *[]CChunk, chunksSize *int64, t Transfromer, m *sync.RWMutex) *ChunkReader {
 	if m == nil {
 		m = &sync.RWMutex{}
 	}

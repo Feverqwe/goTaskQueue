@@ -7,7 +7,7 @@ RUN go build -o goTaskQueue
 
 FROM alpine:3.18 as release
 #>>>
-ARG BUILD_VERSION="2023.09.24"
+ARG BUILD_VERSION="2023.10.07"
 RUN apk add --no-cache \
         ca-certificates \
         curl \

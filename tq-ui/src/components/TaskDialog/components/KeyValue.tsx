@@ -1,27 +1,17 @@
 import React, {FC, useMemo} from 'react';
-import {Box, SxProps, useTheme} from '@mui/material';
-import {getDatetimeFormatter} from '../../../utils/common';
+import {Box, useTheme} from '@mui/material';
+import {formatValue} from '../../../utils/formatValue';
 
 interface KeyValueProps {
   name: string;
   value: string;
   type?: 'datetime';
-  sx?: SxProps;
 }
 
-const KeyValue: FC<KeyValueProps> = ({name, value, type, sx}) => {
+const KeyValue: FC<KeyValueProps> = ({name, value, type}) => {
   const theme = useTheme();
 
-  let formattedValue;
-  switch (type) {
-    case 'datetime': {
-      formattedValue = getDatetimeFormatter().format(new Date(value));
-      break;
-    }
-    default: {
-      formattedValue = value;
-    }
-  }
+  const formattedValue = formatValue(value, type);
 
   const lineStyle = useMemo(
     () => ({borderBottom: `1px dotted  ${theme.palette.divider}`, flexGrow: 1, minWidth: '10%'}),
@@ -29,7 +19,7 @@ const KeyValue: FC<KeyValueProps> = ({name, value, type, sx}) => {
   );
 
   return (
-    <Box sx={sx} display="flex" alignItems="baseline">
+    <Box display="flex" alignItems="baseline">
       <span>{name}</span>
       <span style={lineStyle} />
       <span>{formattedValue ?? '–'}</span>

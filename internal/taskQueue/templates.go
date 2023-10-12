@@ -135,7 +135,7 @@ func WriteTemplate(template Template, isNew bool) error {
 		return err
 	}
 
-	err = os.MkdirAll(place, 0755)
+	err = os.MkdirAll(place, 0700)
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func MoveTemplate(relFrom string, relTo string) error {
 		return errors.New("to_place_not_empty")
 	}
 
-	err = os.MkdirAll(filepath.Dir(to), 0755)
+	err = os.MkdirAll(filepath.Dir(to), 0700)
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func MoveTemplateFolder(relFrom string, relTo string) error {
 		return errors.New("to_place_not_empty")
 	}
 
-	err = os.MkdirAll(filepath.Dir(to), 0755)
+	err = os.MkdirAll(filepath.Dir(to), 0700)
 	if err != nil {
 		return err
 	}
@@ -381,9 +381,9 @@ func copyDefaultTemplates(templatesPath string) error {
 		if err == nil {
 			sourcePath := assetName[len(prefix):]
 			fullPath := filepath.Join(templatesPath, sourcePath)
-			err = os.MkdirAll(filepath.Dir(fullPath), 0755)
+			err = os.MkdirAll(filepath.Dir(fullPath), 0700)
 			if err != nil {
-				err = os.WriteFile(fullPath, data, 0644)
+				err = os.WriteFile(fullPath, data, 0600)
 			}
 		}
 		if err != nil {

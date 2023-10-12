@@ -32,7 +32,7 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
   }, []);
 
   return (
-    <Box m={1} mt={0} component={Paper} display="flex">
+    <Box m={1} mt={0} component={Paper}>
       <Box display="flex" flexGrow={1} sx={{flexDirection: {xs: 'column', sm: 'row'}}}>
         <Box
           component="form"

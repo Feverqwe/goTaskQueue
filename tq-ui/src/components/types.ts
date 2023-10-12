@@ -13,6 +13,7 @@ export interface RawTemplate {
   }[];
   isPty?: boolean;
   isOnlyCombined?: boolean;
+  isWriteLogs?: boolean;
   isSingleInstance?: boolean;
   isStartOnBoot?: boolean;
 }
@@ -95,6 +96,7 @@ export interface AddTaskRequest {
   group?: string;
   isPty?: boolean;
   isOnlyCombined?: boolean;
+  isWriteLogs?: boolean;
   isSingleInstance?: boolean;
   isStartOnBoot?: boolean;
   isRun?: boolean;

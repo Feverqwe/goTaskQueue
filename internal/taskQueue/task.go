@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
+	logwriter "goTaskQueue/internal/logWriter"
+	"goTaskQueue/internal/shared"
 	"io"
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"sync"
 	"syscall"
 	"time"
@@ -16,9 +19,16 @@ import (
 	"github.com/creack/pty"
 )
 
-const PtyMaxLogSize = gzbuffer.ChunkSize * 4 * 4
-const PtyTrimLogSize = PtyMaxLogSize / 4
-const CombinedBufSize = 128 * 1024
+const PtyLogSize = 4 * 1024 * 1025
+const PtyTrimLimit = PtyLogSize * 4
+const CombinedLogSize = 1 * 1024 * 1025
+const CombinedLogTrimLimit = CombinedLogSize * 5
+const MemBufSize = 256 * 1024
+const HistorySize = 64 * 1024
+
+const LOG_COMBINED = "combined"
+const LOG_STDOUT = "out"
+const LOG_STDERR = "err"
 
 type TaskLink struct {
 	Name  string `json:"name"`
@@ -46,6 +56,7 @@ type NewTaskBase struct {
 	IsOnlyCombined   bool   `json:"isOnlyCombined"`
 	IsSingleInstance bool   `json:"isSingleInstance"`
 	IsStartOnBoot    bool   `json:"isStartOnBoot"`
+	IsWriteLogs      bool   `json:"isWriteLogs"`
 }
 
 type TaskBase struct {
@@ -58,23 +69,23 @@ type Task struct {
 	TaskBase
 	Id             string `json:"id"`
 	process        *exec.Cmd
-	IsStarted      bool               `json:"isStarted"`
-	IsFinished     bool               `json:"isFinished"`
-	IsCanceled     bool               `json:"isCanceled"`
-	IsError        bool               `json:"isError"`
-	State          string             `json:"state"`
-	Stdout         *gzbuffer.GzBuffer `json:"-"`
-	Stderr         *gzbuffer.GzBuffer `json:"-"`
-	Combined       *gzbuffer.GzBuffer `json:"-"`
-	Error          string             `json:"error"`
-	CreatedAt      time.Time          `json:"createdAt"`
-	StartedAt      time.Time          `json:"startedAt"`
-	FinishedAt     time.Time          `json:"finishedAt"`
+	IsStarted      bool              `json:"isStarted"`
+	IsFinished     bool              `json:"isFinished"`
+	IsCanceled     bool              `json:"isCanceled"`
+	IsError        bool              `json:"isError"`
+	State          string            `json:"state"`
+	Stdout         *shared.DataStore `json:"-"`
+	Stderr         *shared.DataStore `json:"-"`
+	Combined       *shared.DataStore `json:"-"`
+	Error          string            `json:"error"`
+	CreatedAt      time.Time         `json:"createdAt"`
+	StartedAt      time.Time         `json:"startedAt"`
+	FinishedAt     time.Time         `json:"finishedAt"`
 	mu             sync.Mutex
 	cmu            sync.RWMutex
 	qCh            []chan int
 	stdin          io.Writer
-	combinedOffset int
+	combinedOffset int64
 	Links          []TaskLink `json:"links"`
 	queue          *Queue
 	Assets         []TaskAsset `json:"assets"`
@@ -133,29 +144,30 @@ func (s *Task) RunPty(config *cfg.Config) error {
 
 	s.stdin = f
 
-	output := gzbuffer.NewGzBuffer(CombinedBufSize)
+	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize)
+	if err != nil {
+		return err
+	}
 	s.Combined = output
-	s.Stdout = output
 
 	go func() {
 		chunk := make([]byte, 16*1024)
 		for {
 			bytes, err := f.Read(chunk)
 			if bytes > 0 {
+				s.cmu.Lock()
 				output.Write(chunk[0:bytes])
 
-				if output.Len() > PtyMaxLogSize {
-					if newOutput, err := output.Slice(PtyTrimLogSize, true); err == nil {
+				if output.Len() > PtyTrimLimit {
+					if newOutput, err := output.Slice(PtyLogSize, true); err == nil {
 						// fmt.Println("trim")
 						approxOff := output.Len() - newOutput.Len()
-						s.cmu.Lock()
 						output = newOutput
-						s.Stdout = newOutput
-						s.Combined = newOutput
+						s.Combined = output
 						s.combinedOffset += approxOff
-						s.cmu.Unlock()
 					}
 				}
+				s.cmu.Unlock()
 
 				go s.pushChanges(1)
 			}
@@ -205,12 +217,15 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	process.Env = append(process.Env, s.getEnvVariables(config)...)
 	process.Dir = s.getWorkingDir()
 
-	const Out = "out"
-	const Err = "err"
+	const Out = LOG_STDOUT
+	const Err = LOG_STDERR
 
 	pipes := []string{Out, Err}
 
-	output := gzbuffer.NewGzBuffer(CombinedBufSize)
+	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize)
+	if err != nil {
+		return err
+	}
 	s.Combined = output
 
 	stdin, _ := process.StdinPipe()
@@ -218,9 +233,13 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 
 	for _, pT := range pipes {
 		var pipe io.ReadCloser
-		var buffer *gzbuffer.GzBuffer
+		var buffer *shared.DataStore
 		if !s.IsOnlyCombined {
-			buffer = gzbuffer.NewGzBuffer(0)
+			b, err := s.getStdWriter(config, s.IsWriteLogs, pT, 0)
+			if err != nil {
+				return err
+			}
+			buffer = b
 		}
 		if pT == Err {
 			pipe, _ = process.StderrPipe()
@@ -239,7 +258,19 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 						buffer.Write(chunk[0:bytes])
 					}
 
+					s.cmu.Lock()
 					output.Write(chunk[0:bytes])
+
+					if !s.IsOnlyCombined && output.Len() > CombinedLogTrimLimit {
+						if newOutput, err := output.Slice(CombinedLogSize, true); err == nil {
+							// fmt.Println("trim")
+							approxOff := output.Len() - newOutput.Len()
+							output = newOutput
+							s.Combined = output
+							s.combinedOffset += approxOff
+						}
+					}
+					s.cmu.Unlock()
 
 					go s.pushChanges(1)
 				}
@@ -250,7 +281,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 		}()
 	}
 
-	err := process.Start()
+	err = process.Start()
 	if err != nil {
 		return err
 	}
@@ -275,16 +306,22 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 		}
 
 		if s.Stderr != nil {
-			s.Stderr.Finish()
+			if err := s.Stderr.Close(); err != nil {
+				log.Println("Close stderr error", err)
+			}
 		}
-		s.cmu.RLock()
 		if s.Stdout != nil {
-			s.Stdout.Finish()
+			if err := s.Stdout.Close(); err != nil {
+				log.Println("Close stdout error", err)
+			}
 		}
 		if s.Combined != nil {
-			s.Combined.Finish()
+			s.cmu.RLock()
+			if err := s.Combined.Close(); err != nil {
+				log.Println("Close combined error", err)
+			}
+			s.cmu.RUnlock()
 		}
-		s.cmu.RUnlock()
 
 		s.syncStatusAndSave()
 
@@ -294,7 +331,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	return nil
 }
 
-func (s *Task) ReadCombined(offset int) (int, []byte, error) {
+func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
 	s.cmu.RLock()
 	combined := s.Combined
 	combinedOffset := s.combinedOffset
@@ -303,8 +340,8 @@ func (s *Task) ReadCombined(offset int) (int, []byte, error) {
 		return offset, make([]byte, 0), nil
 	}
 	if offset == -1 {
-		if combined.Len() > CombinedBufSize {
-			offset = combinedOffset + combined.Len() - CombinedBufSize
+		if combined.Len() > HistorySize {
+			offset = combinedOffset + combined.Len() - HistorySize
 		} else {
 			offset = combinedOffset
 		}
@@ -317,7 +354,7 @@ func (s *Task) ReadCombined(offset int) (int, []byte, error) {
 	if err != nil {
 		return 0, nil, err
 	}
-	offset += len(fragment)
+	offset += int64(len(fragment))
 	return offset, fragment, nil
 }
 
@@ -471,8 +508,17 @@ func (s *Task) syncStatusAndSave() {
 	s.queue.Save()
 }
 
-func (s *Task) Init(queue *Queue) {
+func (s *Task) Init(config *cfg.Config, queue *Queue) {
 	s.queue = queue
+
+	if s.IsWriteLogs {
+		s.Combined, _ = s.openStdWriter(config, LOG_COMBINED)
+		if !s.IsOnlyCombined {
+			s.Stdout, _ = s.openStdWriter(config, LOG_STDOUT)
+			s.Stderr, _ = s.openStdWriter(config, LOG_STDERR)
+		}
+	}
+
 	if s.IsStarted && !s.IsFinished {
 		s.IsCanceled = true
 		s.IsFinished = true
@@ -483,6 +529,28 @@ func (s *Task) Init(queue *Queue) {
 func (s *Task) SetLabel(label string) {
 	s.Label = label
 	s.queue.Save()
+}
+
+func (s *Task) openStdWriter(config *cfg.Config, postfix string) (*shared.DataStore, error) {
+	l, err := logwriter.OpenLogWriter(s.getLogFilename(config, postfix))
+	if err != nil {
+		return nil, err
+	}
+	return l.GetDataStore(), nil
+}
+
+func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int) (*shared.DataStore, error) {
+	if inLog {
+		l, err := logwriter.NewLogWriter(s.getLogFilename(config, postfix))
+		return l.GetDataStore(), err
+	} else {
+		l := gzbuffer.NewGzBuffer(bufSize)
+		return l.GetDataStore(), nil
+	}
+}
+
+func (s *Task) getLogFilename(c *cfg.Config, t string) string {
+	return path.Join(c.GetLogsFolder(), s.Id+"-"+t+".log")
 }
 
 func NewTask(id string, taskBase TaskBase) *Task {

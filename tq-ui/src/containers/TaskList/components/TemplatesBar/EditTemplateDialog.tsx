@@ -50,6 +50,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
     isOnlyCombined,
     isSingleInstance,
     isStartOnBoot,
+    isWriteLogs,
   } = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
@@ -61,6 +62,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   const refPty = useRef<HTMLInputElement>(null);
   const refId = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
+  const refWriteLogs = useRef<HTMLInputElement>(null);
   const refSingleInstance = useRef<HTMLInputElement>(null);
   const refStartOnBoot = useRef<HTMLInputElement>(null);
   const refPlace = useRef<HTMLInputElement>(null);
@@ -193,6 +195,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
       }),
       isPty: refPty.current?.checked,
       isOnlyCombined: refOnlyCombined.current?.checked,
+      isWriteLogs: refWriteLogs.current?.checked,
       isSingleInstance: refSingleInstance.current?.checked,
       isStartOnBoot: refStartOnBoot.current?.checked,
     };
@@ -261,6 +264,11 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             control={
               <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
             }
+          />
+          <FormControlLabel
+            sx={{my: 1}}
+            label="Write logs"
+            control={<Checkbox size="small" inputRef={refWriteLogs} defaultChecked={isWriteLogs} />}
           />
           <FormControlLabel
             sx={{my: 1}}

@@ -40,7 +40,7 @@ func main() {
 	taskqueue.InitTemplates()
 
 	var powerControl = powerCtr.GetPowerControl()
-	var taskQueue = taskqueue.LoadQueue()
+	var taskQueue = taskqueue.LoadQueue(&config)
 	var memStorage = memstorage.GetMemStorage()
 
 	callChan := make(chan string)
@@ -120,6 +120,8 @@ func powerLock(router *internal.Router, powerControl *powerCtr.PowerControl) {
 
 func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 	const CHUNK_SIZE = 16 * 1024
+	const HISTORY_DATA = "h"
+	const ACTUAL_DATA = "a"
 
 	ws := func(ws *websocket.Conn) {
 		defer ws.Close()
@@ -179,9 +181,9 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 			return nil
 		}
 
-		offset := -1
+		offset := int64(-1)
 		lastValue := -1
-		dataType := "h"
+		dataType := HISTORY_DATA
 		for {
 			if task.Combined != nil {
 				for {
@@ -202,7 +204,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 					}
 				}
 			}
-			dataType = "a"
+			dataType = ACTUAL_DATA
 			if lastValue == 0 {
 				break
 			}

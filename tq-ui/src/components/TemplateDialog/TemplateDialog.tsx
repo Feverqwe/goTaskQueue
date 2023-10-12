@@ -41,6 +41,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
     group,
     isPty,
     isOnlyCombined,
+    isWriteLogs,
     place,
     isSingleInstance,
     isStartOnBoot,
@@ -54,6 +55,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
   const refGroup = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
+  const refWriteLogs = useRef<HTMLInputElement>(null);
   const refSingleInstance = useRef<HTMLInputElement>(null);
   const refStartOnBoot = useRef<HTMLInputElement>(null);
   const refMap = useRef(new Map());
@@ -98,6 +100,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
     const group = refGroup.current?.value || '';
     const isPty = refPty.current?.checked;
     const isOnlyCombined = refOnlyCombined.current?.checked;
+    const isWriteLogs = refWriteLogs.current?.checked;
     const isSingleInstance = refSingleInstance.current?.checked;
     const isStartOnBoot = refStartOnBoot.current?.checked;
 
@@ -111,6 +114,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
       isOnlyCombined,
       isSingleInstance,
       isStartOnBoot,
+      isWriteLogs,
       templatePlace,
       isRun,
       variables,
@@ -196,6 +200,13 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
               label="Combined output"
               control={
                 <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
+              }
+            />
+            <FormControlLabel
+              sx={{my: 1}}
+              label="Write logs"
+              control={
+                <Checkbox size="small" inputRef={refWriteLogs} defaultChecked={isWriteLogs} />
               }
             />
             {place && (

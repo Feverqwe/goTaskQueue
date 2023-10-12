@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -17,6 +18,7 @@ type Config struct {
 	Port          int
 	Address       string
 	Name          string
+	LogFolder     string
 	Run           []string
 	PtyRun        []string
 	PtyRunEnv     []string
@@ -38,10 +40,18 @@ func (s *Config) GetBrowserAddress() string {
 	return "http://" + addr + ":" + strconv.Itoa(s.Port)
 }
 
+func (s *Config) GetLogsFolder() string {
+	if path.IsAbs(s.LogFolder) {
+		return s.LogFolder
+	}
+	return path.Join(GetProfilePath(), s.LogFolder)
+}
+
 func getNewConfig() Config {
 	var config = Config{
-		Port: 80,
-		Name: "TaskQueue",
+		Port:      80,
+		Name:      "TaskQueue",
+		LogFolder: "logs",
 	}
 	if runtime.GOOS == "windows" {
 		config.Run = []string{"cmd", "/C"}
@@ -57,7 +67,8 @@ func getNewConfig() Config {
 }
 
 func LoadConfig() Config {
-	config := getNewConfig()
+	newConfig := getNewConfig()
+	config := newConfig
 
 	path := getConfigPath()
 
@@ -79,23 +90,32 @@ func LoadConfig() Config {
 	}
 
 	if config.Run == nil {
-		config.Run = getNewConfig().Run
+		config.Run = newConfig.Run
 	}
 
 	if config.PtyRun == nil {
-		config.PtyRun = getNewConfig().PtyRun
+		config.PtyRun = newConfig.PtyRun
 	}
 
 	if config.PtyRunEnv == nil {
-		config.PtyRunEnv = getNewConfig().PtyRunEnv
+		config.PtyRunEnv = newConfig.PtyRunEnv
 	}
 
 	if config.RunEnv == nil {
-		config.RunEnv = getNewConfig().RunEnv
+		config.RunEnv = newConfig.RunEnv
 	}
 
 	if config.TemplateOrder == nil {
-		config.TemplateOrder = getNewConfig().TemplateOrder
+		config.TemplateOrder = newConfig.TemplateOrder
+	}
+
+	if config.LogFolder == "" {
+		config.LogFolder = newConfig.LogFolder
+	}
+
+	err = os.MkdirAll(config.GetLogsFolder(), 0700)
+	if err != nil {
+		log.Println("Create logs folder error", err)
 	}
 
 	return config
