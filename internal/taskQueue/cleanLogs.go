@@ -40,6 +40,10 @@ func CleanLogs(config *cfg.Config, queue *Queue) (err error) {
 		}
 
 		parts := strings.Split(name, "-")
+		if len(parts) < 2 {
+			continue
+		}
+
 		id := parts[0]
 
 		if _, ok := idSet[id]; !ok {
