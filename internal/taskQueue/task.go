@@ -541,7 +541,7 @@ func (s *Task) openStdWriter(config *cfg.Config, postfix string) (*shared.DataSt
 
 func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int) (*shared.DataStore, error) {
 	if inLog {
-		l, err := logwriter.NewLogWriter(s.getLogFilename(config, postfix))
+		l, err := logwriter.NewLogWriter(MemBufSize, s.getLogFilename(config, postfix))
 		return l.GetDataStore(), err
 	} else {
 		l := gzbuffer.NewGzBuffer(bufSize)

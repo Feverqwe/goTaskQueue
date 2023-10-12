@@ -11,11 +11,13 @@ import (
 
 type LogWriter struct {
 	shared.DataStore
-	filename string
-	file     *os.File
-	mu       sync.RWMutex
-	size     int64
-	finished bool
+	filename   string
+	file       *os.File
+	mu         sync.RWMutex
+	size       int64
+	finished   bool
+	qBuf       []byte
+	maxBufSize int
 }
 
 func (s *LogWriter) GetDataStore() *shared.DataStore {
@@ -41,6 +43,12 @@ func (s *LogWriter) Write(data []byte) (n int, err error) {
 
 	n, err = s.file.Write(data)
 
+	s.qBuf = append(s.qBuf, data...)
+	if len(s.qBuf) > s.maxBufSize {
+		off := len(s.qBuf) - s.maxBufSize
+		s.qBuf = s.qBuf[off:]
+	}
+
 	s.size += int64(n)
 
 	return
@@ -56,6 +64,15 @@ func (s *LogWriter) ReadAt(offset int64) ([]byte, error) {
 		fmt.Println("Read offset more than len", offset, size)
 		return nil, errors.New("read_icorrect_offset")
 	}
+
+	readSize := int(size - offset)
+	if len(s.qBuf) >= readSize {
+		// log.Println("Read from buffer")
+		off := len(s.qBuf) - readSize
+		return s.qBuf[off:], nil
+	}
+
+	// log.Println("Read from file")
 
 	file, err := os.OpenFile(s.filename, os.O_RDONLY, 0600)
 	if err != nil {
@@ -105,7 +122,7 @@ func (s *LogWriter) Slice(rightOffset int64, approx bool) (lw *LogWriter, err er
 		return
 	}
 
-	lw, err = NewLogWriter(s.filename)
+	lw, err = NewLogWriter(s.maxBufSize, s.filename)
 	if err != nil {
 		return
 	}
@@ -130,6 +147,10 @@ func (s *LogWriter) Close() (err error) {
 
 	err = s.file.Close()
 
+	if err == nil {
+		s.qBuf = make([]byte, 0)
+	}
+
 	s.finished = true
 	return
 }
@@ -149,12 +170,13 @@ func OpenLogWriter(filename string) (lw *LogWriter, err error) {
 	return
 }
 
-func NewLogWriter(filename string) (lw *LogWriter, err error) {
+func NewLogWriter(maxBufSize int, filename string) (lw *LogWriter, err error) {
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 
 	lw = &LogWriter{
-		filename: filename,
-		file:     f,
+		filename:   filename,
+		file:       f,
+		maxBufSize: maxBufSize,
 	}
 
 	return
