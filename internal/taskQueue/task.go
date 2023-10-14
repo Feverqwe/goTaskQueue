@@ -150,6 +150,9 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	}
 	s.Combined = output
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	go func() {
 		chunk := make([]byte, 16*1024)
 		for {
@@ -171,10 +174,14 @@ func (s *Task) RunPty(config *cfg.Config) error {
 
 				go s.pushChanges(1)
 			}
-			if err == io.EOF || err != nil {
+			if err != nil {
+				if err != io.EOF {
+					log.Println("Read pipe ("+LOG_STDOUT+") error:", err)
+				}
 				break
 			}
 		}
+		wg.Done()
 	}()
 
 	s.StartedAt = time.Now()
@@ -186,6 +193,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	go func() {
 		defer f.Close()
 
+		wg.Wait()
 		err = process.Wait()
 
 		s.FinishedAt = time.Now()
@@ -239,8 +247,12 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	stdin, _ := process.StdinPipe()
 	s.stdin = stdin
 
-	for _, pT := range pipes {
-		var pipe io.ReadCloser
+	var wg sync.WaitGroup
+	for _, pt := range pipes {
+		pT := pt
+		wg.Add(1)
+
+		var pipe io.Reader
 		var buffer *shared.DataStore
 		if !s.IsOnlyCombined {
 			b, err := s.getStdWriter(config, s.IsWriteLogs, pT, 0)
@@ -282,10 +294,14 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 
 					go s.pushChanges(1)
 				}
-				if err == io.EOF || err != nil {
+				if err != nil {
+					if err != io.EOF {
+						log.Println("Read pipe ("+pT+") error:", err)
+					}
 					break
 				}
 			}
+			wg.Done()
 		}()
 	}
 
@@ -303,6 +319,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	go func() {
 		defer stdin.Close()
 
+		wg.Wait()
 		err = process.Wait()
 
 		s.FinishedAt = time.Now()
