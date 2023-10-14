@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
-	logwriter "goTaskQueue/internal/logWriter"
+	logstore "goTaskQueue/internal/logStore"
 	"goTaskQueue/internal/shared"
 	"io"
 	"log"
@@ -557,7 +557,7 @@ func (s *Task) SetLabel(label string) {
 }
 
 func (s *Task) openStdWriter(config *cfg.Config, postfix string) (*shared.DataStore, error) {
-	l, err := logwriter.OpenLogWriter(s.getLogFilename(config, postfix))
+	l, err := logstore.OpenLogStore(s.getLogFilename(config, postfix))
 	if err != nil {
 		return nil, err
 	}
@@ -566,8 +566,8 @@ func (s *Task) openStdWriter(config *cfg.Config, postfix string) (*shared.DataSt
 
 func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int) (*shared.DataStore, error) {
 	if inLog {
-		l, err := logwriter.NewLogWriter(MemBufSize, s.getLogFilename(config, postfix))
-		return l.GetDataStore(), err
+		l := logstore.NewLogStore(s.getLogFilename(config, postfix))
+		return l.GetDataStore(), nil
 	} else {
 		l := gzbuffer.NewGzBuffer(bufSize)
 		return l.GetDataStore(), nil
