@@ -137,7 +137,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 			for {
 				var data string
 				err := websocket.Message.Receive(ws, &data)
-				if err == io.EOF || err != nil {
+				if err != nil {
 					if err != io.EOF {
 						fmt.Println("ws receive error", err)
 					}

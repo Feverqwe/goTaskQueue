@@ -190,6 +190,14 @@ func (s *Task) RunPty(config *cfg.Config) error {
 
 		s.FinishedAt = time.Now()
 
+		if s.Combined != nil {
+			s.cmu.RLock()
+			if err := s.Combined.Close(); err != nil {
+				log.Println("Close combined error", err)
+			}
+			s.cmu.RUnlock()
+		}
+
 		s.IsFinished = true
 		if err != nil {
 			s.IsError = true
@@ -299,12 +307,6 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 
 		s.FinishedAt = time.Now()
 
-		s.IsFinished = true
-		if err != nil {
-			s.IsError = true
-			s.Error = err.Error()
-		}
-
 		if s.Stderr != nil {
 			if err := s.Stderr.Close(); err != nil {
 				log.Println("Close stderr error", err)
@@ -321,6 +323,12 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 				log.Println("Close combined error", err)
 			}
 			s.cmu.RUnlock()
+		}
+
+		s.IsFinished = true
+		if err != nil {
+			s.IsError = true
+			s.Error = err.Error()
 		}
 
 		s.syncStatusAndSave()
