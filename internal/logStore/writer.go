@@ -14,7 +14,7 @@ type LogWriter struct {
 }
 
 func (s *LogWriter) Write(data []byte) (n int, err error) {
-	// log.Println("Write", len(data))
+	// log.Println("w Write", len(data))
 	var cn int
 	for len(data) > 0 {
 		if s.chunk == nil {
@@ -55,6 +55,7 @@ func (s *LogWriter) Close() (err error) {
 }
 
 func (s *LogWriter) openChunk() (err error) {
+	// log.Println("w openChunk")
 	f, err := s.chunk.OpenForWriting(s.store.place)
 	if err != nil {
 		return
@@ -64,6 +65,7 @@ func (s *LogWriter) openChunk() (err error) {
 }
 
 func (s *LogWriter) closeChunk() (err error) {
+	// log.Println("w closeChunk")
 	if s.file != nil {
 		if err = s.file.Close(); err != nil {
 			return
@@ -74,7 +76,8 @@ func (s *LogWriter) closeChunk() (err error) {
 		s.chunk.Close()
 	}
 	s.chunk = nil
-	return s.store.OnChunkClose()
+	s.store.OnChunkClose()
+	return
 }
 
 func NewLogWriter(store *LogStore) *LogWriter {

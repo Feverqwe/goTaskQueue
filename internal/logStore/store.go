@@ -19,6 +19,7 @@ type LogStore struct {
 	Chunks []*LogChunk `json:"chunks"`
 	place  string
 	m      sync.RWMutex
+	sm     sync.Mutex
 }
 
 func (s *LogStore) Len() int64 {
@@ -46,13 +47,21 @@ func (s *LogStore) PutChunk(chunk *LogChunk) {
 	s.Chunks = append(s.Chunks, chunk)
 }
 
-func (s *LogStore) OnChunkClose() (err error) {
-	return s.Save()
+func (s *LogStore) OnChunkClose() {
+	if ok := s.sm.TryLock(); !ok {
+		return
+	}
+	go func() {
+		defer s.sm.Unlock()
+		s.Compress()
+		log.Println("save")
+		if err := s.Save(); err != nil {
+			log.Println("Save store error", err)
+		}
+	}()
 }
 
 func (s *LogStore) Save() (err error) {
-	s.Compress()
-
 	s.m.RLock()
 	data, err := json.Marshal(s)
 	s.m.RUnlock()
@@ -66,16 +75,23 @@ func (s *LogStore) Save() (err error) {
 }
 
 func (s *LogStore) Compress() {
-	s.m.RLock()
-	chunks := s.Chunks
-	s.m.RUnlock()
+	for {
+		var c int
+		s.m.RLock()
+		chunks := s.Chunks
+		s.m.RUnlock()
 
-	for _, chunk := range chunks {
-		if chunk.CanCompress() {
-			err := chunk.Compress(s.place)
-			if err != nil {
-				log.Println("Compress chunk error", err)
+		for _, chunk := range chunks {
+			if chunk.CanCompress() {
+				if err := chunk.Compress(s.place); err != nil {
+					log.Println("Compress chunk error", err)
+					continue
+				}
+				c++
 			}
+		}
+		if c == 0 {
+			break
 		}
 	}
 }
