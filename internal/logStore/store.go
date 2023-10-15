@@ -23,10 +23,9 @@ type LogStore struct {
 	place        string
 	lastChangeAt time.Time
 	lastSaveAt   time.Time
-	sliced       bool
 	cm           sync.Mutex
+	cwg          sync.WaitGroup
 	chunksM      sync.Mutex
-	static       bool
 }
 
 func (s *LogStore) Len() int64 {
@@ -35,9 +34,10 @@ func (s *LogStore) Len() int64 {
 
 func (s *LogStore) AppendChunk(chunk *LogChunk) {
 	s.chunksM.Lock()
-	defer s.chunksM.Unlock()
-
 	s.Chunks = append(s.Chunks, chunk)
+	s.chunksM.Unlock()
+
+	s.EmitChange()
 }
 
 func (s *LogStore) GetChunkName() string {
@@ -50,16 +50,10 @@ func (s *LogStore) EmitChange() {
 
 	s.Save()
 
-	if s.static {
-		s.TryCompress()
-	}
+	s.TryCompress()
 }
 
 func (s *LogStore) Save() (err error) {
-	if s.sliced {
-		return
-	}
-
 	if s.lastSaveAt.After(s.lastChangeAt) {
 		return
 	}
@@ -84,8 +78,10 @@ func (s *LogStore) TryCompress() {
 		return
 	}
 
+	s.cwg.Add(1)
 	go func() {
 		defer s.cm.Unlock()
+		defer s.cwg.Done()
 
 		var n int
 		for {
@@ -101,10 +97,6 @@ func (s *LogStore) TryCompress() {
 }
 
 func (s *LogStore) compress(isClose bool) (c bool) {
-	if s.sliced {
-		return
-	}
-
 	chunks := s.Chunks
 	if !isClose {
 		if len(chunks) < 2 {
@@ -121,10 +113,6 @@ func (s *LogStore) compress(isClose bool) (c bool) {
 		if err != nil {
 			log.Println("Compress chunk error", err)
 			continue
-		}
-
-		if s.sliced {
-			return
 		}
 
 		s.chunksM.Lock()
@@ -147,7 +135,6 @@ func (s *LogStore) GetDataStore() *shared.DataStore {
 		Write: w.Write,
 		ReadAt: func(i int64) (b []byte, err error) {
 			// log.Println("ReadAt", i)
-
 			r := NewLogReader(s)
 			defer r.Close()
 
@@ -169,11 +156,10 @@ func (s *LogStore) GetDataStore() *shared.DataStore {
 			return
 		},
 		Slice: func(i int64, b bool) (ds *shared.DataStore, err error) {
-			s.sliced = true
-			err = w.Close()
-			if err != nil {
+			if err = w.Close(); err != nil {
 				return
 			}
+			s.cwg.Wait()
 
 			ls, err := s.Slice(i, b)
 			if err != nil {
@@ -196,8 +182,6 @@ func (s *LogStore) Slice(rightOffset int64, approx bool) (ls *LogStore, err erro
 	if !approx {
 		return nil, errors.New("not_approximate_unsupported")
 	}
-
-	s.sliced = true
 
 	offset := s.Len() - rightOffset
 	index := getChunkIndex(offset)
@@ -223,7 +207,6 @@ func (s *LogStore) Clone(chunkIndex int) (ls *LogStore) {
 		Name:       s.Name,
 		place:      s.place,
 		chunkIndex: s.chunkIndex,
-		static:     s.static,
 	}
 
 	for _, chunk := range chunks {
@@ -234,11 +217,10 @@ func (s *LogStore) Clone(chunkIndex int) (ls *LogStore) {
 }
 
 func (s *LogStore) Close() (err error) {
-	s.cm.Lock()
+	s.cwg.Wait()
 	if s.compress(true) {
 		s.lastChangeAt = time.Now()
 	}
-	s.cm.Unlock()
 
 	return s.Save()
 }
@@ -265,8 +247,8 @@ func OpenLogStore(filename string) (ls *LogStore, err error) {
 	return
 }
 
-func NewLogStore(filename string, static bool) *LogStore {
+func NewLogStore(filename string) *LogStore {
 	name := path.Base(filename)
 	place := path.Dir(filename)
-	return &LogStore{Name: name, place: place, static: static}
+	return &LogStore{Name: name, place: place}
 }

@@ -144,7 +144,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 
 	s.stdin = f
 
-	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize, false)
+	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize)
 	if err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 
 	pipes := []string{Out, Err}
 
-	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize, s.IsOnlyCombined)
+	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize)
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 		var pipe io.Reader
 		var buffer *shared.DataStore
 		if !s.IsOnlyCombined {
-			b, err := s.getStdWriter(config, s.IsWriteLogs, pT, 0, true)
+			b, err := s.getStdWriter(config, s.IsWriteLogs, pT, 0)
 			if err != nil {
 				return err
 			}
@@ -566,9 +566,9 @@ func (s *Task) openStdWriter(config *cfg.Config, postfix string) (*shared.DataSt
 	return l.GetDataStore(), nil
 }
 
-func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int, static bool) (*shared.DataStore, error) {
+func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int) (*shared.DataStore, error) {
 	if inLog {
-		l := logstore.NewLogStore(s.getLogFilename(config, postfix), static)
+		l := logstore.NewLogStore(s.getLogFilename(config, postfix))
 		return l.GetDataStore(), nil
 	} else {
 		l := gzbuffer.NewGzBuffer(bufSize)

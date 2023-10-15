@@ -15,38 +15,37 @@ type LogWriter struct {
 
 func (s *LogWriter) Write(data []byte) (n int, err error) {
 	// log.Println("w Write", len(data))
-	var cn int
-	for len(data) > 0 {
-		if !s.inited {
-			s.inited = true
-			chunks := s.store.Chunks
-			if len(chunks) > 0 {
-				chunk := chunks[len(chunks)-1]
-				if chunk.GetAvailableLen() > 0 {
-					s.chunk = chunk
-					if err = s.openChunk(); err != nil {
-						return
-					}
+	if !s.inited {
+		s.inited = true
+		chunks := s.store.Chunks
+		if len(chunks) > 0 {
+			chunk := chunks[len(chunks)-1]
+			if getAvailableSize(chunk) > 0 {
+				s.chunk = chunk
+				if err = s.openChunk(); err != nil {
+					return
 				}
 			}
 		}
+	}
 
+	var cn int
+	for len(data) > 0 {
 		if s.chunk == nil {
-			name := s.store.GetChunkName()
-			s.chunk = NewLogChunk(s.store, name)
+			s.chunk = NewLogChunk(s.store)
 			if err = s.openChunk(); err != nil {
 				return
 			}
 
 			s.store.AppendChunk(s.chunk)
-			s.store.EmitChange()
 		}
 
-		avail := s.chunk.GetAvailableLen()
+		l := s.chunk.Len
+		avail := getAvailableSize(s.chunk)
 		size := min(len(data), avail)
 
 		cn, err = s.file.Write(data[0:size])
-		s.chunk.IncLen(cn)
+		s.chunk.Len = l + cn
 		n += cn
 		if err != nil {
 			return
@@ -87,8 +86,7 @@ func (s *LogWriter) closeChunk() (err error) {
 	}
 	s.file = nil
 	if s.chunk != nil {
-		s.chunk.Close()
-		s.store.EmitChange()
+		s.chunk.Closed = true
 	}
 	s.chunk = nil
 	return

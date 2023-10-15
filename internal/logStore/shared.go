@@ -13,3 +13,7 @@ func getChunksSize(chunks []*LogChunk) (n int64) {
 	}
 	return int64(chunks[l-1].Len + ChunkSize*(l-1))
 }
+
+func getAvailableSize(chunk *LogChunk) int {
+	return ChunkSize - chunk.Len
+}

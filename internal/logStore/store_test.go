@@ -15,7 +15,7 @@ func TestStore(t *testing.T) {
 	os.RemoveAll(place)
 	os.MkdirAll(place, 0700)
 
-	s := NewLogStore(filename, true)
+	s := NewLogStore(filename)
 	defer s.Close()
 
 	size := s.Len()

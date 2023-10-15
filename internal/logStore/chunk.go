@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"sync"
 )
 
 type LogChunk struct {
@@ -15,7 +14,6 @@ type LogChunk struct {
 	Closed     bool   `json:"closed"`
 	Compressed bool   `json:"compressed"`
 	store      *LogStore
-	lenM       sync.Mutex
 }
 
 func (s *LogChunk) OpenForReading() (f *os.File, r io.ReadCloser, err error) {
@@ -35,17 +33,6 @@ func (s *LogChunk) OpenForWriting() (f *os.File, err error) {
 		return
 	}
 	return
-}
-
-func (s *LogChunk) GetAvailableLen() int {
-	return ChunkSize - s.Len
-}
-
-func (s *LogChunk) IncLen(n int) {
-	s.lenM.Lock()
-	defer s.lenM.Unlock()
-
-	s.Len += n
 }
 
 func (s *LogChunk) CanCompress() bool {
@@ -111,10 +98,6 @@ func (s *LogChunk) Remove() error {
 	return os.Remove(filename)
 }
 
-func (s *LogChunk) Close() {
-	s.Closed = true
-}
-
 func (s *LogChunk) GetReader(f *os.File) io.ReadCloser {
 	if !s.Compressed {
 		return f
@@ -133,16 +116,14 @@ func (s *LogChunk) SyncLen() (err error) {
 		return
 	}
 
-	s.lenM.Lock()
-	defer s.lenM.Unlock()
 	s.Len = int(stat.Size())
 
 	return
 }
 
-func NewLogChunk(store *LogStore, name string) *LogChunk {
+func NewLogChunk(store *LogStore) *LogChunk {
 	return &LogChunk{
-		Name:  name,
+		Name:  store.GetChunkName(),
 		store: store,
 	}
 }
