@@ -26,6 +26,8 @@ type LogStore struct {
 	cm           sync.Mutex
 	cwg          sync.WaitGroup
 	chunksM      sync.Mutex
+	qBuf         []byte
+	maxBufSize   int
 }
 
 func (s *LogStore) Len() int64 {
@@ -135,9 +137,26 @@ func (s *LogStore) GetDataStore() *shared.DataStore {
 	w := NewLogWriter(s)
 
 	return &shared.DataStore{
-		Write: w.Write,
+		Write: func(b []byte) (n int, err error) {
+			n, err = w.Write(b)
+
+			s.qBuf = append(s.qBuf, b...)
+			if len(s.qBuf) > s.maxBufSize {
+				off := len(s.qBuf) - s.maxBufSize
+				s.qBuf = s.qBuf[off:]
+			}
+
+			return
+		},
 		ReadAt: func(i int64) (b []byte, err error) {
 			// log.Println("ReadAt", i)
+			size := s.Len()
+			readSize := int(size - i)
+			if len(s.qBuf) >= readSize {
+				off := len(s.qBuf) - readSize
+				return s.qBuf[off:], nil
+			}
+
 			r := NewLogReader(s)
 			defer r.Close()
 
@@ -170,6 +189,8 @@ func (s *LogStore) GetDataStore() *shared.DataStore {
 		},
 		Len: s.Len,
 		Close: func() (err error) {
+			s.qBuf = make([]byte, 0)
+
 			if err = w.Close(); err != nil {
 				return
 			}
@@ -207,6 +228,7 @@ func (s *LogStore) Clone(chunkIndex int) (ls *LogStore) {
 		Name:       s.Name,
 		place:      s.place,
 		chunkIndex: s.chunkIndex,
+		maxBufSize: s.maxBufSize,
 	}
 
 	for _, chunk := range chunks {
@@ -247,8 +269,8 @@ func OpenLogStore(filename string) (ls *LogStore, err error) {
 	return
 }
 
-func NewLogStore(filename string) *LogStore {
+func NewLogStore(filename string, bufferSize int) *LogStore {
 	name := path.Base(filename)
 	place := path.Dir(filename)
-	return &LogStore{Name: name, place: place}
+	return &LogStore{Name: name, place: place, maxBufSize: bufferSize}
 }

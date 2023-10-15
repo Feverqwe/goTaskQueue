@@ -100,7 +100,7 @@ func (s *LogChunk) Remove() error {
 
 func (s *LogChunk) GetReader(f *os.File) io.ReadCloser {
 	if !s.Compressed {
-		return f
+		return nil
 	}
 	return flate.NewReader(f)
 }
