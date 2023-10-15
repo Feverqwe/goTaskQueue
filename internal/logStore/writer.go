@@ -3,29 +3,43 @@ package logstore
 import (
 	"io"
 	"os"
-	"strconv"
 )
 
 type LogWriter struct {
 	io.WriteCloser
-	store *LogStore
-	chunk *LogChunk
-	file  *os.File
+	store  *LogStore
+	chunk  *LogChunk
+	inited bool
+	file   *os.File
 }
 
 func (s *LogWriter) Write(data []byte) (n int, err error) {
 	// log.Println("w Write", len(data))
 	var cn int
 	for len(data) > 0 {
+		if !s.inited {
+			s.inited = true
+			chunks := s.store.Chunks
+			if len(chunks) > 0 {
+				chunk := chunks[len(chunks)-1]
+				if chunk.GetAvailableLen() > 0 {
+					s.chunk = chunk
+					if err = s.openChunk(); err != nil {
+						return
+					}
+				}
+			}
+		}
+
 		if s.chunk == nil {
-			index := len(s.store.GetChunks())
-			name := s.store.Name + "-chunk-" + strconv.Itoa(index)
-			s.chunk = NewLogChunk(name)
+			name := s.store.GetChunkName()
+			s.chunk = NewLogChunk(s.store, name)
 			if err = s.openChunk(); err != nil {
 				return
 			}
 
-			s.store.PutChunk(s.chunk)
+			s.store.AppendChunk(s.chunk)
+			s.store.EmitChange()
 		}
 
 		avail := s.chunk.GetAvailableLen()
@@ -55,8 +69,8 @@ func (s *LogWriter) Close() (err error) {
 }
 
 func (s *LogWriter) openChunk() (err error) {
-	// log.Println("w openChunk")
-	f, err := s.chunk.OpenForWriting(s.store.place)
+	// log.Println("w openChunk", s.chunk.Name)
+	f, err := s.chunk.OpenForWriting()
 	if err != nil {
 		return
 	}
@@ -74,9 +88,9 @@ func (s *LogWriter) closeChunk() (err error) {
 	s.file = nil
 	if s.chunk != nil {
 		s.chunk.Close()
+		s.store.EmitChange()
 	}
 	s.chunk = nil
-	s.store.OnChunkClose()
 	return
 }
 

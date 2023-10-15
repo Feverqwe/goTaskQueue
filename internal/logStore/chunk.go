@@ -4,7 +4,6 @@ import (
 	"compress/flate"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"path"
 	"sync"
@@ -15,86 +14,62 @@ type LogChunk struct {
 	Len        int    `json:"len"`
 	Closed     bool   `json:"closed"`
 	Compressed bool   `json:"compressed"`
-	m          sync.RWMutex
-	cm         sync.Mutex
+	store      *LogStore
+	lenM       sync.Mutex
 }
 
-func (s *LogChunk) OpenForReading(place string) (f *os.File, r io.ReadCloser, err error) {
-	s.m.RLock()
-	defer s.m.RUnlock()
-
-	filename := path.Join(place, s.Name)
+func (s *LogChunk) OpenForReading() (f *os.File, r io.ReadCloser, err error) {
+	filename := path.Join(s.store.place, s.Name)
 	f, err = os.OpenFile(filename, os.O_RDONLY, 0600)
 	if err != nil {
 		return
 	}
-	r = s.getReader(f)
+	r = s.GetReader(f)
 	return
 }
 
-func (s *LogChunk) OpenForWriting(place string) (f *os.File, err error) {
-	s.m.RLock()
-	defer s.m.RUnlock()
-
-	filename := path.Join(place, s.Name)
-	f, err = os.OpenFile(filename, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+func (s *LogChunk) OpenForWriting() (f *os.File, err error) {
+	filename := path.Join(s.store.place, s.Name)
+	f, err = os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (s *LogChunk) GetLen() int {
-	s.m.RLock()
-	defer s.m.RUnlock()
-
-	return s.Len
-}
-
 func (s *LogChunk) GetAvailableLen() int {
-	s.m.RLock()
-	defer s.m.RUnlock()
-
 	return ChunkSize - s.Len
 }
 
 func (s *LogChunk) IncLen(n int) {
-	s.m.Lock()
-	defer s.m.Unlock()
+	s.lenM.Lock()
+	defer s.lenM.Unlock()
 
 	s.Len += n
 }
 
 func (s *LogChunk) CanCompress() bool {
-	s.m.RLock()
-	defer s.m.RUnlock()
-
 	return !s.Compressed && s.Closed
 }
 
-func (s *LogChunk) Compress(place string) (err error) {
-	s.cm.Lock()
-	defer s.cm.Unlock()
-
-	s.m.RLock()
+func (s *LogChunk) Compress() (lc *LogChunk, err error) {
 	if s.Compressed {
-		return errors.New("chunk_already_compressed")
+		return lc, errors.New("chunk_already_compressed")
 	}
 	if !s.Closed {
-		return errors.New("chunk_is_not_closed")
+		return lc, errors.New("chunk_is_not_closed")
 	}
-	name := s.Name
-	s.m.RUnlock()
 
+	name := s.Name
 	cName := name + ".gz"
-	sPath := path.Join(place, name)
+	sPath := path.Join(s.store.place, name)
 	sf, err := os.OpenFile(sPath, os.O_RDONLY, 0600)
 	if err != nil {
 		return
 	}
 	defer sf.Close()
 
-	tPath := path.Join(place, cName)
+	tPath := path.Join(s.store.place, cName)
 	tf, err := os.OpenFile(tPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if err != nil {
 		return
@@ -114,34 +89,60 @@ func (s *LogChunk) Compress(place string) (err error) {
 		return
 	}
 
-	s.m.Lock()
-	s.Compressed = true
-	s.Name = cName
-	s.m.Unlock()
+	lc = s.Clone(s.store)
+	lc.Name = cName
+	lc.Compressed = true
 
-	rmErr := os.Remove(sPath)
-	if rmErr != nil {
-		log.Println("Rm raw chunk error", rmErr)
-	}
 	return
 }
 
-func (s *LogChunk) Close() {
-	s.m.Lock()
-	defer s.m.Unlock()
+func (s *LogChunk) Clone(store *LogStore) *LogChunk {
+	return &LogChunk{
+		Name:       s.Name,
+		Len:        s.Len,
+		Closed:     s.Closed,
+		Compressed: s.Compressed,
+		store:      store,
+	}
+}
 
+func (s *LogChunk) Remove() error {
+	filename := path.Join(s.store.place, s.Name)
+	return os.Remove(filename)
+}
+
+func (s *LogChunk) Close() {
 	s.Closed = true
 }
 
-func (s *LogChunk) getReader(f *os.File) io.ReadCloser {
+func (s *LogChunk) GetReader(f *os.File) io.ReadCloser {
 	if !s.Compressed {
 		return f
 	}
 	return flate.NewReader(f)
 }
 
-func NewLogChunk(name string) *LogChunk {
+func (s *LogChunk) SyncLen() (err error) {
+	if s.Compressed {
+		return
+	}
+
+	sPath := path.Join(s.store.place, s.Name)
+	stat, err := os.Stat(sPath)
+	if err != nil {
+		return
+	}
+
+	s.lenM.Lock()
+	defer s.lenM.Unlock()
+	s.Len = int(stat.Size())
+
+	return
+}
+
+func NewLogChunk(store *LogStore, name string) *LogChunk {
 	return &LogChunk{
-		Name: name,
+		Name:  name,
+		store: store,
 	}
 }

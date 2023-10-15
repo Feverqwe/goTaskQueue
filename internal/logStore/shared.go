@@ -11,6 +11,5 @@ func getChunksSize(chunks []*LogChunk) (n int64) {
 	if l == 0 {
 		return 0
 	}
-
-	return int64(chunks[l-1].GetLen() + ChunkSize*(l-1))
+	return int64(chunks[l-1].Len + ChunkSize*(l-1))
 }
