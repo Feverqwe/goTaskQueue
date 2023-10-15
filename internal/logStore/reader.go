@@ -84,9 +84,14 @@ func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
 
 	cOff := off - int64(cIndex*ChunkSize)
 	if cOff > 0 {
-		_, err = io.ReadFull(s.cReader, make([]byte, cOff))
-		if err != nil {
-			return
+		if f, ok := s.cReader.(*os.File); ok {
+			if _, err = f.Seek(off, 0); err != nil {
+				return
+			}
+		} else {
+			if _, err = io.ReadFull(s.cReader, make([]byte, cOff)); err != nil {
+				return
+			}
 		}
 	}
 
@@ -109,13 +114,13 @@ func (s *LogReader) openChunk(chunk *LogChunk) (err error) {
 
 func (s *LogReader) closeChunk() (err error) {
 	readerIsFile := s.cFile == s.cReader
-	if s.cReader != nil {
+	if !readerIsFile && s.cReader != nil {
 		if err = s.cReader.Close(); err != nil {
 			return
 		}
 	}
 	s.cReader = nil
-	if !readerIsFile && s.cFile != nil {
+	if s.cFile != nil {
 		if err = s.cFile.Close(); err != nil {
 			return
 		}

@@ -66,10 +66,11 @@ func (s *LogStore) Save() (err error) {
 	}
 
 	filename := path.Join(s.place, s.Name+"-index")
-	err = atomic.WriteFile(filename, bytes.NewReader(data))
-	if err == nil {
-		s.lastSaveAt = t
+	if err = atomic.WriteFile(filename, bytes.NewReader(data)); err != nil {
+		return
 	}
+
+	s.lastSaveAt = t
 	return
 }
 
@@ -121,9 +122,11 @@ func (s *LogStore) compress(isClose bool) (c bool) {
 
 		c = true
 
-		if err := chunk.Remove(); err != nil {
-			log.Println("Remove raw chunk error", err)
-		}
+		go func(chunk *LogChunk) {
+			if err := chunk.Remove(); err != nil {
+				log.Println("Remove raw chunk error", err)
+			}
+		}(chunk)
 	}
 	return
 }
@@ -138,15 +141,11 @@ func (s *LogStore) GetDataStore() *shared.DataStore {
 			r := NewLogReader(s)
 			defer r.Close()
 
-			_, err = r.Seek(i, 0)
-			if err != nil {
+			if _, err = r.Seek(i, 0); err != nil {
 				return
 			}
-			b, err = io.ReadAll(r)
-			if err != nil {
-				return
-			}
-			return
+
+			return io.ReadAll(r)
 		},
 		PipeTo: func(w io.Writer) (err error) {
 			r := NewLogReader(s)
@@ -171,9 +170,10 @@ func (s *LogStore) GetDataStore() *shared.DataStore {
 		},
 		Len: s.Len,
 		Close: func() (err error) {
-			err = w.Close()
-			s.Close()
-			return
+			if err = w.Close(); err != nil {
+				return
+			}
+			return s.Close()
 		},
 	}
 }
@@ -189,13 +189,13 @@ func (s *LogStore) Slice(rightOffset int64, approx bool) (ls *LogStore, err erro
 	rmChunks := s.Chunks[0:index]
 	ls = s.Clone(index)
 
-	go (func() {
+	go func() {
 		for _, ch := range rmChunks {
 			if err := ch.Remove(); err != nil {
 				log.Println("Remove sliced chunk error", err)
 			}
 		}
-	})()
+	}()
 
 	return
 }
