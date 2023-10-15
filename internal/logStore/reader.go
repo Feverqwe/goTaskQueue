@@ -54,7 +54,7 @@ func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
 
 	chunks := s.store.Chunks
 
-	size := getChunksSize(chunks)
+	size := getChunksSize(chunks, s.store.ChunkSize)
 
 	var off int64
 	switch whence {
@@ -72,7 +72,7 @@ func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
 		return ret, errors.New("offset_more_than_size")
 	}
 
-	cIndex := getChunkIndex(off)
+	cIndex := getChunkIndex(off, s.store.ChunkSize)
 	s.chunkIndex = cIndex
 
 	if off == 0 && len(chunks) == 0 {
@@ -86,7 +86,7 @@ func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
 		return
 	}
 
-	cOff := off - int64(cIndex*ChunkSize)
+	cOff := off - int64(cIndex*s.store.ChunkSize)
 	if cOff > 0 {
 		if s.cReader != nil {
 			if _, err = io.ReadFull(s.cReader, make([]byte, cOff)); err != nil {

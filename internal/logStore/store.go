@@ -18,6 +18,7 @@ import (
 
 type LogStore struct {
 	Name         string      `json:"name"`
+	ChunkSize    int         `json:"chunkSize"`
 	Chunks       []*LogChunk `json:"chunks"`
 	chunkIndex   int
 	place        string
@@ -31,7 +32,7 @@ type LogStore struct {
 }
 
 func (s *LogStore) Len() int64 {
-	return getChunksSize(s.Chunks)
+	return getChunksSize(s.Chunks, s.ChunkSize)
 }
 
 func (s *LogStore) AppendChunk(chunk *LogChunk) {
@@ -205,7 +206,7 @@ func (s *LogStore) Slice(rightOffset int64, approx bool) (ls *LogStore, err erro
 	}
 
 	offset := s.Len() - rightOffset
-	index := getChunkIndex(offset)
+	index := getChunkIndex(offset, s.ChunkSize)
 
 	rmChunks := s.Chunks[0:index]
 	ls = s.Clone(index)
@@ -226,6 +227,7 @@ func (s *LogStore) Clone(chunkIndex int) (ls *LogStore) {
 
 	ls = &LogStore{
 		Name:       s.Name,
+		ChunkSize:  s.ChunkSize,
 		place:      s.place,
 		chunkIndex: s.chunkIndex,
 		maxBufSize: s.maxBufSize,
@@ -258,6 +260,9 @@ func OpenLogStore(filename string) (ls *LogStore, err error) {
 	}
 
 	store.place = path.Dir(filename)
+	if store.ChunkSize == 0 {
+		store.ChunkSize = ChunkSize
+	}
 	for _, chunk := range store.Chunks {
 		chunk.store = &store
 		if err := chunk.SyncLen(); err != nil {
@@ -272,5 +277,10 @@ func OpenLogStore(filename string) (ls *LogStore, err error) {
 func NewLogStore(filename string, bufferSize int) *LogStore {
 	name := path.Base(filename)
 	place := path.Dir(filename)
-	return &LogStore{Name: name, place: place, maxBufSize: bufferSize}
+	return &LogStore{
+		Name:       name,
+		ChunkSize:  ChunkSize,
+		place:      place,
+		maxBufSize: bufferSize,
+	}
 }

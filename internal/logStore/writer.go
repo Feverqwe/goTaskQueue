@@ -20,7 +20,7 @@ func (s *LogWriter) Write(data []byte) (n int, err error) {
 		chunks := s.store.Chunks
 		if len(chunks) > 0 {
 			chunk := chunks[len(chunks)-1]
-			if getAvailableSize(chunk) > 0 {
+			if getAvailableSize(chunk, s.store.ChunkSize) > 0 {
 				s.chunk = chunk
 				if err = s.openChunk(); err != nil {
 					return
@@ -41,7 +41,7 @@ func (s *LogWriter) Write(data []byte) (n int, err error) {
 		}
 
 		l := s.chunk.Len
-		avail := getAvailableSize(s.chunk)
+		avail := getAvailableSize(s.chunk, s.store.ChunkSize)
 		size := min(len(data), avail)
 
 		cn, err = s.file.Write(data[0:size])
