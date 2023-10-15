@@ -85,7 +85,7 @@ func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
 	cOff := off - int64(cIndex*ChunkSize)
 	if cOff > 0 {
 		if f, ok := s.cReader.(*os.File); ok {
-			if _, err = f.Seek(off, 0); err != nil {
+			if _, err = f.Seek(cOff, 0); err != nil {
 				return
 			}
 		} else {
