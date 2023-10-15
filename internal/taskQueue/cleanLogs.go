@@ -35,9 +35,6 @@ func CleanLogs(config *cfg.Config, queue *Queue) (err error) {
 
 		name := file.Name()
 		filePath := path.Join(place, name)
-		if !strings.HasSuffix(name, ".log") {
-			continue
-		}
 
 		parts := strings.Split(name, "-")
 		if len(parts) < 2 {

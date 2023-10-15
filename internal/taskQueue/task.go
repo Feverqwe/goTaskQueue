@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
-	logwriter "goTaskQueue/internal/logWriter"
+	logstore "goTaskQueue/internal/logStore"
 	"goTaskQueue/internal/shared"
 	"io"
 	"log"
@@ -19,10 +19,10 @@ import (
 	"github.com/creack/pty"
 )
 
-const PtyLogSize = 4 * 1024 * 1025
-const PtyTrimLimit = PtyLogSize * 4
-const CombinedLogSize = 1 * 1024 * 1025
-const CombinedLogTrimLimit = CombinedLogSize * 5
+const PtyLogSize = logstore.ChunkSize
+const PtyTrimLimit = PtyLogSize * 2
+const CombinedLogSize = logstore.ChunkSize
+const CombinedLogTrimLimit = CombinedLogSize * 2
 const MemBufSize = 256 * 1024
 const HistorySize = 64 * 1024
 
@@ -144,7 +144,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 
 	s.stdin = f
 
-	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize)
+	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize, false)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,9 @@ func (s *Task) RunPty(config *cfg.Config) error {
 			bytes, err := f.Read(chunk)
 			if bytes > 0 {
 				s.cmu.Lock()
-				output.Write(chunk[0:bytes])
+				if _, err := output.Write(chunk[0:bytes]); err != nil {
+					log.Println("Write output error", err)
+				}
 
 				if output.Len() > PtyTrimLimit {
 					if newOutput, err := output.Slice(PtyLogSize, true); err == nil {
@@ -238,7 +240,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 
 	pipes := []string{Out, Err}
 
-	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize)
+	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize, s.IsOnlyCombined)
 	if err != nil {
 		return err
 	}
@@ -255,7 +257,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 		var pipe io.Reader
 		var buffer *shared.DataStore
 		if !s.IsOnlyCombined {
-			b, err := s.getStdWriter(config, s.IsWriteLogs, pT, 0)
+			b, err := s.getStdWriter(config, s.IsWriteLogs, pT, 0, true)
 			if err != nil {
 				return err
 			}
@@ -557,17 +559,17 @@ func (s *Task) SetLabel(label string) {
 }
 
 func (s *Task) openStdWriter(config *cfg.Config, postfix string) (*shared.DataStore, error) {
-	l, err := logwriter.OpenLogWriter(s.getLogFilename(config, postfix))
+	l, err := logstore.OpenLogStore(s.getLogFilename(config, postfix))
 	if err != nil {
 		return nil, err
 	}
 	return l.GetDataStore(), nil
 }
 
-func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int) (*shared.DataStore, error) {
+func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int, static bool) (*shared.DataStore, error) {
 	if inLog {
-		l, err := logwriter.NewLogWriter(MemBufSize, s.getLogFilename(config, postfix))
-		return l.GetDataStore(), err
+		l := logstore.NewLogStore(s.getLogFilename(config, postfix), static)
+		return l.GetDataStore(), nil
 	} else {
 		l := gzbuffer.NewGzBuffer(bufSize)
 		return l.GetDataStore(), nil
@@ -575,7 +577,7 @@ func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufS
 }
 
 func (s *Task) getLogFilename(c *cfg.Config, t string) string {
-	return path.Join(c.GetLogsFolder(), s.Id+"-"+t+".log")
+	return path.Join(c.GetLogsFolder(), s.Id+"-"+t)
 }
 
 func NewTask(id string, taskBase TaskBase) *Task {
