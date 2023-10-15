@@ -577,7 +577,7 @@ func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufS
 }
 
 func (s *Task) getLogFilename(c *cfg.Config, t string) string {
-	return path.Join(c.GetLogsFolder(), s.Id+"-"+t+".log")
+	return path.Join(c.GetLogsFolder(), s.Id+"-"+t)
 }
 
 func NewTask(id string, taskBase TaskBase) *Task {
