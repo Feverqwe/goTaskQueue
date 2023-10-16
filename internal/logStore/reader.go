@@ -18,7 +18,7 @@ type LogReader struct {
 func (s *LogReader) Read(p []byte) (n int, err error) {
 	// log.Println("Read")
 	if s.cFile == nil {
-		chunks := s.store.Chunks
+		chunks := s.store.GetChunks()
 
 		if s.chunkIndex >= len(chunks) {
 			return n, io.EOF
@@ -52,7 +52,7 @@ func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
 		return
 	}
 
-	chunks := s.store.Chunks
+	chunks := s.store.GetChunks()
 
 	size := getChunksSize(chunks, s.store.ChunkSize)
 

@@ -26,13 +26,19 @@ type LogStore struct {
 	lastSaveAt   time.Time
 	cm           sync.Mutex
 	cwg          sync.WaitGroup
-	chunksM      sync.Mutex
+	chunksM      sync.RWMutex
 	qBuf         []byte
 	maxBufSize   int
 }
 
 func (s *LogStore) Len() int64 {
-	return getChunksSize(s.Chunks, s.ChunkSize)
+	return getChunksSize(s.GetChunks(), s.ChunkSize)
+}
+
+func (s *LogStore) GetChunks() []*LogChunk {
+	s.chunksM.RLock()
+	defer s.chunksM.RUnlock()
+	return s.Chunks
 }
 
 func (s *LogStore) AppendChunk(chunk *LogChunk) {
@@ -63,7 +69,9 @@ func (s *LogStore) Save() (err error) {
 
 	t := time.Now()
 
-	data, err := json.Marshal(s.Clone(0))
+	chunks := s.GetChunks()
+
+	data, err := json.Marshal(s.Clone(chunks))
 	if err != nil {
 		return
 	}
@@ -101,7 +109,7 @@ func (s *LogStore) TryCompress() {
 }
 
 func (s *LogStore) compress(isClose bool) (c bool) {
-	chunks := s.Chunks
+	chunks := s.GetChunks()
 	if !isClose {
 		if len(chunks) < 2 {
 			return
@@ -208,8 +216,10 @@ func (s *LogStore) Slice(rightOffset int64, approx bool) (ls *LogStore, err erro
 	offset := s.Len() - rightOffset
 	index := getChunkIndex(offset, s.ChunkSize)
 
-	rmChunks := s.Chunks[0:index]
-	ls = s.Clone(index)
+	chunks := s.GetChunks()
+
+	ls = s.Clone(chunks[index:])
+	rmChunks := chunks[0:index]
 
 	go func() {
 		for _, ch := range rmChunks {
@@ -222,9 +232,7 @@ func (s *LogStore) Slice(rightOffset int64, approx bool) (ls *LogStore, err erro
 	return
 }
 
-func (s *LogStore) Clone(chunkIndex int) (ls *LogStore) {
-	chunks := s.Chunks[chunkIndex:]
-
+func (s *LogStore) Clone(chunks []*LogChunk) (ls *LogStore) {
 	ls = &LogStore{
 		Name:       s.Name,
 		ChunkSize:  s.ChunkSize,

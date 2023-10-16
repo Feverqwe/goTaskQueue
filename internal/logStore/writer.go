@@ -17,7 +17,7 @@ func (s *LogWriter) Write(data []byte) (n int, err error) {
 	// log.Println("w Write", len(data))
 	if !s.inited {
 		s.inited = true
-		chunks := s.store.Chunks
+		chunks := s.store.GetChunks()
 		if len(chunks) > 0 {
 			chunk := chunks[len(chunks)-1]
 			if getAvailableSize(chunk, s.store.ChunkSize) > 0 {
