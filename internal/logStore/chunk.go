@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sync"
 )
 
 type LogChunk struct {
@@ -14,6 +15,7 @@ type LogChunk struct {
 	Closed     bool   `json:"closed"`
 	Compressed bool   `json:"compressed"`
 	store      *LogStore
+	wg         sync.WaitGroup
 }
 
 func (s *LogChunk) OpenForReading() (f *os.File, r io.ReadCloser, err error) {
@@ -22,6 +24,7 @@ func (s *LogChunk) OpenForReading() (f *os.File, r io.ReadCloser, err error) {
 	if err != nil {
 		return
 	}
+	s.wg.Add(1)
 	r = s.GetReader(f)
 	return
 }
@@ -32,6 +35,8 @@ func (s *LogChunk) OpenForWriting() (f *os.File, err error) {
 	if err != nil {
 		return
 	}
+	s.Closed = false
+	s.wg.Add(1)
 	return
 }
 
@@ -93,7 +98,17 @@ func (s *LogChunk) Clone(store *LogStore) *LogChunk {
 	}
 }
 
+func (s *LogChunk) Close(f *os.File, isWriter bool) (err error) {
+	err = f.Close()
+	if isWriter {
+		s.Closed = true
+	}
+	s.wg.Done()
+	return
+}
+
 func (s *LogChunk) Remove() error {
+	s.wg.Wait()
 	filename := path.Join(s.store.place, s.Name)
 	return os.Remove(filename)
 }

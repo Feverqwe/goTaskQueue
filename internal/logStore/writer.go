@@ -80,14 +80,11 @@ func (s *LogWriter) openChunk() (err error) {
 func (s *LogWriter) closeChunk() (err error) {
 	// log.Println("w closeChunk")
 	if s.file != nil {
-		if err = s.file.Close(); err != nil {
+		if err = s.chunk.Close(s.file, true); err != nil {
 			return
 		}
 	}
 	s.file = nil
-	if s.chunk != nil {
-		s.chunk.Closed = true
-	}
 	s.chunk = nil
 	return
 }
