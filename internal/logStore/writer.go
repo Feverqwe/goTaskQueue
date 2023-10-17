@@ -25,6 +25,7 @@ func (s *LogWriter) Write(data []byte) (n int, err error) {
 				if err = s.openChunk(); err != nil {
 					return
 				}
+				s.chunk.Closed = false
 			}
 		}
 	}
@@ -80,11 +81,14 @@ func (s *LogWriter) openChunk() (err error) {
 func (s *LogWriter) closeChunk() (err error) {
 	// log.Println("w closeChunk")
 	if s.file != nil {
-		if err = s.chunk.Close(s.file, true); err != nil {
+		if err = s.file.Close(); err != nil {
 			return
 		}
 	}
 	s.file = nil
+	if s.chunk != nil {
+		s.chunk.Closed = true
+	}
 	s.chunk = nil
 	return
 }

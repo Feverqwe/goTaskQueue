@@ -11,7 +11,6 @@ type LogReader struct {
 	store      *LogStore
 	chunkIndex int
 	offset     int64
-	chunk      *LogChunk
 	cFile      *os.File
 	cReader    io.ReadCloser
 }
@@ -25,9 +24,9 @@ func (s *LogReader) Read(p []byte) (n int, err error) {
 			return n, io.EOF
 		}
 
-		s.chunk = chunks[s.chunkIndex]
+		chunk := chunks[s.chunkIndex]
 
-		if err = s.openChunk(); err != nil {
+		if err = s.openChunk(chunk); err != nil {
 			return
 		}
 	}
@@ -79,9 +78,9 @@ func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
 		return
 	}
 
-	s.chunk = chunks[s.chunkIndex]
+	chunk := chunks[s.chunkIndex]
 
-	if err = s.openChunk(); err != nil {
+	if err = s.openChunk(chunk); err != nil {
 		return
 	}
 
@@ -108,8 +107,8 @@ func (s *LogReader) Close() (err error) {
 	return s.closeChunk()
 }
 
-func (s *LogReader) openChunk() (err error) {
-	f, r, err := s.chunk.OpenForReading()
+func (s *LogReader) openChunk(chunk *LogChunk) (err error) {
+	f, r, err := chunk.OpenForReading()
 	s.cFile = f
 	s.cReader = r
 	return
@@ -123,12 +122,11 @@ func (s *LogReader) closeChunk() (err error) {
 	}
 	s.cReader = nil
 	if s.cFile != nil {
-		if err = s.chunk.Close(s.cFile, false); err != nil {
+		if err = s.cFile.Close(); err != nil {
 			return
 		}
 	}
 	s.cFile = nil
-	s.chunk = nil
 	return
 }
 
