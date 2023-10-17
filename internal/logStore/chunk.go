@@ -35,8 +35,8 @@ func (s *LogChunk) OpenForWriting() (f *os.File, err error) {
 	if err != nil {
 		return
 	}
-	s.Closed = false
 	s.wg.Add(1)
+	s.Closed = false
 	return
 }
 

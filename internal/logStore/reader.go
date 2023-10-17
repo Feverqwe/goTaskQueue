@@ -27,8 +27,7 @@ func (s *LogReader) Read(p []byte) (n int, err error) {
 
 		s.chunk = chunks[s.chunkIndex]
 
-		err = s.openChunk()
-		if err != nil {
+		if err = s.openChunk(); err != nil {
 			return
 		}
 	}
@@ -48,8 +47,7 @@ func (s *LogReader) Read(p []byte) (n int, err error) {
 
 func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
 	// log.Println("Seek", delta, whence)
-	err = s.closeChunk()
-	if err != nil {
+	if err = s.closeChunk(); err != nil {
 		return
 	}
 
