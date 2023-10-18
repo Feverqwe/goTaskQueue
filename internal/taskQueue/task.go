@@ -177,7 +177,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 				go s.pushChanges(1)
 			}
 			if err != nil {
-				if err != io.EOF {
+				if !errors.Is(err, io.EOF) /* && !errors.Is(err, syscall.EIO)*/ {
 					log.Println("Read pipe ("+LOG_STDOUT+") error:", err)
 				}
 				break

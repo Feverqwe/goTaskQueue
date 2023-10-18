@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"goTaskQueue/assets"
@@ -17,11 +18,13 @@ import (
 	"goTaskQueue/internal/utils"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
@@ -138,7 +141,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				var data string
 				err := websocket.Message.Receive(ws, &data)
 				if err != nil {
-					if err != io.EOF {
+					if !errors.Is(err, io.EOF) && !errors.Is(err, net.ErrClosed) {
 						fmt.Println("ws receive error", err)
 					}
 					break
@@ -197,7 +200,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 					}
 					offset = newOffset
 					if err := pushPart(fragment, dataType); err != nil {
-						if err != io.EOF {
+						if !errors.Is(err, io.EOF) && !errors.Is(err, syscall.EPIPE) {
 							fmt.Println("ws send error", err)
 						}
 						return
