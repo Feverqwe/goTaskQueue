@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"fmt"
 	"goTaskQueue/assets"
 	"goTaskQueue/internal"
 	"goTaskQueue/internal/cfg"
@@ -86,7 +85,7 @@ func main() {
 
 		for {
 			v := <-callChan
-			fmt.Println("callChan", v)
+			log.Println("callChan", v)
 
 			switch v {
 			case "reload":
@@ -142,7 +141,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				err := websocket.Message.Receive(ws, &data)
 				if err != nil {
 					if !errors.Is(err, io.EOF) && !errors.Is(err, net.ErrClosed) {
-						fmt.Println("ws receive error", err)
+						log.Println("ws receive error", err)
 					}
 					break
 				}
@@ -156,7 +155,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 						if err == nil {
 							err = task.Resize(payload)
 							if err != nil {
-								fmt.Println("resize error", err)
+								log.Println("resize error", err)
 							}
 						}
 					}
@@ -192,7 +191,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				for {
 					newOffset, fragment, err := task.ReadCombined(offset)
 					if err != nil {
-						fmt.Println("read combined error", err)
+						log.Println("read combined error", err)
 						return
 					}
 					if newOffset == offset {
@@ -201,7 +200,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 					offset = newOffset
 					if err := pushPart(fragment, dataType); err != nil {
 						if !errors.Is(err, io.EOF) && !errors.Is(err, syscall.EPIPE) {
-							fmt.Println("ws send error", err)
+							log.Println("ws send error", err)
 						}
 						return
 					}

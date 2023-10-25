@@ -165,7 +165,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 
 				if output.Len() > PtyTrimLimit {
 					if newOutput, err := output.Slice(PtyLogSize, true); err == nil {
-						// fmt.Println("trim")
+						// log.Println("trim")
 						approxOff := output.Len() - newOutput.Len()
 						output = newOutput
 						s.Combined = output
@@ -177,7 +177,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 				go s.pushChanges(1)
 			}
 			if err != nil {
-				if !errors.Is(err, io.EOF) /* && !errors.Is(err, syscall.EIO)*/ {
+				if !errors.Is(err, io.EOF) && !errors.Is(err, syscall.EIO) {
 					log.Println("Read pipe ("+LOG_STDOUT+") error:", err)
 				}
 				break
@@ -285,7 +285,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 
 					if !s.IsOnlyCombined && output.Len() > CombinedLogTrimLimit {
 						if newOutput, err := output.Slice(CombinedLogSize, true); err == nil {
-							// fmt.Println("trim")
+							// log.Println("trim")
 							approxOff := output.Len() - newOutput.Len()
 							output = newOutput
 							s.Combined = output
@@ -374,7 +374,7 @@ func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
 		}
 	}
 	if offset < combinedOffset {
-		fmt.Println("skip", combinedOffset-offset)
+		log.Println("skip", combinedOffset-offset)
 		offset = combinedOffset
 	}
 	fragment, err := combined.ReadAt(offset - combinedOffset)

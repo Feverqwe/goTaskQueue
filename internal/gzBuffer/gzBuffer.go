@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"compress/flate"
 	"errors"
-	"fmt"
 	"goTaskQueue/internal/shared"
 	"io"
+	"log"
 	"sync"
 )
 
@@ -54,7 +54,7 @@ func (s *GzBuffer) Write(data []byte) (n int, err error) {
 }
 
 func (s *GzBuffer) ReadAt(offset int64) ([]byte, error) {
-	// fmt.Println("read", offset, s.offset)
+	// log.Println("read", offset, s.offset)
 	s.mu.RLock()
 	size := s.len()
 	buf := s.buf
@@ -63,7 +63,7 @@ func (s *GzBuffer) ReadAt(offset int64) ([]byte, error) {
 	s.mu.RUnlock()
 
 	if size < offset {
-		fmt.Println("Read offset more than len", offset, size)
+		log.Println("Read offset more than len", offset, size)
 		return nil, errors.New("read_icorrect_offset")
 	}
 
@@ -114,7 +114,7 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 }
 
 func (s *GzBuffer) Slice(offset int64, approx bool) (*GzBuffer, error) {
-	// fmt.Println("Slice", offset)
+	// log.Println("Slice", offset)
 	s.mu.RLock()
 	newSize := s.len() - offset
 	buf := s.buf
@@ -172,7 +172,7 @@ func (s *GzBuffer) len() int64 {
 }
 
 func (s *GzBuffer) Close() error {
-	// fmt.Println("finish")
+	// log.Println("finish")
 	s.finished = true
 	s.runCompress()
 	return nil
@@ -188,7 +188,7 @@ func (s *GzBuffer) runCompress() {
 	go func() {
 		defer s.cmu.Unlock()
 		if err := s.compress(); err != nil {
-			fmt.Println("Compress error", err)
+			log.Println("Compress error", err)
 		}
 	}()
 }
@@ -248,7 +248,7 @@ func (s *GzBuffer) getCompressSize() int {
 }
 
 func compress(cw *flate.Writer, chunk []byte) ([]byte, error) {
-	// fmt.Println("compress")
+	// log.Println("compress")
 	var b bytes.Buffer
 	cw.Reset(&b)
 	if _, err := cw.Write(chunk); err != nil {

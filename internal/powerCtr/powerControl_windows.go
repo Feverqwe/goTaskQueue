@@ -3,11 +3,12 @@
 package powerCtr
 
 import (
-	"fmt"
-	"golang.org/x/sys/windows"
+	"log"
 	"sync/atomic"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 type PowerControl struct {
@@ -69,17 +70,17 @@ func GetPowerControl() *PowerControl {
 				pCtx, errNum, status := powerCreateRequest.Call(uintptr(unsafe.Pointer(reason)))
 				ctx = pCtx
 				if errNum != 0 {
-					fmt.Println("powerCreateRequest error", status)
+					log.Println("powerCreateRequest error", status)
 				} else {
 					_, errNum, status := powerSetRequest.Call(ctx, uintptr(0x3))
 					if errNum != 0 {
-						fmt.Println("powerSetRequest error", status)
+						log.Println("powerSetRequest error", status)
 					}
 				}
 			case 0:
 				_, errNum, status := powerClearRequest.Call(ctx, uintptr(0x3))
 				if errNum != 0 {
-					fmt.Println("powerCreateRequest error", status)
+					log.Println("powerCreateRequest error", status)
 				}
 			}
 		}

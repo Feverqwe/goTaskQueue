@@ -2,9 +2,9 @@ package logwriter
 
 import (
 	"errors"
-	"fmt"
 	"goTaskQueue/internal/shared"
 	"io"
+	"log"
 	"os"
 	"sync"
 )
@@ -61,7 +61,7 @@ func (s *LogWriter) ReadAt(offset int64) ([]byte, error) {
 	size := s.size
 
 	if size < offset {
-		fmt.Println("Read offset more than len", offset, size)
+		log.Println("Read offset more than len", offset, size)
 		return nil, errors.New("read_icorrect_offset")
 	}
 
