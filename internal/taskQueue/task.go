@@ -134,6 +134,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
+	process.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	process.Env = append(append(process.Env, config.PtyRunEnv...), s.getEnvVariables(config)...)
 	process.Dir = s.getWorkingDir()
 
@@ -232,6 +233,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	runArgs = append(runArgs, s.Command)
 
 	process := exec.Command(runCommand, runArgs...)
+	process.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	process.Env = append(process.Env, s.getEnvVariables(config)...)
 	process.Dir = s.getWorkingDir()
 
