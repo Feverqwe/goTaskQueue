@@ -7,13 +7,8 @@ import (
 	"strings"
 )
 
-func CleanLogs(config *cfg.Config, queue *Queue) (err error) {
+func CleanTaskLogs(config *cfg.Config, id string) (err error) {
 	place := config.GetLogsFolder()
-
-	idSet := make(map[string]bool)
-	for _, task := range queue.GetAll() {
-		idSet[task.Id] = true
-	}
 
 	placeFile, err := os.Open(place)
 	if err != nil {
@@ -36,14 +31,7 @@ func CleanLogs(config *cfg.Config, queue *Queue) (err error) {
 		name := file.Name()
 		filePath := path.Join(place, name)
 
-		parts := strings.Split(name, "-")
-		if len(parts) < 2 {
-			continue
-		}
-
-		id := parts[0]
-
-		if _, ok := idSet[id]; !ok {
+		if strings.HasPrefix(name, id+"-") {
 			r = append(r, filePath)
 		}
 	}

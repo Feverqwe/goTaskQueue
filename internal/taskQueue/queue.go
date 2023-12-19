@@ -74,12 +74,12 @@ func (s *Queue) Del(config *cfg.Config, id string) error {
 
 	s.Save()
 
-	go func() {
-		err := CleanLogs(config, s)
+	if task.IsWriteLogs {
+		err := CleanTaskLogs(config, task.Id)
 		if err != nil {
-			log.Println("Clean logs error", err)
+			log.Println("Clean task logs error", err)
 		}
-	}()
+	}
 
 	return nil
 }
