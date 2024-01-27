@@ -1,3 +1,7 @@
+body.task-page {
+  letter-spacing: normal;
+}
+
 .xterm-viewport {
   overscroll-behavior: contain;
 }
