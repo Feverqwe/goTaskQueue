@@ -33,6 +33,7 @@ const NEW_TEMPLATE: TemplateButton = {
   command: '',
   isPty: false,
   isOnlyCombined: true,
+  isWriteLogs: true,
 };
 
 type RunDialogParams = Partial<TemplateDialogProps> & Pick<TemplateDialogProps, 'template'>;
