@@ -227,6 +227,10 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     scope.terminal.focus();
   }, [scope, state]);
 
+  useEffect(() => {
+    scope.terminal.options.disableStdin = state !== TaskState.Started;
+  }, [scope, state]);
+
   const handleReconnect = useCallback(() => {
     scope.terminal.reset();
     scope.wsConnect();
