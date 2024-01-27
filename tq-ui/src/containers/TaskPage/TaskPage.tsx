@@ -70,7 +70,7 @@ const TaskPage: FC = () => {
             <CircularProgress />
           </Box>
         )}
-        {error && (
+        {!silent && error && (
           <Box p={1} display="flex" justifyContent="center">
             <DisplayError error={error} onRetry={handleRetry} back={true} />
           </Box>
