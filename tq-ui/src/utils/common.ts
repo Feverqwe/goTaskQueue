@@ -8,3 +8,7 @@ export function getDatetimeFormatter() {
   }
   return datetimeFormatter;
 }
+
+export function isAbortError(err: unknown) {
+  return (err as Error).name !== 'AbortError';
+}

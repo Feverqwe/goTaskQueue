@@ -3,6 +3,7 @@ import {runInAction} from 'mobx';
 import {Task} from '../components/types';
 import {ApiError, HTTPError} from '../tools/apiRequest';
 import {api} from '../tools/api';
+import {isAbortError} from '../utils/common';
 
 const useTaskStore = () => {
   return useLocalObservable(() => ({
@@ -32,6 +33,7 @@ const useTaskStore = () => {
           this.task = task;
         });
       } catch (err) {
+        if (isAbortError(err)) return;
         console.error('fetchTask error: %O', err);
         runInAction(() => {
           if (this.abortController !== abortController) return;

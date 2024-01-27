@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Alert, Box, Button, Snackbar} from '@mui/material';
+import {Alert, Box, Button, Snackbar, useMediaQuery, useTheme} from '@mui/material';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
 import {WebLinksAddon} from 'xterm-addon-web-links';
@@ -29,6 +29,11 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   refTask.current = task;
   const refRemapNewLine = useRef(remapNewLine);
   refRemapNewLine.current = remapNewLine;
+
+  const muiTheme = useTheme();
+  const isDesktop = useMediaQuery(muiTheme.breakpoints.up('sm'));
+  const refIsDesktop = useRef(isDesktop);
+  refIsDesktop.current = isDesktop;
 
   const scope = useMemo(() => {
     const terminal = new Terminal({
@@ -217,6 +222,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   }, [scope, isOpen]);
 
   useEffect(() => {
+    if (!refIsDesktop.current) return;
     if (state !== TaskState.Started) return;
     scope.terminal.focus();
   }, [scope, state]);

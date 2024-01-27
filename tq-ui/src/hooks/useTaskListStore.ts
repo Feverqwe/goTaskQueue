@@ -4,6 +4,7 @@ import {ApiError, HTTPError} from '../tools/apiRequest';
 import {TaskOrGroup} from '../components/types';
 import {api} from '../tools/api';
 import {groupTasks} from '../containers/TaskList/utils';
+import {isAbortError} from '../utils/common';
 
 const useTaskListStore = () => {
   return useLocalObservable(() => ({
@@ -31,6 +32,7 @@ const useTaskListStore = () => {
           this.taskList = groupTasks(taskList);
         });
       } catch (err) {
+        if (isAbortError(err)) return;
         console.error('fetchTaskList error: %O', err);
         runInAction(() => {
           if (this.abortController !== abortController) return;
