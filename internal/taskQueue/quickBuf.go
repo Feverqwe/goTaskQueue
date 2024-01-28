@@ -1,4 +1,4 @@
-package logstore
+package taskQueue
 
 import (
 	"goTaskQueue/internal/shared"
@@ -44,7 +44,7 @@ func (s *QuickBuf) qClose() {
 	s.qBuf = make([]byte, 0)
 }
 
-func WrapDataStore(p *shared.DataStore, maxBufSize int) *shared.DataStore {
+func WrapQuickBuf(p *shared.DataStore, maxBufSize int) *shared.DataStore {
 	q := QuickBuf{
 		maxBufSize: maxBufSize,
 	}
@@ -66,7 +66,7 @@ func WrapDataStore(p *shared.DataStore, maxBufSize int) *shared.DataStore {
 		Slice: func(i int64, b bool) (ds *shared.DataStore, err error) {
 			newDs, err := p.Slice(i, b)
 			if err == nil {
-				ds = WrapDataStore(newDs, q.maxBufSize)
+				ds = WrapQuickBuf(newDs, q.maxBufSize)
 			}
 			return
 		},

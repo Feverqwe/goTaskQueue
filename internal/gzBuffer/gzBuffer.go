@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/flate"
 	"errors"
-	logstore "goTaskQueue/internal/logStore"
 	"goTaskQueue/internal/shared"
 	"io"
 	"log"
@@ -19,7 +18,6 @@ type CChunk struct {
 }
 
 type GzBuffer struct {
-	logstore.QuickBuf
 	buf        []byte
 	mu         sync.RWMutex
 	cmu        sync.Mutex
