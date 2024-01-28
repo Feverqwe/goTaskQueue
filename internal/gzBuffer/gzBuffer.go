@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/flate"
 	"errors"
+	logstore "goTaskQueue/internal/logStore"
 	"goTaskQueue/internal/shared"
 	"io"
 	"log"
@@ -18,13 +19,13 @@ type CChunk struct {
 }
 
 type GzBuffer struct {
+	logstore.QuickBuf
 	buf        []byte
 	mu         sync.RWMutex
 	cmu        sync.Mutex
 	chunks     []CChunk
 	chunksSize int64
 	finished   bool
-	maxBufSize int
 }
 
 func (s *GzBuffer) GetDataStore() *shared.DataStore {
@@ -45,6 +46,8 @@ func (s *GzBuffer) GetDataStore() *shared.DataStore {
 }
 
 func (s *GzBuffer) Write(data []byte) (n int, err error) {
+	s.QWrite(data)
+
 	s.mu.Lock()
 	n = len(data)
 	s.buf = append(s.buf, data...)
@@ -55,6 +58,10 @@ func (s *GzBuffer) Write(data []byte) (n int, err error) {
 
 func (s *GzBuffer) ReadAt(offset int64) ([]byte, error) {
 	// log.Println("read", offset, s.offset)
+	if b, ok := s.QReadFromEnd(int(s.Len() - offset)); ok {
+		return b, nil
+	}
+
 	s.mu.RLock()
 	size := s.len()
 	buf := s.buf
@@ -153,7 +160,7 @@ func (s *GzBuffer) Slice(offset int64, approx bool) (*GzBuffer, error) {
 		readSize -= int64(ccSize)
 	}
 
-	cbuf := NewGzBuffer(s.maxBufSize)
+	cbuf := NewGzBuffer(s.GetMaxSize())
 	cbuf.buf = buf
 	cbuf.chunks = newChunks
 	cbuf.chunksSize = newChunksSize
@@ -173,6 +180,8 @@ func (s *GzBuffer) len() int64 {
 
 func (s *GzBuffer) Close() error {
 	// log.Println("finish")
+	s.QClose()
+
 	s.finished = true
 	s.runCompress()
 	return nil
@@ -238,7 +247,7 @@ func (s *GzBuffer) getCompressSize() int {
 	size := 0
 	if s.finished {
 		size = len(s.buf)
-	} else if len(s.buf) > ChunkSize+s.maxBufSize {
+	} else if len(s.buf) > ChunkSize {
 		size = ChunkSize
 	}
 	if size > ChunkSize {
@@ -323,8 +332,7 @@ func getChunkExtractor() func(cc []byte) (io.ReadCloser, error) {
 }
 
 func NewGzBuffer(maxBufSize int) *GzBuffer {
-	cbuf := &GzBuffer{
-		maxBufSize: maxBufSize,
-	}
+	cbuf := &GzBuffer{}
+	cbuf.SetMaxSize(maxBufSize)
 	return cbuf
 }
