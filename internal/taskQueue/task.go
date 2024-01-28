@@ -568,14 +568,17 @@ func (s *Task) openStdWriter(config *cfg.Config, postfix string) (*shared.DataSt
 	return l.GetDataStore(), nil
 }
 
-func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int) (*shared.DataStore, error) {
+func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufSize int) (dataStore *shared.DataStore, err error) {
+	var ds *shared.DataStore
 	if inLog {
-		l := logstore.NewLogStore(s.getLogFilename(config, postfix), bufSize)
-		return l.GetDataStore(), nil
+		l := logstore.NewLogStore(s.getLogFilename(config, postfix))
+		ds = l.GetDataStore()
 	} else {
-		l := gzbuffer.NewGzBuffer(bufSize)
-		return l.GetDataStore(), nil
+		l := gzbuffer.NewGzBuffer()
+		ds = l.GetDataStore()
 	}
+	dataStore = logstore.WrapDataStore(ds, bufSize)
+	return
 }
 
 func (s *Task) getLogFilename(c *cfg.Config, t string) string {

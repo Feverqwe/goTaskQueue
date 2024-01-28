@@ -15,7 +15,7 @@ func TestStore(t *testing.T) {
 	os.RemoveAll(place)
 	os.MkdirAll(place, 0700)
 
-	s := NewLogStore(filename, 0)
+	s := NewLogStore(filename)
 	// s.ChunkSize = 4
 	defer s.Close()
 

@@ -46,8 +46,6 @@ func (s *GzBuffer) GetDataStore() *shared.DataStore {
 }
 
 func (s *GzBuffer) Write(data []byte) (n int, err error) {
-	s.QWrite(data)
-
 	s.mu.Lock()
 	n = len(data)
 	s.buf = append(s.buf, data...)
@@ -58,10 +56,6 @@ func (s *GzBuffer) Write(data []byte) (n int, err error) {
 
 func (s *GzBuffer) ReadAt(offset int64) ([]byte, error) {
 	// log.Println("read", offset, s.offset)
-	if b, ok := s.QReadFromEnd(int(s.Len() - offset)); ok {
-		return b, nil
-	}
-
 	s.mu.RLock()
 	size := s.len()
 	buf := s.buf
@@ -160,7 +154,7 @@ func (s *GzBuffer) Slice(offset int64, approx bool) (*GzBuffer, error) {
 		readSize -= int64(ccSize)
 	}
 
-	cbuf := NewGzBuffer(s.GetMaxSize())
+	cbuf := NewGzBuffer()
 	cbuf.buf = buf
 	cbuf.chunks = newChunks
 	cbuf.chunksSize = newChunksSize
@@ -180,8 +174,6 @@ func (s *GzBuffer) len() int64 {
 
 func (s *GzBuffer) Close() error {
 	// log.Println("finish")
-	s.QClose()
-
 	s.finished = true
 	s.runCompress()
 	return nil
@@ -331,8 +323,7 @@ func getChunkExtractor() func(cc []byte) (io.ReadCloser, error) {
 	}
 }
 
-func NewGzBuffer(maxBufSize int) *GzBuffer {
+func NewGzBuffer() *GzBuffer {
 	cbuf := &GzBuffer{}
-	cbuf.SetMaxSize(maxBufSize)
 	return cbuf
 }

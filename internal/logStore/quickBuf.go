@@ -1,6 +1,7 @@
 package logstore
 
 import (
+	"goTaskQueue/internal/shared"
 	"sync"
 )
 
@@ -8,18 +9,6 @@ type QuickBuf struct {
 	qBuf       []byte
 	qBufM      sync.RWMutex
 	maxBufSize int
-}
-
-func (s *QuickBuf) GetMaxSize() int {
-	return s.maxBufSize
-}
-
-func (s *QuickBuf) SetMaxSize(size int) {
-	s.maxBufSize = size
-}
-
-func (s *QuickBuf) QWrite(b []byte) {
-	s.qWrite(b)
 }
 
 func (s *QuickBuf) qWrite(b []byte) {
@@ -36,10 +25,6 @@ func (s *QuickBuf) qWrite(b []byte) {
 	}
 }
 
-func (s *QuickBuf) QReadFromEnd(i int) (b []byte, ok bool) {
-	return s.qReadFromEnd(i)
-}
-
 func (s *QuickBuf) qReadFromEnd(i int) (b []byte, ok bool) {
 	s.qBufM.RLock()
 	defer s.qBufM.RUnlock()
@@ -47,13 +32,9 @@ func (s *QuickBuf) qReadFromEnd(i int) (b []byte, ok bool) {
 	if len(s.qBuf) >= i {
 		off := len(s.qBuf) - i
 		b = s.qBuf[off:]
-		return b, true
+		ok = true
 	}
 	return
-}
-
-func (s *QuickBuf) QClose() {
-	s.qClose()
 }
 
 func (s *QuickBuf) qClose() {
@@ -61,4 +42,39 @@ func (s *QuickBuf) qClose() {
 	defer s.qBufM.Unlock()
 
 	s.qBuf = make([]byte, 0)
+}
+
+func WrapDataStore(p *shared.DataStore, maxBufSize int) *shared.DataStore {
+	q := QuickBuf{
+		maxBufSize: maxBufSize,
+	}
+
+	return &shared.DataStore{
+		Write: func(b []byte) (n int, err error) {
+			q.qWrite(b)
+
+			return p.Write(b)
+		},
+		ReadAt: func(i int64) (b []byte, err error) {
+			if b, ok := q.qReadFromEnd(int(p.Len() - i)); ok {
+				return b, err
+			}
+
+			return p.ReadAt(i)
+		},
+		PipeTo: p.PipeTo,
+		Slice: func(i int64, b bool) (ds *shared.DataStore, err error) {
+			newDs, err := p.Slice(i, b)
+			if err == nil {
+				ds = WrapDataStore(newDs, q.maxBufSize)
+			}
+			return
+		},
+		Len: p.Len,
+		Close: func() (err error) {
+			q.qClose()
+
+			return p.Close()
+		},
+	}
 }

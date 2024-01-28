@@ -17,7 +17,6 @@ import (
 )
 
 type LogStore struct {
-	QuickBuf
 	Name         string      `json:"name"`
 	ChunkSize    int         `json:"chunkSize"`
 	Chunks       []*LogChunk `json:"chunks"`
@@ -147,17 +146,10 @@ func (s *LogStore) GetDataStore() *shared.DataStore {
 	return &shared.DataStore{
 		Write: func(b []byte) (n int, err error) {
 			n, err = w.Write(b)
-
-			s.qWrite(b)
-
 			return
 		},
 		ReadAt: func(i int64) (b []byte, err error) {
 			// log.Println("ReadAt", i)
-			if b, ok := s.qReadFromEnd(int(s.Len() - i)); ok {
-				return b, err
-			}
-
 			r := NewLogReader(s)
 			defer r.Close()
 
@@ -190,8 +182,6 @@ func (s *LogStore) GetDataStore() *shared.DataStore {
 		},
 		Len: s.Len,
 		Close: func() (err error) {
-			s.qClose()
-
 			if err = w.Close(); err != nil {
 				return
 			}
@@ -230,9 +220,6 @@ func (s *LogStore) Clone(chunks []*LogChunk) (ls *LogStore) {
 		ChunkSize:  s.ChunkSize,
 		place:      s.place,
 		chunkIndex: s.chunkIndex,
-		QuickBuf: QuickBuf{
-			maxBufSize: s.maxBufSize,
-		},
 	}
 
 	for _, chunk := range chunks {
@@ -276,15 +263,12 @@ func OpenLogStore(filename string) (ls *LogStore, err error) {
 	return
 }
 
-func NewLogStore(filename string, bufferSize int) *LogStore {
+func NewLogStore(filename string) *LogStore {
 	name := path.Base(filename)
 	place := path.Dir(filename)
 	return &LogStore{
 		Name:      name,
 		ChunkSize: ChunkSize,
 		place:     place,
-		QuickBuf: QuickBuf{
-			maxBufSize: bufferSize,
-		},
 	}
 }
