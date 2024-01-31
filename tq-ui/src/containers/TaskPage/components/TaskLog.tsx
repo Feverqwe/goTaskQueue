@@ -32,8 +32,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
   const muiTheme = useTheme();
   const isDesktop = useMediaQuery(muiTheme.breakpoints.up('sm'));
-  const refIsDesktop = useRef(isDesktop);
-  refIsDesktop.current = isDesktop;
+  const [isDesktopInit] = useState(isDesktop);
 
   const scope = useMemo(() => {
     const terminal = new Terminal({
@@ -222,10 +221,10 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   }, [scope, isOpen]);
 
   useEffect(() => {
-    if (!refIsDesktop.current) return;
+    if (!isDesktopInit) return;
     if (state !== TaskState.Started) return;
     scope.terminal.focus();
-  }, [scope, state]);
+  }, [isDesktopInit, scope.terminal, state]);
 
   useEffect(() => {
     scope.terminal.options.disableStdin = state !== TaskState.Started;
