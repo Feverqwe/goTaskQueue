@@ -16,7 +16,12 @@ const IconActionButton: FC<IconActionButtonProps> = ({
   const {isLoading, handleSubmit, stateNode} = useActionButton({onSubmit, isIcon: true});
 
   return (
-    <IconButton disabled={isLoading} size={size} {...props} onClick={handleSubmit}>
+    <IconButton
+      size={size}
+      {...props}
+      disabled={isLoading || props.disabled}
+      onClick={handleSubmit}
+    >
       {stateNode || children}
     </IconButton>
   );

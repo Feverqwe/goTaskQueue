@@ -11,7 +11,7 @@ const ActionButton: FC<ActionButtonProps> = ({onSubmit, children, ...props}) => 
   const {isLoading, handleSubmit, stateNode} = useActionButton({onSubmit});
 
   return (
-    <Button disabled={isLoading} {...props} onClick={handleSubmit}>
+    <Button {...props} disabled={isLoading || props.disabled} onClick={handleSubmit}>
       {children} {stateNode}
     </Button>
   );
