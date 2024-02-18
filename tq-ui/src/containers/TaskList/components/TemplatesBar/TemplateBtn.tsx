@@ -1,16 +1,18 @@
 import React, {FC, SyntheticEvent, useCallback, useState} from 'react';
-import {Button, Divider} from '@mui/material';
+import {Divider} from '@mui/material';
 import {TemplateButton, TemplateFolder} from '../../../../components/types';
 import DialogMenu from '../../../../components/DialogMenu/DialogMenu';
 import DialogMenuItem from '../../../../components/DialogMenu/DialogMenuItem';
+import {useConfirmDialog} from '../../../../hooks/useConfirmDialog';
+import ActionButton from '../../../../components/ActionButton/ActionButton';
 
 export interface TemplateBtnProps {
   folder: TemplateFolder;
   template: TemplateButton;
-  onClick: (e: SyntheticEvent, template: TemplateButton, as?: boolean) => void;
+  onClick: (e: SyntheticEvent, template: TemplateButton, as?: boolean) => Promise<void>;
   onEdit: (folder: TemplateFolder, template: TemplateButton) => void;
-  onDelete: (template: TemplateButton) => void;
-  onClone: (folder: TemplateFolder, template: TemplateButton) => void;
+  onDelete: (template: TemplateButton) => Promise<void>;
+  onClone: (folder: TemplateFolder, template: TemplateButton) => Promise<void>;
 }
 
 const TemplateBtn: FC<TemplateBtnProps> = ({
@@ -25,8 +27,8 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
   const [showMenu, setShowMenu] = useState(false);
 
   const handleClick = useCallback(
-    (e: SyntheticEvent) => {
-      onClick(e, template);
+    async (e: SyntheticEvent) => {
+      await onClick(e, template);
     },
     [template, onClick],
   );
@@ -36,8 +38,8 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
   }, []);
 
   const handleRunAs = useCallback(
-    (e: SyntheticEvent) => {
-      onClick(e, template, true);
+    async (e: SyntheticEvent) => {
+      await onClick(e, template, true);
       handleCloseMenu();
     },
     [template, onClick, handleCloseMenu],
@@ -48,15 +50,25 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
     handleCloseMenu();
   }, [folder, template, onEdit, handleCloseMenu]);
 
-  const handleDelete = useCallback(() => {
-    onDelete(template);
+  const handleDelete = useCallback(async () => {
+    await onDelete(template);
     handleCloseMenu();
   }, [template, onDelete, handleCloseMenu]);
 
-  const handleClone = useCallback(() => {
-    onClone(folder, template);
+  const {onConfirmSubmit: handleConfirmDelete, confirmNode: deleteConfirmNode} = useConfirmDialog({
+    onSubmit: handleDelete,
+    title: 'Delete template?',
+  });
+
+  const handleClone = useCallback(async () => {
+    await onClone(folder, template);
     handleCloseMenu();
   }, [folder, template, onClone, handleCloseMenu]);
+
+  const {onConfirmSubmit: handleConfirmClone, confirmNode: cloneConfirmNode} = useConfirmDialog({
+    onSubmit: handleClone,
+    title: 'Clone template?',
+  });
 
   const handleCtxMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
@@ -65,14 +77,14 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
 
   return (
     <>
-      <Button
+      <ActionButton
         sx={{m: 1, mt: 0, flexGrow: {xs: 1, sm: 0}}}
         variant="outlined"
-        onClick={handleClick}
+        onSubmit={handleClick}
         onContextMenu={handleCtxMenu}
       >
         {name}
-      </Button>
+      </ActionButton>
       <DialogMenu open={showMenu} onClose={handleCloseMenu} title={name}>
         {!template.variables.length && (
           <>
@@ -81,10 +93,12 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
           </>
         )}
         <DialogMenuItem onClick={handleEdit}>Edit</DialogMenuItem>
-        <DialogMenuItem onClick={handleClone}>Clone</DialogMenuItem>
+        <DialogMenuItem onClick={handleConfirmClone}>Clone</DialogMenuItem>
         <Divider />
-        <DialogMenuItem onClick={handleDelete}>Delete</DialogMenuItem>
+        <DialogMenuItem onClick={handleConfirmDelete}>Delete</DialogMenuItem>
       </DialogMenu>
+      {cloneConfirmNode}
+      {deleteConfirmNode}
     </>
   );
 };

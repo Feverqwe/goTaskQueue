@@ -2,7 +2,7 @@ import React, {FC, ReactNode, useCallback, useState} from 'react';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material';
 import ActionButton from './ActionButton/ActionButton';
 
-interface ConfirmDialogProps {
+export interface ConfirmDialogProps {
   open: boolean;
   title: ReactNode;
   message?: ReactNode;

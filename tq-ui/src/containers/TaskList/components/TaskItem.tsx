@@ -15,6 +15,7 @@ import DialogMenu from '../../../components/DialogMenu/DialogMenu';
 import LinkIcon from '../../TaskPage/components/LinkIcon';
 import KillDialog from '../../../components/KillDialog/KillDialog';
 import IconActionButton from '../../../components/IconActionButton/IconActionButton';
+import {useConfirmDialog} from '../../../hooks/useConfirmDialog';
 
 interface TaskItemProps {
   task: Task;
@@ -25,20 +26,30 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   const {id, state} = task;
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
-  const [showConfirm, setShowConfirm] = useState<{type: string} | undefined>();
+  const [showStopConfirm, setShowStopConfirm] = useState<boolean>(false);
 
   const handleDelete = useCallback(async () => {
     await api.delete({id});
     onUpdate();
   }, [id, onUpdate]);
 
+  const {onConfirmSubmit: handleConfirmDelete, confirmNode: deleteConfirmNode} = useConfirmDialog({
+    onSubmit: handleDelete,
+    title: 'Delete task?',
+  });
+
   const handleStart = useCallback(async () => {
     await api.taskRun({id});
     onUpdate();
   }, [id, onUpdate]);
 
+  const {onConfirmSubmit: handleConfirmStart, confirmNode: startConfirmNode} = useConfirmDialog({
+    onSubmit: handleStart,
+    title: 'Start task?',
+  });
+
   const handleStop = useCallback(async () => {
-    setShowConfirm({type: 'stop'});
+    setShowStopConfirm(true);
   }, []);
 
   const handleOpen = useCallback(
@@ -67,7 +78,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   );
 
   const handleConfirmClose = useCallback(() => {
-    setShowConfirm(undefined);
+    setShowStopConfirm(false);
   }, []);
 
   const extraButtons = useMemo(() => {
@@ -81,9 +92,9 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
             </IconActionButton>
           )) ||
             (state === TaskState.Idle && (
-              <IconActionButton onSubmit={handleStart} title="Start">
+              <IconButton onClick={handleConfirmStart} title="Start">
                 <PlayArrowIcon />
-              </IconActionButton>
+              </IconButton>
             ))}
         </Box>,
       );
@@ -121,49 +132,54 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       </Box>,
     );
     return result;
-  }, [handleStart, handleStop, handleOpenMenu, state, task]);
+  }, [state, task, handleStop, handleConfirmStart, handleOpenMenu]);
 
   return (
-    <Box px={1} pb={1}>
-      <Card>
-        <Box display="flex" flexDirection="row" alignItems="stretch">
-          <Box display="flex" alignItems="center">
-            <IconActionButton
-              disabled={state === TaskState.Started}
-              onSubmit={handleDelete}
-              title="Delete"
-            >
-              <ClearIcon />
-            </IconActionButton>
+    <>
+      <Box px={1} pb={1}>
+        <Card>
+          <Box display="flex" flexDirection="row" alignItems="stretch">
+            <Box display="flex" alignItems="center">
+              <IconButton
+                size="medium"
+                disabled={state === TaskState.Started}
+                onClick={handleConfirmDelete}
+                title="Delete"
+              >
+                <ClearIcon />
+              </IconButton>
+            </Box>
+            <Box flexGrow={1}>
+              <CardActionArea
+                href={`task?id=${id}`}
+                onClick={handleOpen}
+                sx={{height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center'}}
+              >
+                <Box px={1} width="100%" sx={{wordBreak: 'break-all'}}>
+                  <TaskName task={task} />
+                </Box>
+              </CardActionArea>
+            </Box>
+            {extraButtons}
           </Box>
-          <Box flexGrow={1}>
-            <CardActionArea
-              href={`task?id=${id}`}
-              onClick={handleOpen}
-              sx={{height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center'}}
-            >
-              <Box px={1} width="100%" sx={{wordBreak: 'break-all'}}>
-                <TaskName task={task} />
-              </Box>
-            </CardActionArea>
-          </Box>
-          {extraButtons}
-        </Box>
-      </Card>
-      {openMenu && (
-        <DialogMenu open={openMenu} onClose={handleCloseMenu}>
-          <TaskLinks task={task} onClick={handleCloseMenu} />
-        </DialogMenu>
-      )}
-      {showConfirm && showConfirm.type === 'stop' && (
-        <KillDialog
-          task={task}
-          open={true}
-          onSubmit={handleStopConfirmSubmit}
-          onClose={handleConfirmClose}
-        />
-      )}
-    </Box>
+        </Card>
+        {openMenu && (
+          <DialogMenu open={openMenu} onClose={handleCloseMenu}>
+            <TaskLinks task={task} onClick={handleCloseMenu} />
+          </DialogMenu>
+        )}
+        {showStopConfirm && (
+          <KillDialog
+            task={task}
+            open={showStopConfirm}
+            onSubmit={handleStopConfirmSubmit}
+            onClose={handleConfirmClose}
+          />
+        )}
+      </Box>
+      {deleteConfirmNode}
+      {startConfirmNode}
+    </>
   );
 };
 

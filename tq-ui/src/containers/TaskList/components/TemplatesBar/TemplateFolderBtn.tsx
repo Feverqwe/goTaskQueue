@@ -35,9 +35,9 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
   }, []);
 
   const withCloseMenu = useMemo(() => {
-    function proxy<T extends (...args: Parameters<T>) => void>(fn: T) {
-      return (...args: Parameters<T>) => {
-        fn(...args);
+    function proxy<T extends (...args: Parameters<T>) => Promise<void> | void>(fn: T) {
+      return async (...args: Parameters<T>) => {
+        await fn(...args);
         setShowMenu(false);
       };
     }
