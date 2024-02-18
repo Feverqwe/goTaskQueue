@@ -1,7 +1,7 @@
 import React, {FC, SyntheticEvent} from 'react';
 import {ListItemButton} from '@mui/material';
 import {ListItemButtonProps} from '@mui/material/ListItemButton/ListItemButton';
-import useActionButton from '../ActionButton/useActionButton';
+import useActionButton from '../../hooks/useActionButton';
 
 export type ActionListItemButtonProps = Omit<ListItemButtonProps, 'onSubmit' | 'onClick'> & {
   onSubmit: (event: SyntheticEvent<HTMLDivElement, MouseEvent>) => Promise<void>;

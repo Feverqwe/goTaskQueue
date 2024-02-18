@@ -1,7 +1,7 @@
 import React, {FC, SyntheticEvent} from 'react';
 import {IconButton} from '@mui/material';
 import {IconButtonProps} from '@mui/material/IconButton/IconButton';
-import useActionButton from '../ActionButton/useActionButton';
+import useActionButton from '../../hooks/useActionButton';
 
 type IconActionButtonProps = Omit<IconButtonProps, 'onSubmit' | 'onClick'> & {
   onSubmit: (event: SyntheticEvent<HTMLButtonElement, MouseEvent>) => Promise<void>;
