@@ -104,14 +104,10 @@ const TaskHeader: FC<TaskInfoProps> = ({
 
   const handleRestartTask = useCallback(
     async (runTask: AddTaskRequest) => {
-      try {
-        const {id} = await api.add(runTask);
+      const {id} = await api.add(runTask);
 
-        if (runTask.isRun) {
-          navigate(`/task?id=${id}`);
-        }
-      } catch (err) {
-        console.error(err);
+      if (runTask.isRun) {
+        navigate(`/task?id=${id}`);
       }
     },
     [navigate],
