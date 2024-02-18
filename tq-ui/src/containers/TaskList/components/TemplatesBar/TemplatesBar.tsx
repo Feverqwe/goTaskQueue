@@ -79,20 +79,16 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
 
   const handleAdd = useCallback(
     async (runTask: AddTaskRequest, isNewTab = false) => {
-      try {
-        const {id} = await api.add(runTask);
-        onUpdate();
+      const {id} = await api.add(runTask);
+      onUpdate();
 
-        if (runTask.isPty && runTask.isRun) {
-          const url = `/task?id=${id}`;
-          if (isNewTab) {
-            window.open(url);
-          } else {
-            navigate(url);
-          }
+      if (runTask.isPty && runTask.isRun) {
+        const url = `/task?id=${id}`;
+        if (isNewTab) {
+          window.open(url);
+        } else {
+          navigate(url);
         }
-      } catch (err) {
-        console.error(err);
       }
     },
     [onUpdate, navigate],
