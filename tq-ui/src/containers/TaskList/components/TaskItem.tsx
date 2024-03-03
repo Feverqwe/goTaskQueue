@@ -16,6 +16,7 @@ import LinkIcon from '../../TaskPage/components/LinkIcon';
 import KillDialog from '../../../components/KillDialog/KillDialog';
 import IconActionButton from '../../../components/IconActionButton/IconActionButton';
 import {useConfirmDialog} from '../../../hooks/useConfirmDialog';
+import {getTaskName} from '../../TaskPage/utils';
 
 interface TaskItemProps {
   task: Task;
@@ -36,6 +37,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   const {onConfirmSubmit: handleConfirmDelete, confirmNode: deleteConfirmNode} = useConfirmDialog({
     onSubmit: handleDelete,
     title: 'Delete task?',
+    message: getTaskName(task),
   });
 
   const handleStart = useCallback(async () => {
@@ -46,6 +48,7 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
   const {onConfirmSubmit: handleConfirmStart, confirmNode: startConfirmNode} = useConfirmDialog({
     onSubmit: handleStart,
     title: 'Start task?',
+    message: getTaskName(task),
   });
 
   const handleStop = useCallback(async () => {

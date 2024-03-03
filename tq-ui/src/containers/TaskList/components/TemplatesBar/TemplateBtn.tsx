@@ -58,6 +58,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
   const {onConfirmSubmit: handleConfirmDelete, confirmNode: deleteConfirmNode} = useConfirmDialog({
     onSubmit: handleDelete,
     title: 'Delete template?',
+    message: name,
   });
 
   const handleClone = useCallback(async () => {
@@ -68,6 +69,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
   const {onConfirmSubmit: handleConfirmClone, confirmNode: cloneConfirmNode} = useConfirmDialog({
     onSubmit: handleClone,
     title: 'Clone template?',
+    message: name,
   });
 
   const handleCtxMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
