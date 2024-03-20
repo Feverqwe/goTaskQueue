@@ -425,12 +425,7 @@ func (s *Task) Wait() int {
 }
 
 func (s *Task) Kill() error {
-	err := s.Signal(syscall.SIGKILL)
-	if err == nil {
-		s.IsCanceled = true
-		s.syncStatusAndSave()
-	}
-	return err
+	return s.Signal(syscall.SIGKILL)
 }
 
 func (s *Task) Signal(sig syscall.Signal) error {
