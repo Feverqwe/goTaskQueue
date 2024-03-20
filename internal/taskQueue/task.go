@@ -89,6 +89,7 @@ type Task struct {
 	Links          []TaskLink `json:"links"`
 	queue          *Queue
 	Assets         []TaskAsset `json:"assets"`
+	cancelCh       chan bool
 }
 
 func (s *Task) Run(config *cfg.Config, queue *Queue) error {
@@ -196,7 +197,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	go func() {
 		defer f.Close()
 
-		wg.Wait()
+		s.WaitProcess(&wg)
 		err = process.Wait()
 
 		s.FinishedAt = time.Now()
@@ -323,7 +324,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	go func() {
 		defer stdin.Close()
 
-		wg.Wait()
+		s.WaitProcess(&wg)
 		err = process.Wait()
 
 		s.FinishedAt = time.Now()
@@ -425,19 +426,33 @@ func (s *Task) Wait() int {
 }
 
 func (s *Task) Kill() error {
-	err := s.Signal(syscall.SIGKILL)
-	if err == nil {
-		s.IsCanceled = true
-		s.syncStatusAndSave()
-	}
-	return err
+	return s.Signal(syscall.SIGKILL)
 }
 
-func (s *Task) Signal(sig syscall.Signal) error {
+func (s *Task) Signal(sig syscall.Signal) (err error) {
 	if s.IsFinished {
 		return errors.New("process_finished")
 	}
-	return s.process.Process.Signal(sig)
+	err = s.process.Process.Signal(sig)
+	if sig == syscall.SIGKILL && err == nil {
+		close(s.cancelCh)
+		s.IsCanceled = true
+		s.syncStatusAndSave()
+	}
+	return
+}
+
+func (s *Task) WaitProcess(wg *sync.WaitGroup) {
+	waitCh := make(chan bool)
+	go func() {
+		wg.Wait()
+		close(waitCh)
+	}()
+
+	select {
+	case <-s.cancelCh:
+	case <-waitCh:
+	}
 }
 
 func (s *Task) getLinkIndex(name string) int {
@@ -592,6 +607,7 @@ func NewTask(id string, taskBase TaskBase) *Task {
 		Id:        id,
 		CreatedAt: time.Now(),
 		Links:     make([]TaskLink, 0),
+		cancelCh:  make(chan bool),
 	}
 
 	task.syncStatus()
