@@ -10,5 +10,5 @@ export function getDatetimeFormatter() {
 }
 
 export function isAbortError(err: unknown) {
-  return (err as Error).name !== 'AbortError';
+  return (err as Error).name === 'AbortError';
 }
