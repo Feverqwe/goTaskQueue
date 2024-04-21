@@ -10,14 +10,12 @@ const useTaskStore = () => {
     task: null as null | Task,
     loading: true,
     error: null as null | HTTPError | ApiError | TypeError,
-    silent: false,
     abortController: null as null | AbortController,
-    async fetchTask(id: string, silent = false) {
+    async fetchTask(id: string) {
       if (this.abortController) {
         this.abortController.abort();
       }
 
-      this.silent = silent;
       this.loading = true;
       this.error = null;
       const abortController = new AbortController();

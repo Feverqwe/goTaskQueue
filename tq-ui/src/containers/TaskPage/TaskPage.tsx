@@ -8,6 +8,7 @@ import DisplayError from '../../components/DisplayError';
 import TaskView from './components/TaskView';
 import NotificationProvider from '../../components/Notifications/NotificationProvider';
 import useTaskStore from '../../hooks/useTaskStore';
+import SilentStatus from '../../components/SilentStatus/SilentStatus';
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
@@ -17,7 +18,7 @@ const TaskPage: FC = () => {
   const notification = useContext(NotificationCtx);
 
   const taskStore = useTaskStore();
-  const {task, loading, silent, error, fetchTask} = taskStore;
+  const {task, loading, error, fetchTask} = taskStore;
 
   const refTaskStore = useRef(taskStore);
   refTaskStore.current = taskStore;
@@ -25,7 +26,7 @@ const TaskPage: FC = () => {
   const handleUpdate = useCallback(() => {
     const {task} = refTaskStore.current;
     if (!task) return;
-    fetchTask(task.id, true);
+    fetchTask(task.id);
   }, [fetchTask]);
 
   useEffect(() => {
@@ -65,17 +66,18 @@ const TaskPage: FC = () => {
         disableGutters={true}
         sx={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
-        {!silent && loading && (
+        {loading && !task ? (
           <Box p={1} display="flex" justifyContent="center">
             <CircularProgress />
           </Box>
-        )}
-        {!silent && error && (
+        ) : null}
+        {loading && task ? <SilentStatus status="loading" /> : null}
+        {error && (
           <Box p={1} display="flex" justifyContent="center">
             <DisplayError error={error} onRetry={handleRetry} back={true} />
           </Box>
         )}
-        {(silent || !error) && task && <TaskView task={task} onUpdate={handleUpdate} />}
+        {task && <TaskView task={task} onUpdate={handleUpdate} />}
       </Container>
     </NotificationProvider>
   );

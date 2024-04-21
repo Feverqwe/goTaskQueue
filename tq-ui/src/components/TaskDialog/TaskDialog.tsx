@@ -4,6 +4,7 @@ import {observer} from 'mobx-react-lite';
 import DisplayError from '../DisplayError';
 import useTaskStore from '../../hooks/useTaskStore';
 import TaskDialogView from './TaskDialogView';
+import SilentStatus from '../SilentStatus/SilentStatus';
 
 interface TaskDialogBaseProps {
   taskId: string;
@@ -28,7 +29,7 @@ const TaskDialog: FC<TaskDialogProps> = (props) => {
     taskStore = useTaskStore(),
   } = props as TaskDialogWithStoreProps;
 
-  const {task, loading, silent, error, fetchTask} = taskStore;
+  const {task, loading, error, fetchTask} = taskStore;
 
   const refTaskStore = useRef(taskStore);
   refTaskStore.current = taskStore;
@@ -43,23 +44,24 @@ const TaskDialog: FC<TaskDialogProps> = (props) => {
   }, [taskId, fetchTask]);
 
   const handleUpdate = useCallback(async () => {
-    await fetchTask(taskId, true);
+    await fetchTask(taskId);
     await onUpdate?.();
   }, [taskId, onUpdate, fetchTask]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
-      {!silent && loading && (
+      {loading && !task && (
         <Box p={1} display="flex" justifyContent="center">
           <CircularProgress />
         </Box>
       )}
+      {loading && task ? <SilentStatus status="loading" /> : null}
       {error && (
         <Box p={1} display="flex" justifyContent="center">
           <DisplayError error={error} onRetry={handleRetry} back={true} />
         </Box>
       )}
-      {(silent || !error) && task ? (
+      {task ? (
         <TaskDialogView task={task} onUpdate={handleUpdate} onClose={onClose} />
       ) : (
         <DialogActions>
