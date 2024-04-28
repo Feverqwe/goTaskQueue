@@ -6,6 +6,7 @@ import {TemplateBtnProps} from './TemplateBtn';
 import TemplatesBarView from './TemplatesBarView';
 import DialogMenuItem from '../../../../components/DialogMenu/DialogMenuItem';
 import DialogMenu from '../../../../components/DialogMenu/DialogMenu';
+import useContextMenuFix from '../../../../hooks/useContextMenuFix';
 
 export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template' | 'folder'> {
   template: TemplateFolder;
@@ -63,6 +64,8 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
     handleCloseCtxMenu();
   }, [template, onMoveFolder, handleCloseCtxMenu]);
 
+  const iosContextMenuEvents = useContextMenuFix(handleCtxMenu);
+
   return (
     <>
       <Button
@@ -71,6 +74,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
         onClick={handleClick}
         onContextMenu={handleCtxMenu}
         startIcon={<FolderOutlinedIcon />}
+        {...iosContextMenuEvents}
       >
         {name}
       </Button>

@@ -5,6 +5,7 @@ import DialogMenu from '../../../../components/DialogMenu/DialogMenu';
 import DialogMenuItem from '../../../../components/DialogMenu/DialogMenuItem';
 import {useConfirmDialog} from '../../../../hooks/useConfirmDialog';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
+import useContextMenuFix from '../../../../hooks/useContextMenuFix';
 
 export interface TemplateBtnProps {
   folder: TemplateFolder;
@@ -77,6 +78,8 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
     setShowMenu(true);
   }, []);
 
+  const iosContextMenuEvents = useContextMenuFix(handleCtxMenu);
+
   return (
     <>
       <ActionButton
@@ -84,6 +87,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
         variant="outlined"
         onSubmit={handleClick}
         onContextMenu={handleCtxMenu}
+        {...iosContextMenuEvents}
       >
         {name}
       </ActionButton>
