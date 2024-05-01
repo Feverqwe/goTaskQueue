@@ -2,17 +2,23 @@ package internal
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 )
 
+const DEBUG = false
+
 type RouteNextFn func()
 
-type RouteHandler func(w http.ResponseWriter, r *http.Request, next RouteNextFn)
+type RouteHandler func(w http.ResponseWriter, r *http.Request)
 
 type contextType string
 
+type paramsType map[string]interface{}
+
 const nextFnKey contextType = "nextFn"
+const paramsKey contextType = "params"
 
 const (
 	IsPath       = 1
@@ -60,9 +66,7 @@ func (s *Router) Use(handlers ...RouteHandler) {
 
 func (s *Router) Route(path string) *Router {
 	router := NewRouter()
-	s.All(path, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		router.ServeHTTP(w, r)
-	})
+	s.All(path, router.ServeHTTP)
 	return router
 }
 
@@ -124,9 +128,8 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	n = func() {
 		for {
 			if index >= len(s.routes) {
-				next := r.Context().Value(nextFnKey)
-				if next != nil {
-					next.(func())()
+				if next, ok := r.Context().Value(nextFnKey).(func()); ok {
+					next()
 				}
 				break
 			}
@@ -134,16 +137,43 @@ func (s *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			route := s.routes[index]
 			index++
 			isMatch := matchMethod(r, &route) && matchPath(r, &route)
+			if DEBUG {
+				log.Printf("Route %s %s %v\n", route.method, route.path, isMatch)
+			}
 
 			if isMatch {
-				route.handler(w, rc, n)
+				route.handler(w, rc)
 				break
 			}
 		}
 	}
 	ctx := context.WithValue(r.Context(), nextFnKey, n)
+	if _, ok := r.Context().Value(paramsKey).(paramsType); !ok {
+		ctx = context.WithValue(ctx, paramsKey, make(paramsType))
+	}
 	rc = r.WithContext(ctx)
 	n()
+}
+
+func SetParam[T any](r *http.Request, key string, value T) {
+	m, ok := r.Context().Value(paramsKey).(paramsType)
+	if ok {
+		m[key] = value
+	}
+}
+
+func GetParam[T any](r *http.Request, key string) (v T, ok bool) {
+	if m, okP := r.Context().Value(paramsKey).(paramsType); okP {
+		if u, okU := m[key]; okU {
+			v, ok = u.(T)
+		}
+	}
+	return
+}
+
+func GetNext(r *http.Request) (next func(), ok bool) {
+	next, ok = r.Context().Value(nextFnKey).(func())
+	return
 }
 
 func matchMethod(r *http.Request, route *Route) bool {

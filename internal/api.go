@@ -31,13 +31,11 @@ func HandleApi(router *Router, queue *taskQueue.Queue, memStorage *memstorage.Me
 	handleMemStorage(apiRouter, memStorage)
 	handleFobidden(apiRouter)
 
-	router.All("^/api/", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
-		gzipHandler.ServeHTTP(w, r)
-	})
+	router.All("^/api/", gzipHandler.ServeHTTP)
 }
 
 func handleFobidden(router *Router) {
-	router.Use(func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Use(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
 	})
 }
@@ -97,14 +95,14 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		Path string `json:"path"`
 	}
 
-	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() ([]*taskQueue.Task, error) {
 			tasks := queue.GetAll()
 			return tasks, nil
 		})
 	})
 
-	router.Post("/api/delete", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/delete", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
@@ -117,7 +115,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/add", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/add", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*taskQueue.Task, error) {
 			payload, err := utils.ParseJson[AddTaskPayload](r.Body)
 			if err != nil {
@@ -176,7 +174,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/clone", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/clone", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*taskQueue.Task, error) {
 			payload, err := utils.ParseJson[CloneTaskPayload](r.Body)
 			if err != nil {
@@ -196,7 +194,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Get("/api/task", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Get("/api/task", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*taskQueue.Task, error) {
 			id := r.URL.Query().Get("id")
 
@@ -205,7 +203,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/run", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/task/run", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
@@ -223,7 +221,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/kill", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/task/kill", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[GetTaskPayload](r.Body)
 			if err != nil {
@@ -241,7 +239,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/signal", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/task/signal", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[SignalTaskPayload](r.Body)
 			if err != nil {
@@ -261,7 +259,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/setLabel", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/task/setLabel", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[SetLabelPayload](r.Body)
 			if err != nil {
@@ -279,7 +277,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/addLink", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/task/addLink", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[AddLinkPayload](r.Body)
 			if err != nil {
@@ -297,7 +295,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/delLink", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/task/delLink", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[DelLinkPayload](r.Body)
 			if err != nil {
@@ -315,7 +313,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/addAsset", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/task/addAsset", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*taskQueue.TaskAsset, error) {
 			payload, err := utils.ParseJson[AddAssetPayload](r.Body)
 			if err != nil {
@@ -333,7 +331,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/task/delAsset", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/task/delAsset", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[DelAssetPayload](r.Body)
 			if err != nil {
@@ -351,7 +349,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/reloadConfig", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/reloadConfig", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			callChan <- "reload"
 
@@ -359,7 +357,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/reloadTemplates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/reloadTemplates", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			taskQueue.FlushTemplateCache()
 
@@ -371,7 +369,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		TemplateOrder []string `json:"templateOrder"`
 	}
 
-	router.Post("/api/setTemplateOrder", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/setTemplateOrder", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[SetTemplateOrderPayload](r.Body)
 			if err != nil {
@@ -385,7 +383,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Get("/api/getTemplateOrder", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Get("/api/getTemplateOrder", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() ([]string, error) {
 			templateOrder := config.TemplateOrder
 
@@ -393,7 +391,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Custom([]string{"GET"}, []string{"/api/task/stdout", "/api/task/stderr", "/api/task/combined"}, func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Custom([]string{"GET"}, []string{"/api/task/stdout", "/api/task/stderr", "/api/task/combined"}, func(w http.ResponseWriter, r *http.Request) {
 		logType := r.URL.Path[10:]
 		id := r.URL.Query().Get("id")
 
@@ -421,7 +419,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		data.PipeTo(w)
 	})
 
-	router.Get("/api/templates", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Get("/api/templates", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() ([]taskQueue.Template, error) {
 			templates := taskQueue.GetTemplates()
 
@@ -429,7 +427,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Get("/api/getTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Get("/api/getTemplate", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*taskQueue.Template, error) {
 			id := r.URL.Query().Get("id")
 
@@ -447,7 +445,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		Template     taskQueue.Template `json:"template"`
 	}
 
-	router.Post("/api/setTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/setTemplate", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[SetTemplatePayload](r.Body)
 			if err != nil {
@@ -472,7 +470,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Get("/api/readTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Get("/api/readTemplate", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*taskQueue.Template, error) {
 			relPlace := r.URL.Query().Get("place")
 
@@ -490,7 +488,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		RelTo   string `json:"to"`
 	}
 
-	router.Post("/api/moveTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/moveTemplate", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[MoveTemplatePayload](r.Body)
 			if err != nil {
@@ -506,7 +504,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		})
 	})
 
-	router.Post("/api/moveTemplateFolder", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/moveTemplateFolder", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[MoveTemplatePayload](r.Body)
 			if err != nil {
@@ -526,7 +524,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		RelPlace string `json:"place"`
 	}
 
-	router.Post("/api/removeTemplate", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/removeTemplate", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			payload, err := utils.ParseJson[RemoveTemplatePayload](r.Body)
 			if err != nil {
@@ -544,7 +542,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 }
 
 func handleMemStorage(router *Router, memStorage *memstorage.MemStorage) {
-	router.Post("/api/memStorage/get", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/memStorage/get", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (map[string]interface{}, error) {
 			keys, err := utils.ParseJson[[]string](r.Body)
 			if err != nil {
@@ -555,7 +553,7 @@ func handleMemStorage(router *Router, memStorage *memstorage.MemStorage) {
 		})
 	})
 
-	router.Post("/api/memStorage/set", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/memStorage/set", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			keyValue, err := utils.ParseJson[map[string]interface{}](r.Body)
 			if err == nil {
@@ -565,7 +563,7 @@ func handleMemStorage(router *Router, memStorage *memstorage.MemStorage) {
 		})
 	})
 
-	router.Post("/api/memStorage/del", func(w http.ResponseWriter, r *http.Request, next RouteNextFn) {
+	router.Post("/api/memStorage/del", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (string, error) {
 			keys, err := utils.ParseJson[[]string](r.Body)
 			if err == nil {

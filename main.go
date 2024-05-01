@@ -111,12 +111,17 @@ func main() {
 }
 
 func powerLock(router *internal.Router, powerControl *powerCtr.PowerControl) {
-	router.Use(func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
+	if powerControl == nil {
+		return
+	}
+	router.Use(func(w http.ResponseWriter, r *http.Request) {
 		if powerControl != nil {
 			powerControl.Inc()
 			defer powerControl.Dec()
 		}
-		next()
+		if next, ok := internal.GetNext(r); ok {
+			next()
+		}
 	})
 }
 
@@ -214,9 +219,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		}
 	}
 
-	router.All("/ws", func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		websocket.Handler(ws).ServeHTTP(w, r)
-	})
+	router.All("/ws", websocket.Handler(ws).ServeHTTP)
 }
 
 func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, config *cfg.Config) {
@@ -286,7 +289,5 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 		http.ServeContent(w, r, name, mTime, reader)
 	}))
 
-	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/"}, func(w http.ResponseWriter, r *http.Request, next internal.RouteNextFn) {
-		gzipHandler.ServeHTTP(w, r)
-	})
+	router.Custom([]string{http.MethodGet, http.MethodHead}, []string{"^/"}, gzipHandler.ServeHTTP)
 }
