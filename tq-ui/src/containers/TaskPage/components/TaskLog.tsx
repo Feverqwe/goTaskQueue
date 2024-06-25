@@ -159,7 +159,7 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
     return {
       wsConnect: () => {
         setConnecting(true);
-        ws = new WebSocket(`ws://${location.host}/ws?id=${id}`);
+        ws = new WebSocket(`${location.protocol === 'http:' ? 'ws' : 'wss'}://${location.host}/ws?id=${id}`);
         ws.onopen = () => {
           setOpen((isOpen = true));
           setConnecting(false);
