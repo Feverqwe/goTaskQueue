@@ -5,7 +5,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 const SilentStatusContainer = styled(Box)(() => {
   return {
-    position: 'fixed',
+    position: 'fixed' as unknown as never,
     right: '16px',
     bottom: '16px',
   };

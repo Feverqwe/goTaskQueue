@@ -47,7 +47,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
     isStartOnBoot,
   } = template;
   const {isPtySupported} = useContext(RootStoreCtx);
-  const [isExtended, setExtended] = useState(() => isNew);
+  const [isExtended, setExtended] = useState(() => isNew || variables.length === 0);
   const [isPtyEnabled, setPtyEnabled] = useState(isPty);
   const refPlace = useRef<string>(place);
   const refCommand = useRef<HTMLInputElement>(null);
