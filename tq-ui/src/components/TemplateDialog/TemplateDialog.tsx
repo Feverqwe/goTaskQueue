@@ -45,6 +45,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
     place,
     isSingleInstance,
     isStartOnBoot,
+    ttl,
   } = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [isExtended, setExtended] = useState(() => isNew || variables.length === 0);
@@ -53,6 +54,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
   const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refGroup = useRef<HTMLInputElement>(null);
+  const refTtl = useRef<HTMLInputElement>(null);
   const refPty = useRef<HTMLInputElement>(null);
   const refOnlyCombined = useRef<HTMLInputElement>(null);
   const refWriteLogs = useRef<HTMLInputElement>(null);
@@ -103,6 +105,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
     const isWriteLogs = refWriteLogs.current?.checked;
     const isSingleInstance = refSingleInstance.current?.checked;
     const isStartOnBoot = refStartOnBoot.current?.checked;
+    const ttl = parseInt(refTtl.current?.value ?? '0', 10);
 
     const templatePlace = refPlace.current;
 
@@ -118,6 +121,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
       templatePlace,
       isRun,
       variables,
+      ttl,
     };
 
     return payload;
@@ -232,29 +236,41 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
             <TextField
               size="small"
               sx={{my: 1}}
-              label="Label"
-              defaultValue={label || ''}
-              inputProps={{ref: refLabel}}
-              fullWidth
-              type="text"
+              label="TTL after finish (seconds)"
+              defaultValue={ttl ?? 0}
+              inputProps={{ref: refTtl}}
+              type="number"
               variant="outlined"
               InputLabelProps={{
                 shrink: true,
               }}
             />
-            <TextField
-              size="small"
-              sx={{my: 1}}
-              label="Group"
-              defaultValue={group || ''}
-              inputProps={{ref: refGroup}}
-              fullWidth
-              type="text"
-              variant="outlined"
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
+            <Box display="flex" flexDirection="row" gap={1} my={1}>
+              <TextField
+                size="small"
+                label="Label"
+                defaultValue={label || ''}
+                inputProps={{ref: refLabel}}
+                fullWidth
+                type="text"
+                variant="outlined"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+              <TextField
+                size="small"
+                label="Group"
+                defaultValue={group || ''}
+                inputProps={{ref: refGroup}}
+                fullWidth
+                type="text"
+                variant="outlined"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Box>
           </Box>
           {!isNew && (
             <Button

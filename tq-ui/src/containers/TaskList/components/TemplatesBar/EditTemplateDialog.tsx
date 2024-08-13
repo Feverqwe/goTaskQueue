@@ -51,6 +51,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
     isSingleInstance,
     isStartOnBoot,
     isWriteLogs,
+    ttl,
   } = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
@@ -66,6 +67,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   const refSingleInstance = useRef<HTMLInputElement>(null);
   const refStartOnBoot = useRef<HTMLInputElement>(null);
   const refPlace = useRef<HTMLInputElement>(null);
+  const refTtl = useRef<HTMLInputElement>(null);
 
   useMemo(() => {
     variables.forEach((variable) => {
@@ -198,6 +200,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
       isWriteLogs: refWriteLogs.current?.checked,
       isSingleInstance: refSingleInstance.current?.checked,
       isStartOnBoot: refStartOnBoot.current?.checked,
+      ttl: parseInt(refTtl.current?.value ?? '0', 10),
     };
     return template;
   }, [variables, folder, isNew]);
@@ -289,49 +292,60 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             }
           />
           <TextField
-            sx={{my: 1}}
             size="small"
-            label="Label"
-            defaultValue={label || ''}
-            inputProps={{ref: refLabel}}
-            fullWidth
-            type="text"
+            sx={{my: 1}}
+            label="TTL after finish (seconds)"
+            defaultValue={ttl ?? 0}
+            inputProps={{ref: refTtl}}
+            type="number"
             variant="outlined"
             InputLabelProps={{
               shrink: true,
             }}
           />
-          <TextField
-            sx={{my: 1}}
-            size="small"
-            label="Group"
-            defaultValue={group || ''}
-            inputProps={{ref: refGroup}}
-            fullWidth
-            type="text"
-            variant="outlined"
-            InputLabelProps={{
+          <Box display="flex" flexDirection="row" gap={1} my={1}>
+            <TextField
+              size="small"
+              label="Label"
+              defaultValue={label || ''}
+              inputProps={{ref: refLabel}}
+              fullWidth
+              type="text"
+              variant="outlined"
+              InputLabelProps={{
               shrink: true,
             }}
-          />
-          <TextField
-            sx={{my: 1}}
-            size="small"
-            label="Id"
-            defaultValue={id || ''}
-            inputProps={{ref: refId}}
-            fullWidth
-            type="text"
-            variant="outlined"
-            InputLabelProps={{
+            />
+            <TextField
+              size="small"
+              label="Group"
+              defaultValue={group || ''}
+              inputProps={{ref: refGroup}}
+              fullWidth
+              type="text"
+              variant="outlined"
+              InputLabelProps={{
               shrink: true,
             }}
-          />
-          {!isNew && (
+            />
+          </Box>
+          <Box display="flex" flexDirection="row" gap={1} my={1}>
+            <TextField
+              size="small"
+              label="Id"
+              defaultValue={id || ''}
+              inputProps={{ref: refId}}
+              fullWidth
+              type="text"
+              variant="outlined"
+              InputLabelProps={{
+              shrink: true,
+            }}
+            />
+            {!isNew && (
             <TextField
               size="small"
               label="Place"
-              sx={{my: 1}}
               defaultValue={place || ''}
               inputProps={{ref: refPlace}}
               fullWidth
@@ -343,6 +357,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               }}
             />
           )}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>

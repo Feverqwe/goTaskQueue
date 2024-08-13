@@ -16,6 +16,7 @@ export interface RawTemplate {
   isWriteLogs?: boolean;
   isSingleInstance?: boolean;
   isStartOnBoot?: boolean;
+  ttl?: number;
 }
 
 export type Template = TemplateButton | TemplateFolder;
@@ -100,6 +101,7 @@ export interface AddTaskRequest {
   isSingleInstance?: boolean;
   isStartOnBoot?: boolean;
   isRun?: boolean;
+  ttl?: number;
 }
 
 export interface CloneTaskRequest extends TaskId {
