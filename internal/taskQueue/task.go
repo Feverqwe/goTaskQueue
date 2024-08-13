@@ -57,6 +57,7 @@ type NewTaskBase struct {
 	IsSingleInstance bool   `json:"isSingleInstance"`
 	IsStartOnBoot    bool   `json:"isStartOnBoot"`
 	IsWriteLogs      bool   `json:"isWriteLogs"`
+	TTL              int64  `json:"ttl"`
 }
 
 type TaskBase struct {
@@ -81,6 +82,7 @@ type Task struct {
 	CreatedAt      time.Time         `json:"createdAt"`
 	StartedAt      time.Time         `json:"startedAt"`
 	FinishedAt     time.Time         `json:"finishedAt"`
+	ExpiresAt      time.Time         `json:"expiresAt"`
 	mu             sync.Mutex
 	cmu            sync.RWMutex
 	qCh            []chan int
@@ -214,6 +216,8 @@ func (s *Task) RunPty(config *cfg.Config) error {
 			s.IsError = true
 			s.Error = err.Error()
 		}
+
+		s.onFinish()
 
 		s.syncStatusAndSave()
 
@@ -351,6 +355,8 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 			s.IsError = true
 			s.Error = err.Error()
 		}
+
+		s.onFinish()
 
 		s.syncStatusAndSave()
 
@@ -546,6 +552,7 @@ func (s *Task) Init(config *cfg.Config, queue *Queue) {
 	if s.IsStarted && !s.IsFinished {
 		s.IsCanceled = true
 		s.IsFinished = true
+		s.onFinish()
 		s.syncStatus()
 	}
 }
@@ -579,6 +586,16 @@ func (s *Task) getStdWriter(config *cfg.Config, inLog bool, postfix string, bufS
 
 func (s *Task) getLogFilename(c *cfg.Config, t string) string {
 	return path.Join(c.GetLogsFolder(), s.Id+"-"+t)
+}
+
+func (s *Task) onFinish() {
+	if s.IsCanceled || s.IsError {
+		return
+	}
+
+	if s.TTL > 0 {
+		s.ExpiresAt = time.Now().Add(time.Duration(s.TTL) * time.Second)
+	}
 }
 
 func NewTask(id string, taskBase TaskBase) *Task {

@@ -68,6 +68,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		TemplateId       string            `json:"templateId"`
 		Variables        map[string]string `json:"variables"`
 		IsRun            bool              `json:"isRun"`
+		TTL              *int64            `json:"ttl"`
 	}
 
 	type SetLabelPayload struct {
@@ -150,6 +151,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			taskBase.IsSingleInstance = setValue(payload.IsSingleInstance, template.IsSingleInstance)
 			taskBase.IsStartOnBoot = setValue(payload.IsStartOnBoot, template.IsStartOnBoot)
 			taskBase.IsWriteLogs = setValue(payload.IsWriteLogs, template.IsWriteLogs)
+			taskBase.TTL = setValue(payload.TTL, template.TTL)
 
 			for _, variable := range template.Variables {
 				old := fmt.Sprintf("{%v}", variable.Value)
@@ -615,7 +617,7 @@ func sendStatus(w http.ResponseWriter, statusCode int) {
 	}
 }
 
-func setValue[T string | bool](val *T, def T) T {
+func setValue[T int64 | string | bool](val *T, def T) T {
 	if val == nil {
 		return def
 	}

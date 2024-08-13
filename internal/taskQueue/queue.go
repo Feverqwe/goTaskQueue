@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/natefinch/atomic"
@@ -139,6 +140,27 @@ func (s *Queue) RunOnBoot(config *cfg.Config) {
 		}
 		if err != nil {
 			log.Println("run task on boot error", id, err)
+		}
+	}
+}
+
+func (s *Queue) Cleanup(config *cfg.Config) {
+	var delIds []string
+	for _, task := range s.Tasks {
+		if !task.IsStarted ||
+			!task.IsFinished ||
+			task.ExpiresAt.IsZero() {
+			continue
+		}
+
+		if time.Now().After(task.ExpiresAt) {
+			delIds = append(delIds, task.Id)
+		}
+	}
+
+	for _, id := range delIds {
+		if err := s.Del(config, id); err != nil {
+			log.Printf("Unable clenup task %s, cause: %s\n", id, err.Error())
 		}
 	}
 }
