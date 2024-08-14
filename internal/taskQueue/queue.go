@@ -15,14 +15,12 @@ import (
 )
 
 type Queue struct {
-	Tasks          []*Task `json:"tasks"`
-	idTask         map[string]*Task
-	ch             chan int
-	clenupExpireAt time.Time
+	Tasks  []*Task `json:"tasks"`
+	idTask map[string]*Task
+	ch     chan int
 }
 
 func (s *Queue) GetAll(config *cfg.Config) []*Task {
-	s.TryClenup(config)
 	return s.Tasks
 }
 
@@ -143,13 +141,6 @@ func (s *Queue) RunOnBoot(config *cfg.Config) {
 		if err != nil {
 			log.Println("run task on boot error", id, err)
 		}
-	}
-}
-
-func (s *Queue) TryClenup(config *cfg.Config) {
-	if time.Now().After(s.clenupExpireAt) {
-		s.clenupExpireAt = time.Now().Add(time.Minute)
-		s.Cleanup(config)
 	}
 }
 
