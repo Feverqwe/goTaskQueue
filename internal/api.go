@@ -98,7 +98,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() ([]*taskQueue.Task, error) {
-			tasks := queue.GetAll()
+			tasks := queue.GetAll(config)
 			return tasks, nil
 		})
 	})

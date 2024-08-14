@@ -15,12 +15,14 @@ import (
 )
 
 type Queue struct {
-	Tasks  []*Task `json:"tasks"`
-	idTask map[string]*Task
-	ch     chan int
+	Tasks          []*Task `json:"tasks"`
+	idTask         map[string]*Task
+	ch             chan int
+	clenupExpireAt time.Time
 }
 
-func (s *Queue) GetAll() []*Task {
+func (s *Queue) GetAll(config *cfg.Config) []*Task {
+	s.TryClenup(config)
 	return s.Tasks
 }
 
@@ -144,11 +146,20 @@ func (s *Queue) RunOnBoot(config *cfg.Config) {
 	}
 }
 
+func (s *Queue) TryClenup(config *cfg.Config) {
+	if time.Now().After(s.clenupExpireAt) {
+		s.clenupExpireAt = time.Now().Add(time.Minute)
+		s.Cleanup(config)
+	}
+}
+
 func (s *Queue) Cleanup(config *cfg.Config) {
 	var delIds []string
 	for _, task := range s.Tasks {
 		if !task.IsStarted ||
 			!task.IsFinished ||
+			task.IsCanceled ||
+			task.IsError ||
 			task.ExpiresAt.IsZero() {
 			continue
 		}

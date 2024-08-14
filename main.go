@@ -98,13 +98,6 @@ func main() {
 		taskQueue.RunOnBoot(&config)
 	}()
 
-	go func() {
-		for {
-			taskQueue.Cleanup(&config)
-			time.Sleep(time.Minute)
-		}
-	}()
-
 	disableTrayIconPtr := flag.Bool("disableTrayIcon", false, "Disable tray icon")
 	flag.Parse()
 
