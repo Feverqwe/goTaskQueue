@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"sync"
 	"syscall"
 	"time"
@@ -438,7 +439,21 @@ func (s *Task) Signal(sig syscall.Signal) error {
 	if s.IsFinished {
 		return errors.New("process_finished")
 	}
-	return s.process.Process.Signal(sig)
+	if runtime.GOOS == "linux" {
+		if pids, err := GetProcessPids(s.process.Process.Pid); err == nil {
+			var err error
+			for _, pid := range pids {
+				suberr := syscall.Kill(pid, sig)
+				err = errors.Join(err, suberr)
+			}
+			return err
+		} else {
+			log.Printf("Get child pids error, use default signal: %s\n", err)
+			return s.process.Process.Signal(sig)
+		}
+	} else {
+		return s.process.Process.Signal(sig)
+	}
 }
 
 func (s *Task) getLinkIndex(name string) int {

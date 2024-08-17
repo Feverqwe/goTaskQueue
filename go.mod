@@ -62,6 +62,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/sbinet/pstree v0.5.1
 	github.com/schollz/progressbar/v3 v3.14.2 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.opentelemetry.io/otel v1.26.0 // indirect

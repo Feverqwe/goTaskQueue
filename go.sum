@@ -367,6 +367,8 @@ github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
+github.com/sbinet/pstree v0.5.1 h1:B29DPDk22c35W+q9NY92VLBL4DUHwCNgNNp6HPwqzbM=
+github.com/sbinet/pstree v0.5.1/go.mod h1:G208WfJOi4oxq4++w97Y4AeuydVuoOz7tPKCEm8y1oE=
 github.com/schollz/progressbar/v3 v3.7.4/go.mod h1:1H8m5kMPW6q5fyjpDqtBHW1JT22mu2NwHQ1ApuCPh/8=
 github.com/schollz/progressbar/v3 v3.10.0 h1:pOab0roS2jf6zkEBKAe9EyEdmRKJvhbbuxqVp9/Qjyw=
 github.com/schollz/progressbar/v3 v3.10.0/go.mod h1:0N6zRwbDVLFCFy5chxuukVlRkoHWYFFLzlxQrw/sf3M=
