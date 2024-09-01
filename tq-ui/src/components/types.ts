@@ -43,6 +43,8 @@ export interface RootStore {
   templateOrder: string[];
   memStorage: Record<string, unknown>;
   isPtySupported: boolean;
+  tasks?: Task[];
+  task?: Task;
 }
 
 export enum TaskState {

@@ -9,6 +9,7 @@ import TaskView from './components/TaskView';
 import NotificationProvider from '../../components/Notifications/NotificationProvider';
 import useTaskStore from '../../hooks/useTaskStore';
 import SilentStatus from '../../components/SilentStatus/SilentStatus';
+import {RootStoreCtx} from '../../components/RootStore/RootStoreCtx';
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
@@ -16,9 +17,10 @@ const TaskPage: FC = () => {
   const location = useLocation();
   const id = useMemo(() => new URLSearchParams(location.search).get('id'), [location.search]);
   const notification = useContext(NotificationCtx);
+  const rootStore = useContext(RootStoreCtx);
 
   const taskStore = useTaskStore();
-  const {task, loading, error, fetchTask} = taskStore;
+  const {task, loading, error, fetchTask, setTask} = taskStore;
 
   const refTaskStore = useRef(taskStore);
   refTaskStore.current = taskStore;
@@ -38,9 +40,14 @@ const TaskPage: FC = () => {
 
   useEffect(() => {
     if (!id) return;
-    fetchTask(id);
+    if (rootStore.task) {
+      setTask(rootStore.task);
+      rootStore.task = undefined;
+    } else {
+      fetchTask(id);
+    }
     return () => refTaskStore.current.abortController?.abort();
-  }, [id, fetchTask]);
+  }, [id, fetchTask, rootStore, setTask]);
 
   useEffect(() => {
     const taskState = task?.state;

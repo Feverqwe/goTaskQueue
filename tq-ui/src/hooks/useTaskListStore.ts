@@ -1,7 +1,7 @@
 import {useLocalObservable} from 'mobx-react-lite';
 import {runInAction} from 'mobx';
 import {ApiError, HTTPError} from '../tools/apiRequest';
-import {TaskOrGroup} from '../components/types';
+import {Task, TaskOrGroup} from '../components/types';
 import {api} from '../tools/api';
 import {groupTasks} from '../containers/TaskList/utils';
 import {isAbortError} from '../utils/common';
@@ -9,7 +9,7 @@ import {isAbortError} from '../utils/common';
 const useTaskListStore = () => {
   return useLocalObservable(() => ({
     silent: false,
-    loading: true,
+    loading: false,
     error: null as null | HTTPError | ApiError | TypeError,
     taskList: null as null | TaskOrGroup[],
     abortController: null as null | AbortController,
@@ -44,6 +44,12 @@ const useTaskListStore = () => {
           this.loading = false;
         });
       }
+    },
+    setTaskList(tasks: Task[]) {
+      tasks.reverse();
+      this.taskList = groupTasks(tasks);
+      this.error = null;
+      this.loading = false;
     },
   }));
 };

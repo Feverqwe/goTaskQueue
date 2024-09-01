@@ -8,7 +8,7 @@ import {isAbortError} from '../utils/common';
 const useTaskStore = () => {
   return useLocalObservable(() => ({
     task: null as null | Task,
-    loading: true,
+    loading: false,
     error: null as null | HTTPError | ApiError | TypeError,
     abortController: null as null | AbortController,
     async fetchTask(id: string) {
@@ -43,6 +43,11 @@ const useTaskStore = () => {
           this.loading = false;
         });
       }
+    },
+    setTask(task: Task) {
+      this.loading = false;
+      this.task = task;
+      this.error = null;
     },
   }));
 };

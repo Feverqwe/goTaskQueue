@@ -313,8 +313,8 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               type="text"
               variant="outlined"
               InputLabelProps={{
-              shrink: true,
-            }}
+                shrink: true,
+              }}
             />
             <TextField
               size="small"
@@ -325,8 +325,8 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               type="text"
               variant="outlined"
               InputLabelProps={{
-              shrink: true,
-            }}
+                shrink: true,
+              }}
             />
           </Box>
           <Box display="flex" flexDirection="row" gap={1} my={1}>
@@ -339,24 +339,24 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               type="text"
               variant="outlined"
               InputLabelProps={{
-              shrink: true,
-            }}
-            />
-            {!isNew && (
-            <TextField
-              size="small"
-              label="Place"
-              defaultValue={place || ''}
-              inputProps={{ref: refPlace}}
-              fullWidth
-              type="text"
-              variant="outlined"
-              required
-              InputLabelProps={{
                 shrink: true,
               }}
             />
-          )}
+            {!isNew && (
+              <TextField
+                size="small"
+                label="Place"
+                defaultValue={place || ''}
+                inputProps={{ref: refPlace}}
+                fullWidth
+                type="text"
+                variant="outlined"
+                required
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            )}
           </Box>
         </DialogContent>
         <DialogActions>

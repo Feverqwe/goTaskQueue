@@ -14,11 +14,12 @@ interface TaskListProps {}
 const TaskList: FC<TaskListProps> = () => {
   const isVisible = useVisibility();
   const refInit = useRef(true);
-  const {name} = useContext(RootStoreCtx);
+  const rootStore = useContext(RootStoreCtx);
+  const {name} = rootStore;
 
   const taskListStore = useTaskListStore();
 
-  const {loading, silent, error, taskList, fetchTaskList} = taskListStore;
+  const {loading, silent, error, taskList, fetchTaskList, setTaskList} = taskListStore;
 
   const refTaskListStore = useRef(taskListStore);
   refTaskListStore.current = taskListStore;
@@ -32,9 +33,14 @@ const TaskList: FC<TaskListProps> = () => {
   }, [fetchTaskList]);
 
   useEffect(() => {
-    fetchTaskList();
+    if (rootStore.tasks) {
+      setTaskList(rootStore.tasks);
+      rootStore.tasks = undefined;
+    } else {
+      fetchTaskList();
+    }
     return () => refTaskListStore.current.abortController?.abort();
-  }, [fetchTaskList]);
+  }, [fetchTaskList, rootStore, setTaskList]);
 
   useEffect(() => {
     if (!isVisible) return;
