@@ -62,7 +62,7 @@ func main() {
 			powerLock(router, powerControl)
 			handleWebsocket(router, taskQueue)
 			internal.HandleApi(router, taskQueue, memStorage, &config, callChan)
-			handleWww(router, memStorage, &config)
+			handleWww(router, taskQueue, memStorage, &config)
 
 			address := config.GetAddress()
 
@@ -228,7 +228,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 	router.All("/ws", websocket.Handler(ws).ServeHTTP)
 }
 
-func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, config *cfg.Config) {
+func handleWww(router *internal.Router, queue *taskQueue.Queue, memStorage *memstorage.MemStorage, config *cfg.Config) {
 	binTime := time.Now()
 	if binPath, err := os.Executable(); err == nil {
 		if binStat, err := os.Stat(binPath); err == nil {
@@ -242,6 +242,8 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 		TemplateOrder  []string               `json:"templateOrder"`
 		MemStorage     map[string]interface{} `json:"memStorage"`
 		IsPtySupported bool                   `json:"isPtySupported"`
+		Tasks          []*taskQueue.Task      `json:"tasks"`
+		Task           *taskQueue.Task        `json:"task"`
 	}
 
 	gzipHandler := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -280,6 +282,17 @@ func handleWww(router *internal.Router, memStorage *memstorage.MemStorage, confi
 				MemStorage:     memStorage.GetKeys(nil),
 				IsPtySupported: runtime.GOOS != "windows",
 			}
+
+			if r.URL.Path == "/" {
+				store.Tasks = queue.GetAll(config)
+			}
+			if r.URL.Path == "/task" {
+				id := r.URL.Query().Get("id")
+				if task, err := queue.Get(id); err == nil {
+					store.Task = task
+				}
+			}
+
 			storeJson, err := json.Marshal(store)
 
 			body := string(content)
