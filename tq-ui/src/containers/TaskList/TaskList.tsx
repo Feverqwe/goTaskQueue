@@ -14,10 +14,10 @@ interface TaskListProps {}
 const TaskList: FC<TaskListProps> = () => {
   const isVisible = useVisibility();
   const refInit = useRef(true);
-  const rootStore = useContext(RootStoreCtx);
-  const {name} = rootStore;
+  const {name} = useContext(RootStoreCtx);
 
   const taskListStore = useTaskListStore();
+  const {isPreloaded} = taskListStore;
 
   const {loading, silent, error, taskList, fetchTaskList, setTaskList} = taskListStore;
 
@@ -33,14 +33,10 @@ const TaskList: FC<TaskListProps> = () => {
   }, [fetchTaskList]);
 
   useEffect(() => {
-    if (rootStore.tasks) {
-      setTaskList(rootStore.tasks);
-      rootStore.tasks = undefined;
-    } else {
-      fetchTaskList();
-    }
+    if (isPreloaded) return;
+    fetchTaskList();
     return () => refTaskListStore.current.abortController?.abort();
-  }, [fetchTaskList, rootStore, setTaskList]);
+  }, [fetchTaskList, isPreloaded, setTaskList]);
 
   useEffect(() => {
     if (!isVisible) return;

@@ -1,17 +1,29 @@
 import {useLocalObservable} from 'mobx-react-lite';
 import {runInAction} from 'mobx';
+import {useContext} from 'react';
 import {ApiError, HTTPError} from '../tools/apiRequest';
 import {Task, TaskOrGroup} from '../components/types';
 import {api} from '../tools/api';
 import {groupTasks} from '../containers/TaskList/utils';
 import {isAbortError} from '../utils/common';
+import {RootStoreCtx} from '../components/RootStore/RootStoreCtx';
 
 const useTaskListStore = () => {
+  const rootStore = useContext(RootStoreCtx);
+  let initTaskList: null | TaskOrGroup[] = null;
+  if (rootStore.tasks) {
+    const initTasks = rootStore.tasks;
+    initTasks.reverse();
+    initTaskList = groupTasks(initTasks);
+    rootStore.tasks = undefined;
+  }
+
   return useLocalObservable(() => ({
+    isPreloaded: !!initTaskList,
     silent: false,
-    loading: false,
+    loading: !initTaskList,
     error: null as null | HTTPError | ApiError | TypeError,
-    taskList: null as null | TaskOrGroup[],
+    taskList: initTaskList,
     abortController: null as null | AbortController,
     async fetchTaskList(isSilent = false) {
       if (this.abortController) {
@@ -24,12 +36,12 @@ const useTaskListStore = () => {
       const abortController = new AbortController();
       this.abortController = abortController;
       try {
-        const taskList = await api.tasks(undefined, {
+        const tasks = await api.tasks(undefined, {
           signal: this.abortController.signal,
         });
-        taskList.reverse();
         runInAction(() => {
-          this.taskList = groupTasks(taskList);
+          tasks.reverse();
+          this.taskList = groupTasks(tasks);
         });
       } catch (err) {
         if (isAbortError(err)) return;

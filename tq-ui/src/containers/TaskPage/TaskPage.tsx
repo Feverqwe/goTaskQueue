@@ -9,7 +9,6 @@ import TaskView from './components/TaskView';
 import NotificationProvider from '../../components/Notifications/NotificationProvider';
 import useTaskStore from '../../hooks/useTaskStore';
 import SilentStatus from '../../components/SilentStatus/SilentStatus';
-import {RootStoreCtx} from '../../components/RootStore/RootStoreCtx';
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 
@@ -17,10 +16,9 @@ const TaskPage: FC = () => {
   const location = useLocation();
   const id = useMemo(() => new URLSearchParams(location.search).get('id'), [location.search]);
   const notification = useContext(NotificationCtx);
-  const rootStore = useContext(RootStoreCtx);
 
   const taskStore = useTaskStore();
-  const {task, loading, error, fetchTask, setTask} = taskStore;
+  const {task, loading, error, fetchTask, setTask, isPreloaded} = taskStore;
 
   const refTaskStore = useRef(taskStore);
   refTaskStore.current = taskStore;
@@ -39,15 +37,10 @@ const TaskPage: FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!id) return;
-    if (rootStore.task) {
-      setTask(rootStore.task);
-      rootStore.task = undefined;
-    } else {
-      fetchTask(id);
-    }
+    if (!id || isPreloaded) return;
+    fetchTask(id);
     return () => refTaskStore.current.abortController?.abort();
-  }, [id, fetchTask, rootStore, setTask]);
+  }, [id, fetchTask, isPreloaded, setTask]);
 
   useEffect(() => {
     const taskState = task?.state;
