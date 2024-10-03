@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,6 +19,7 @@ type Queue struct {
 	Tasks  []*Task `json:"tasks"`
 	idTask map[string]*Task
 	ch     chan int
+	mu     sync.Mutex
 }
 
 func (s *Queue) GetAll(config *cfg.Config) []*Task {
@@ -35,8 +37,12 @@ func (s *Queue) Get(id string) (*Task, error) {
 func (s *Queue) Add(config *cfg.Config, taskBase TaskBase) *Task {
 	id := s.getId()
 	task := NewTask(id, taskBase)
+
+	s.mu.Lock()
 	s.Tasks = append(s.Tasks, task)
 	s.idTask[task.Id] = task
+	s.mu.Unlock()
+
 	task.Init(config, s)
 	s.Save()
 	return task
@@ -70,8 +76,10 @@ func (s *Queue) Del(config *cfg.Config, id string) error {
 		}
 	}
 
+	s.mu.Lock()
 	s.Tasks = append(s.Tasks[:index], s.Tasks[index+1:]...)
 	delete(s.idTask, task.Id)
+	s.mu.Unlock()
 
 	s.Save()
 
@@ -114,7 +122,12 @@ func (s *Queue) Save() {
 
 func (s *Queue) WriteQueue() error {
 	reader := bytes.NewReader(nil)
-	if data, err := json.Marshal(s); err == nil {
+
+	s.mu.Lock()
+	data, err := json.Marshal(s)
+	s.mu.Unlock()
+
+	if err == nil {
 		reader.Reset(data)
 		path := getQueuePath()
 		err = atomic.WriteFile(path, reader)
@@ -126,6 +139,7 @@ func (s *Queue) WriteQueue() error {
 func (s *Queue) RunOnBoot(config *cfg.Config) {
 	unic := map[string]bool{}
 	ids := make([]string, 0)
+
 	for _, task := range s.Tasks {
 		if task.IsStartOnBoot && !unic[task.TemplatePlace] {
 			unic[task.TemplatePlace] = true
@@ -146,6 +160,7 @@ func (s *Queue) RunOnBoot(config *cfg.Config) {
 
 func (s *Queue) Cleanup(config *cfg.Config) {
 	var delIds []string
+
 	for _, task := range s.Tasks {
 		if !task.IsStarted ||
 			!task.IsFinished ||
