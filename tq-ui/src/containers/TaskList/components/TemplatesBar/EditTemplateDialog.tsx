@@ -17,6 +17,7 @@ import path from 'path-browserify';
 import {RawTemplate, Template, TemplateFolder} from '../../../../components/types';
 import {RootStoreCtx} from '../../../../components/RootStore/RootStoreCtx';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
+import CommandField, {CommandFieldRef} from '../../../../components/CommandField/CommandField';
 
 interface TemplateDialogProps {
   folder: TemplateFolder;
@@ -55,7 +56,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   } = template;
   const {isPtySupported} = useContext(RootStoreCtx);
   const [variables, setVariables] = useState([...template.variables]);
-  const refCommand = useRef<HTMLInputElement>(null);
+  const refCommand = useRef<CommandFieldRef>(null);
   const refMap = useRef(new Map<string, HTMLInputElement>());
   const refLabel = useRef<HTMLInputElement>(null);
   const refGroup = useRef<HTMLInputElement>(null);
@@ -180,7 +181,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
 
     const template: Template = {
       place,
-      command: refCommand.current?.value || '',
+      command: refCommand.current?.getValue() ?? '',
       label: refLabel.current?.value || '',
       group: refGroup.current?.value || '',
       name,
@@ -239,20 +240,9 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
           <Button sx={{my: 1}} onClick={handleAddVariable} size="small" startIcon={<AddIcon />}>
             Add variable
           </Button>
-          <TextField
-            sx={{my: 1}}
-            size="small"
-            multiline
-            label="Command"
+          <CommandField
             defaultValue={command}
-            inputProps={{ref: refCommand}}
-            fullWidth
-            type="text"
-            variant="outlined"
-            required
-            InputLabelProps={{
-              shrink: true,
-            }}
+            rref={refCommand as React.MutableRefObject<CommandFieldRef>}
           />
           {isPtySupported && (
             <FormControlLabel

@@ -15,6 +15,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import {AddTaskRequest, RawTemplate} from '../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
+import CommandField, {CommandFieldRef} from '../CommandField/CommandField';
 
 export interface TemplateDialogProps {
   open: boolean;
@@ -51,7 +52,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
   const [isExtended, setExtended] = useState(() => isNew || variables.length === 0);
   const [isPtyEnabled, setPtyEnabled] = useState(isPty);
   const refPlace = useRef<string>(place);
-  const refCommand = useRef<HTMLInputElement>(null);
+  const refCommand = useRef<CommandFieldRef>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const refGroup = useRef<HTMLInputElement>(null);
   const refTtl = useRef<HTMLInputElement>(null);
@@ -91,7 +92,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
 
   const getCommand = useCallback((isRun = false) => {
     const label = refLabel.current?.value || '';
-    const command = refCommand.current?.value || '';
+    const command = refCommand.current?.getValue() ?? '';
 
     const variables: Record<string, string> = {};
     refMap.current.forEach(({current}, variable) => {
@@ -170,21 +171,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
         <DialogContent>
           {variableInputs}
           <Box display={isExtended ? 'block' : 'none'}>
-            <TextField
-              size="small"
-              sx={{my: 1}}
-              multiline
-              label="Command"
-              defaultValue={command}
-              inputProps={{ref: refCommand}}
-              fullWidth
-              type="text"
-              variant="outlined"
-              autoFocus={isNew}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
+            <CommandField rref={refCommand as React.MutableRefObject<CommandFieldRef>} />
             {isPtySupported && (
               <FormControlLabel
                 sx={{my: 1}}
