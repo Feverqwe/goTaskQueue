@@ -171,7 +171,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
         <DialogContent>
           {variableInputs}
           <Box display={isExtended ? 'block' : 'none'}>
-            <CommandField rref={refCommand as React.MutableRefObject<CommandFieldRef>} />
+            <CommandField rref={refCommand as React.MutableRefObject<CommandFieldRef>} defaultValue={command} />
             {isPtySupported && (
               <FormControlLabel
                 sx={{my: 1}}
