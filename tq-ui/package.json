@@ -22,16 +22,16 @@
     "@emotion/cache": "^11.10.5",
     "@emotion/react": "^11.6.0",
     "@emotion/styled": "^11.6.0",
-    "@mui/icons-material": "^5.1.1",
-    "@mui/material": "^5.1.1",
+    "@mui/icons-material": "^6.3.1",
+    "@mui/material": "^6.3.1",
     "lodash.throttle": "^4.1.1",
     "mobx": "^6.6.2",
     "mobx-react-lite": "^4.0.3",
     "monaco-editor": "^0.52.2",
     "path-browserify": "^1.0.1",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "react-router-dom": "^6.4.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1",
     "xterm": "^5.0.0",
     "xterm-addon-fit": "^0.8.0",
     "xterm-addon-web-links": "^0.9.0"
@@ -39,20 +39,20 @@
   "devDependencies": {
     "@types/lodash.throttle": "^4.1.7",
     "@types/path-browserify": "^1.0.0",
-    "@types/react-dom": "^18.0.1",
-    "@typescript-eslint/eslint-plugin": "^7.0.1",
-    "@typescript-eslint/parser": "^7.0.1",
+    "@types/react-dom": "^19.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
     "copy-webpack-plugin": "^12.0.2",
     "cross-env": "^7.0.2",
     "css-loader": "^7.1.2",
-    "del-cli": "^5.0.0",
+    "del-cli": "^6.0.0",
     "eslint": "^8.27.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsx-a11y": "^6.6.1",
     "eslint-plugin-react": "^7.31.10",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-unused-imports": "^3.0.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "html-webpack-plugin": "^5.5.0",
     "less-loader": "^12.1.0",
     "ncp": "^2.0.0",
@@ -64,6 +64,11 @@
     "typescript": "^5.0.4",
     "url-loader": "^4.1.1",
     "webpack": "^5.64.2",
-    "webpack-cli": "^5.0.1"
+    "webpack-cli": "^6.0.1"
+  },
+  "overrides": {
+    "eslint-config-airbnb": {
+      "eslint-plugin-react-hooks": "$eslint-plugin-react-hooks"
+    }
   }
 }

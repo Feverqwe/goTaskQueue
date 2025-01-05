@@ -9,9 +9,7 @@ import {RootStoreCtx} from '../../components/RootStore/RootStoreCtx';
 import SilentStatus from '../../components/SilentStatus/SilentStatus';
 import useTaskListStore from '../../hooks/useTaskListStore';
 
-interface TaskListProps {}
-
-const TaskList: FC<TaskListProps> = () => {
+const TaskList: FC = () => {
   const isVisible = useVisibility();
   const refInit = useRef(true);
   const {name} = useContext(RootStoreCtx);

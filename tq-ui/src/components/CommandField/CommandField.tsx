@@ -12,15 +12,15 @@ export interface CommandFieldRef {
 
 interface CommandFieldProps {
   defaultValue?: string;
-  rref: React.MutableRefObject<CommandFieldRef>;
+  ref: React.RefObject<CommandFieldRef>;
 }
 
-const CommandField: FC<CommandFieldProps> = ({defaultValue, rref}) => {
+const CommandField: FC<CommandFieldProps> = ({defaultValue, ref}) => {
   const refDefaultValue = useRef(defaultValue);
   const refCtr = useRef<HTMLDivElement>(null);
   const refEditor = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  rref.current = useMemo(
+  ref.current = useMemo(
     () => ({
       getValue(): string {
         return refEditor.current?.getValue() ?? '';

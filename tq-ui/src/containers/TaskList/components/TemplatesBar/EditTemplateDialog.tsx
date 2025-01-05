@@ -242,7 +242,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
           </Button>
           <CommandField
             defaultValue={command}
-            rref={refCommand as React.MutableRefObject<CommandFieldRef>}
+            ref={refCommand as React.RefObject<CommandFieldRef>}
           />
           {isPtySupported && (
             <FormControlLabel

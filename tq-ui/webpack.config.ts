@@ -1,9 +1,9 @@
 import * as HtmlWebpackPlugin from 'html-webpack-plugin';
 import * as Path from 'path';
 import * as CopyPlugin from 'copy-webpack-plugin';
-import {CallableOption} from 'webpack-cli';
+import {CallableWebpackConfiguration} from 'webpack-cli/lib/types';
 
-const getOptions: CallableOption = (env, argv) => ({
+const getOptions: CallableWebpackConfiguration = (env, argv) => ({
   entry: {
     index: './src/index',
   },

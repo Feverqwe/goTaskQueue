@@ -1,8 +1,7 @@
 import React, {useCallback, useMemo, useState} from 'react';
 import ConfirmDialog, {ConfirmDialogProps} from '../components/ConfirmDialog';
 
-export interface UseConfirmDialogProps
-  extends Pick<ConfirmDialogProps, 'title' | 'message' | 'onSubmit'> {}
+export type UseConfirmDialogProps = Pick<ConfirmDialogProps, 'title' | 'message' | 'onSubmit'>;
 
 export const useConfirmDialog = ({onSubmit, title, message}: UseConfirmDialogProps) => {
   const [isOpen, setOpen] = useState(false);

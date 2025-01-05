@@ -64,7 +64,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
   const refMap = useRef(new Map());
   variables.forEach(({value}) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    refMap.current.set(value, useRef());
+    refMap.current.set(value, useRef(null));
   });
 
   const variableInputs = useMemo(() => {
@@ -171,7 +171,10 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
         <DialogContent>
           {variableInputs}
           <Box display={isExtended ? 'block' : 'none'}>
-            <CommandField rref={refCommand as React.MutableRefObject<CommandFieldRef>} defaultValue={command} />
+            <CommandField
+              ref={refCommand as React.RefObject<CommandFieldRef>}
+              defaultValue={command}
+            />
             {isPtySupported && (
               <FormControlLabel
                 sx={{my: 1}}

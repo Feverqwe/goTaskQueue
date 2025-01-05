@@ -2,7 +2,7 @@ import React, {useCallback, useRef} from 'react';
 import {isIOS} from '../utils/common';
 
 const useContextMenuFix = <T>(callback: (e: T) => unknown) => {
-  const refTimeoutId = useRef<number>();
+  const refTimeoutId = useRef<number>(null);
 
   const touchStart = useCallback(
     (e: React.TouchEvent) => {
@@ -19,7 +19,9 @@ const useContextMenuFix = <T>(callback: (e: T) => unknown) => {
   );
 
   const touchClear = useCallback(() => {
-    clearTimeout(refTimeoutId.current);
+    if (refTimeoutId.current) {
+      clearTimeout(refTimeoutId.current);
+    }
   }, []);
 
   if (!isIOS()) return undefined;

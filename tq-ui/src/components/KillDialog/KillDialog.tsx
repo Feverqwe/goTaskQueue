@@ -19,7 +19,7 @@ interface KillDialogProps {
 }
 
 const KillDialog: FC<KillDialogProps> = ({open, task, onClose, onSubmit}) => {
-  const refSelect = useRef<{value: number}>();
+  const refSelect = useRef<{value: number}>(null);
 
   const handleSubmit = useCallback(async () => {
     if (!refSelect.current) return;
