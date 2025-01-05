@@ -7,47 +7,38 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import {Box, CardActionArea, Divider, IconButton, Paper, Typography} from '@mui/material';
+import {Box, CardActionArea, IconButton, Paper, Typography} from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import {Check} from '@mui/icons-material';
 import {useNavigate} from 'react-router-dom';
-import CircleIcon from '@mui/icons-material/Circle';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
 import {AddTaskRequest, RawTemplate, Task, TaskState} from '../../../components/types';
-import DialogMenu from '../../../components/DialogMenu/DialogMenu';
-import DialogMenuItem from '../../../components/DialogMenu/DialogMenuItem';
-import TaskLinks from './TaskLinks';
 import TemplateDialog from '../../../components/TemplateDialog/TemplateDialog';
 import KillDialog from '../../../components/KillDialog/KillDialog';
 import IconActionButton from '../../../components/IconActionButton/IconActionButton';
 import {RootStoreCtx} from '../../../components/RootStore/RootStoreCtx';
+import TaskDialog from '../../../components/TaskDialog/TaskDialog';
 
 interface TaskInfoProps {
   task: Task;
-  remapNewLine: boolean;
-  onToggleRemapNewLine: () => void;
+  showInfo: boolean;
   onToggleInfo: () => void;
   onUpdate: () => void;
 }
 
-const TaskHeader: FC<TaskInfoProps> = ({
-  task,
-  remapNewLine,
-  onToggleRemapNewLine,
-  onToggleInfo,
-  onUpdate,
-}) => {
+const TaskHeader: FC<TaskInfoProps> = ({task, showInfo, onToggleInfo, onUpdate}) => {
   const navigate = useNavigate();
   const {name} = useContext(RootStoreCtx);
-  const {id, state, label, command, error, isOnlyCombined} = task;
+  const {id, state, label, command, error} = task;
   const [restartDialogTemplate, setRestartDialogTemplate] = useState<null | RawTemplate>(null);
-  const [showMenu, setShowMenu] = useState(false);
   const [showConfirm, setShowConfirm] = useState<{type: string} | undefined>();
+  const [showTaskDialog, setShowTaskDialog] = useState(false);
 
   useMemo(() => {
     document.title = `Task ${label || command} — ${name}`;
@@ -70,14 +61,6 @@ const TaskHeader: FC<TaskInfoProps> = ({
     [id, onUpdate],
   );
 
-  const handleOpenMenu = useCallback(() => {
-    setShowMenu(true);
-  }, []);
-
-  const handleCloseMenu = useCallback(() => {
-    setShowMenu(false);
-  }, []);
-
   const handleRestart = useCallback(() => {
     const {
       templatePlace,
@@ -99,6 +82,14 @@ const TaskHeader: FC<TaskInfoProps> = ({
   }, [task]);
 
   const handleTitleClick = useCallback(() => {
+    setShowTaskDialog((v) => !v);
+  }, []);
+
+  const handleCloseTaskDialog = useCallback(() => {
+    setShowTaskDialog(false);
+  }, []);
+
+  const handleExpandClick = useCallback(() => {
     onToggleInfo();
   }, [onToggleInfo]);
 
@@ -188,60 +179,12 @@ const TaskHeader: FC<TaskInfoProps> = ({
                     <RestartAltIcon />
                   </IconButton>
                 )}
-              <IconButton onClick={handleOpenMenu} title="Menu">
-                <TaskStatusIcon task={task} />
-                {task.links.length > 0 && (
-                  <CircleIcon
-                    sx={{position: 'absolute', right: 2, top: 2, width: 10, height: 10}}
-                    color="disabled"
-                  />
-                )}
+              <IconButton onClick={handleExpandClick} title="Expand">
+                {showInfo ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
-              <DialogMenu open={showMenu} onClose={handleCloseMenu}>
-                {task.links.length > 0 && (
-                  <>
-                    <TaskLinks task={task} onClick={handleCloseMenu} />
-                    <Divider />
-                  </>
-                )}
-                <DialogMenuItem onClick={onToggleRemapNewLine}>
-                  Remap new line
-                  {remapNewLine && (
-                    <Box display="flex" alignItems="center" pl={1}>
-                      <Check fontSize="small" />
-                    </Box>
-                  )}
-                </DialogMenuItem>
-                <Divider />
-                {!isOnlyCombined && (
-                  <>
-                    <DialogMenuItem
-                      component="a"
-                      href={`/api/task/stdout?id=${id}`}
-                      target="_blank"
-                      onClick={handleCloseMenu}
-                    >
-                      stdout.log
-                    </DialogMenuItem>
-                    <DialogMenuItem
-                      component="a"
-                      href={`/api/task/stderr?id=${id}`}
-                      target="_blank"
-                      onClick={handleCloseMenu}
-                    >
-                      stderr.log
-                    </DialogMenuItem>
-                  </>
-                )}
-                <DialogMenuItem
-                  component="a"
-                  href={`/api/task/combined?id=${id}`}
-                  target="_blank"
-                  onClick={handleCloseMenu}
-                >
-                  combined.log
-                </DialogMenuItem>
-              </DialogMenu>
+              <Box display="flex" alignItems="center" mx={1}>
+                <TaskStatusIcon task={task} />
+              </Box>
             </Box>
           </Box>
         </Paper>
@@ -263,6 +206,12 @@ const TaskHeader: FC<TaskInfoProps> = ({
           onClose={handleConfirmClose}
         />
       )}
+      <TaskDialog
+        taskId={task.id}
+        open={showTaskDialog}
+        onClose={handleCloseTaskDialog}
+        onUpdate={onUpdate}
+      />
     </>
   );
 };

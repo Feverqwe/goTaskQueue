@@ -11,13 +11,12 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import EditIcon from '@mui/icons-material/Edit';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {Task} from '../types';
 import {api} from '../../tools/api';
 import IconActionButton from '../IconActionButton/IconActionButton';
 import {getTaskName} from '../../containers/TaskPage/utils';
 import KeyValue from './components/KeyValue';
+import CommandField, {CommandFieldRef} from '../CommandField/CommandField';
 
 interface TaskDialogViewProps {
   task: Task;
@@ -27,11 +26,11 @@ interface TaskDialogViewProps {
 
 const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
   const {id, command, label, isOnlyCombined} = task;
-  const refCommand = useRef<HTMLInputElement>(null);
+  const refCommand = useRef<CommandFieldRef>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const initLabel = label || command;
   const [isEditTitle, setEditTitle] = useState(false);
-  const [isExtended, setExtended] = useState(false);
+  /* const [isExtended, setExtended] = useState(false); */
 
   const handleSetLabel = useCallback(
     async (e: SyntheticEvent) => {
@@ -49,23 +48,21 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
     [id, initLabel, onUpdate],
   );
 
-  const handleCommandFocus = useCallback(() => {
-    refCommand.current?.select();
-  }, []);
-
   const handleEdit = useCallback(() => setEditTitle(true), []);
 
-  const handleAdvancedClick = useCallback(() => {
+  /* const handleAdvancedClick = useCallback(() => {
     setExtended((v) => !v);
-  }, []);
+  }, []); */
 
   return (
     <>
       <DialogTitle>
         {!isEditTitle && (
           <Box display="flex" alignItems="center">
-            <Box sx={{whiteSpace: 'nowrap', overflow: 'hidden'}}>{getTaskName(task)}</Box>
-            <IconButton onClick={handleEdit} sx={{ml: 1}}>
+            <Box sx={{whiteSpace: 'nowrap', overflow: 'hidden'}} flexGrow={1}>
+              {getTaskName(task)}
+            </Box>
+            <IconButton size="small" onClick={handleEdit} sx={{ml: 1}}>
               <EditIcon />
             </IconButton>
           </Box>
@@ -96,8 +93,17 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         )}
       </DialogTitle>
       <DialogContent>
-        <Button
-          sx={{my: 1}}
+        <Box display="flex" flexDirection="column" gap={1} mb={1}>
+          <KeyValue name="Created At" value={task.createdAt} type="datetime" />
+          <KeyValue name="Started At" value={task.startedAt} type="datetime" />
+          <KeyValue name="Finished At" value={task.finishedAt} type="datetime" />
+        </Box>
+        <CommandField
+          ref={refCommand as React.RefObject<CommandFieldRef>}
+          defaultValue={command}
+          readOnly
+        />
+        {/* <Button
           size="small"
           onClick={handleAdvancedClick}
           startIcon={isExtended ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -106,29 +112,8 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         </Button>
         {isExtended ? (
           <>
-            <Box display="flex" flexDirection="column" gap={1} mb={1}>
-              <KeyValue name="Created At" value={task.createdAt} type="datetime" />
-              <KeyValue name="Started At" value={task.startedAt} type="datetime" />
-              <KeyValue name="Finished At" value={task.finishedAt} type="datetime" />
-            </Box>
-            <TextField
-              sx={{my: 1}}
-              size="small"
-              variant="outlined"
-              value={command}
-              label="Command"
-              fullWidth
-              multiline
-              maxRows={3}
-              InputProps={{readOnly: true}}
-              inputProps={{ref: refCommand}}
-              onFocus={handleCommandFocus}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
           </>
-        ) : null}
+        ) : null} */}
       </DialogContent>
       <DialogActions>
         {!isOnlyCombined && (

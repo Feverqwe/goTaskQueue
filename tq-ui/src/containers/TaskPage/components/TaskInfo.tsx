@@ -1,5 +1,5 @@
 import React, {FC, SyntheticEvent, useCallback, useRef} from 'react';
-import {Box, InputAdornment, Paper, TextField} from '@mui/material';
+import {Box, Checkbox, InputAdornment, Paper, TextField} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import {Task} from '../../../components/types';
 import {api} from '../../../tools/api';
@@ -7,12 +7,13 @@ import IconActionButton from '../../../components/IconActionButton/IconActionBut
 
 interface TaskInfoProps {
   task: Task;
+  remapNewLine: boolean;
+  onToggleRemapNewLine: () => void;
   onUpdate: () => void;
 }
 
-const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
+const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onUpdate}) => {
   const {id, command, label} = task;
-  const refCommand = useRef<HTMLInputElement>(null);
   const refLabel = useRef<HTMLInputElement>(null);
   const initLabel = label || command;
 
@@ -26,10 +27,6 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
     },
     [id, initLabel, onUpdate],
   );
-
-  const handleCommandFocus = useCallback(() => {
-    refCommand.current?.select();
-  }, []);
 
   return (
     <Box m={1} mt={0} component={Paper}>
@@ -63,21 +60,9 @@ const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
             }}
           />
         </Box>
-        <TextField
-          sx={{flexGrow: 3, m: 1}}
-          size="small"
-          variant="outlined"
-          value={command}
-          label="Command"
-          multiline
-          maxRows={3}
-          InputProps={{readOnly: true}}
-          inputProps={{ref: refCommand}}
-          onFocus={handleCommandFocus}
-          InputLabelProps={{
-            shrink: true,
-          }}
-        />
+        <Box mx={1} display="flex" alignItems="center">
+          <Checkbox checked={remapNewLine} onChange={onToggleRemapNewLine} /> Remap new line
+        </Box>
       </Box>
     </Box>
   );

@@ -13,9 +13,10 @@ export interface CommandFieldRef {
 interface CommandFieldProps {
   defaultValue?: string;
   ref: React.RefObject<CommandFieldRef>;
+  readOnly?: boolean;
 }
 
-const CommandField: FC<CommandFieldProps> = ({defaultValue, ref}) => {
+const CommandField: FC<CommandFieldProps> = ({defaultValue, ref, readOnly}) => {
   const refDefaultValue = useRef(defaultValue);
   const refCtr = useRef<HTMLDivElement>(null);
   const refEditor = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -43,6 +44,7 @@ const CommandField: FC<CommandFieldProps> = ({defaultValue, ref}) => {
       },
       wordWrap: 'on',
       fontSize: 14,
+      readOnly,
     });
 
     function setCtrHeight(ctrNode: HTMLDivElement) {
@@ -65,7 +67,7 @@ const CommandField: FC<CommandFieldProps> = ({defaultValue, ref}) => {
       instance.dispose();
       refEditor.current = null;
     };
-  }, [refDefaultValue]);
+  }, [readOnly, refDefaultValue]);
 
   return (
     <Box sx={{my: 1}}>
