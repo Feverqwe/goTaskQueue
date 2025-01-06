@@ -7,10 +7,12 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
+  SxProps,
   TextField,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import EditIcon from '@mui/icons-material/Edit';
+import {Theme as SystemTheme} from '@mui/system/createTheme/createTheme';
 import {Task} from '../types';
 import {api} from '../../tools/api';
 import IconActionButton from '../IconActionButton/IconActionButton';
@@ -23,6 +25,8 @@ interface TaskDialogViewProps {
   onUpdate: () => Promise<void>;
   onClose: () => void;
 }
+
+const KeyValueSx: SxProps<SystemTheme> = {flexGrow: {sm: '1'}, width: {sm: '45%'}};
 
 const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
   const {id, command, label, isOnlyCombined} = task;
@@ -58,8 +62,11 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
     <>
       <DialogTitle>
         {!isEditTitle && (
-          <Box display="flex" alignItems="center">
-            <Box sx={{whiteSpace: 'nowrap', overflow: 'hidden'}} flexGrow={1}>
+          <Box display="flex" alignItems="center" fontSize="medium">
+            <Box
+              sx={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}
+              flexGrow={1}
+            >
               {getTaskName(task)}
             </Box>
             <IconButton size="small" onClick={handleEdit} sx={{ml: 1}}>
@@ -75,28 +82,34 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
               defaultValue={initLabel}
               label="Label"
               fullWidth
-              inputProps={{ref: refLabel}}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconActionButton type="submit" edge="end" onSubmit={handleSetLabel}>
-                      <SaveIcon />
-                    </IconActionButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                htmlInput: {ref: refLabel},
+                inputLabel: {shrink: true},
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconActionButton type="submit" edge="end" onSubmit={handleSetLabel}>
+                        <SaveIcon />
+                      </IconActionButton>
+                    </InputAdornment>
+                  ),
+                },
               }}
             />
           </Box>
         )}
       </DialogTitle>
       <DialogContent>
-        <Box display="flex" flexDirection="column" gap={1} mb={1}>
-          <KeyValue name="Created At" value={task.createdAt} type="datetime" />
-          <KeyValue name="Started At" value={task.startedAt} type="datetime" />
-          <KeyValue name="Finished At" value={task.finishedAt} type="datetime" />
+        <Box
+          display="flex"
+          gap={1}
+          mb={1}
+          sx={{flexDirection: {xs: 'column', sm: 'row'}, flexWrap: {xs: 'nowrap', sm: 'wrap'}}}
+        >
+          <KeyValue name="Created at" value={task.createdAt} type="datetime" sx={KeyValueSx} />
+          <KeyValue name="Started at" value={task.startedAt} type="datetime" sx={KeyValueSx} />
+          <KeyValue name="Finished at" value={task.finishedAt} type="datetime" sx={KeyValueSx} />
+          <KeyValue name="Expires at" value={task.expiresAt} type="datetime" sx={KeyValueSx} />
         </Box>
         <CommandField
           ref={refCommand as React.RefObject<CommandFieldRef>}
@@ -116,37 +129,6 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         ) : null} */}
       </DialogContent>
       <DialogActions>
-        {!isOnlyCombined && (
-          <>
-            <Button
-              sx={{ml: 1}}
-              variant="outlined"
-              component="a"
-              href={`/api/task/stdout?id=${id}`}
-              target="_blank"
-            >
-              stdout.log
-            </Button>
-            <Button
-              sx={{ml: 1}}
-              variant="outlined"
-              component="a"
-              href={`/api/task/stderr?id=${id}`}
-              target="_blank"
-            >
-              stderr.log
-            </Button>
-          </>
-        )}
-        <Button
-          sx={{ml: 1}}
-          variant="outlined"
-          component="a"
-          href={`/api/task/combined?id=${id}`}
-          target="_blank"
-        >
-          combined.log
-        </Button>
         <Button sx={{ml: 1}} variant="outlined" onClick={onClose}>
           Close
         </Button>

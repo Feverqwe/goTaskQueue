@@ -69,6 +69,7 @@ export interface Task extends Omit<Required<RawTemplate>, 'place' | 'name' | 'va
   createdAt: string;
   startedAt: string;
   finishedAt: string;
+  expiresAt: string;
   links: TaskLink[];
 }
 

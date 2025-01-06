@@ -1,5 +1,5 @@
 import React, {FC, SyntheticEvent, useCallback, useRef} from 'react';
-import {Box, Checkbox, InputAdornment, Paper, TextField} from '@mui/material';
+import {Box, Button, Checkbox, InputAdornment, Paper, TextField} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import {Task} from '../../../components/types';
 import {api} from '../../../tools/api';
@@ -13,7 +13,7 @@ interface TaskInfoProps {
 }
 
 const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onUpdate}) => {
-  const {id, command, label} = task;
+  const {id, command, label, isOnlyCombined} = task;
   const refLabel = useRef<HTMLInputElement>(null);
   const initLabel = label || command;
 
@@ -60,8 +60,41 @@ const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, 
             }}
           />
         </Box>
-        <Box mx={1} display="flex" alignItems="center">
-          <Checkbox checked={remapNewLine} onChange={onToggleRemapNewLine} /> Remap new line
+        <Box display="flex" alignItems="center" sx={{flexWrap: {xs: 'wrap', sm: 'nowrap'}}}>
+          {!isOnlyCombined && (
+            <>
+              <Button
+                sx={{ml: 1}}
+                variant="outlined"
+                component="a"
+                href={`/api/task/stdout?id=${id}`}
+                target="_blank"
+              >
+                stdout.log
+              </Button>
+              <Button
+                sx={{ml: 1}}
+                variant="outlined"
+                component="a"
+                href={`/api/task/stderr?id=${id}`}
+                target="_blank"
+              >
+                stderr.log
+              </Button>
+            </>
+          )}
+          <Button
+            sx={{ml: 1}}
+            variant="outlined"
+            component="a"
+            href={`/api/task/combined?id=${id}`}
+            target="_blank"
+          >
+            combined.log
+          </Button>
+          <Box mx={1} display="flex" alignItems="center">
+            <Checkbox checked={remapNewLine} onChange={onToggleRemapNewLine} /> Remap new line
+          </Box>
         </Box>
       </Box>
     </Box>

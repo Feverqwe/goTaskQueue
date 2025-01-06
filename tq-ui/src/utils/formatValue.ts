@@ -4,7 +4,12 @@ export function formatValue(value: string | number, type?: 'datetime') {
   let formattedValue;
   switch (type) {
     case 'datetime': {
-      formattedValue = getDatetimeFormatter().format(new Date(value));
+      const date = new Date(value);
+      if (date.getFullYear() === 1) {
+        formattedValue = '−';
+      } else {
+        formattedValue = getDatetimeFormatter().format(date);
+      }
       break;
     }
     default: {
