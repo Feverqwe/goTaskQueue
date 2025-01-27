@@ -10,7 +10,7 @@ export interface CommandFieldRef {
   getValue(): string;
 }
 
-interface CommandFieldProps {
+export interface CommandFieldProps {
   defaultValue?: string;
   ref: React.RefObject<CommandFieldRef>;
   readOnly?: boolean;

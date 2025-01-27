@@ -18,7 +18,8 @@ import {api} from '../../tools/api';
 import IconActionButton from '../IconActionButton/IconActionButton';
 import {getTaskName} from '../../containers/TaskPage/utils';
 import KeyValue from './components/KeyValue';
-import CommandField, {CommandFieldRef} from '../CommandField/CommandField';
+import {CommandFieldRef} from '../CommandField/CommandField';
+import CommandFieldAsync from '../CommandField/CommandFieldAsync';
 
 interface TaskDialogViewProps {
   task: Task;
@@ -111,7 +112,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
           <KeyValue name="Finished at" value={task.finishedAt} type="datetime" sx={KeyValueSx} />
           <KeyValue name="Expires at" value={task.expiresAt} type="datetime" sx={KeyValueSx} />
         </Box>
-        <CommandField
+        <CommandFieldAsync
           ref={refCommand as React.RefObject<CommandFieldRef>}
           defaultValue={command}
           readOnly

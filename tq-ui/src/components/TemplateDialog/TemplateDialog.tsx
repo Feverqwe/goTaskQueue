@@ -15,7 +15,8 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import {AddTaskRequest, RawTemplate} from '../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
-import CommandField, {CommandFieldRef} from '../CommandField/CommandField';
+import {CommandFieldRef} from '../CommandField/CommandField';
+import CommandFieldAsync from '../CommandField/CommandFieldAsync';
 
 export interface TemplateDialogProps {
   open: boolean;
@@ -171,7 +172,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
         <DialogContent>
           {variableInputs}
           <Box display={isExtended ? 'block' : 'none'}>
-            <CommandField
+            <CommandFieldAsync
               ref={refCommand as React.RefObject<CommandFieldRef>}
               defaultValue={command}
             />

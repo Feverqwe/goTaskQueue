@@ -17,7 +17,8 @@ import path from 'path-browserify';
 import {RawTemplate, Template, TemplateFolder} from '../../../../components/types';
 import {RootStoreCtx} from '../../../../components/RootStore/RootStoreCtx';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
-import CommandField, {CommandFieldRef} from '../../../../components/CommandField/CommandField';
+import {CommandFieldRef} from '../../../../components/CommandField/CommandField';
+import CommandFieldAsync from '../../../../components/CommandField/CommandFieldAsync';
 
 interface TemplateDialogProps {
   folder: TemplateFolder;
@@ -240,7 +241,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
           <Button sx={{my: 1}} onClick={handleAddVariable} size="small" startIcon={<AddIcon />}>
             Add variable
           </Button>
-          <CommandField
+          <CommandFieldAsync
             defaultValue={command}
             ref={refCommand as React.RefObject<CommandFieldRef>}
           />
