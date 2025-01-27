@@ -5,7 +5,7 @@ import DialogMenuItem from '../../../components/DialogMenu/DialogMenuItem';
 
 interface TaskLinksProps {
   task: Task;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 const TaskLinks: FC<TaskLinksProps> = ({task, onClick}) => {

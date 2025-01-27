@@ -20,6 +20,7 @@ import {getTaskName} from '../../containers/TaskPage/utils';
 import KeyValue from './components/KeyValue';
 import {CommandFieldRef} from '../CommandField/CommandField';
 import CommandFieldAsync from '../CommandField/CommandFieldAsync';
+import TaskLinks from '../../containers/TaskPage/components/TaskLinks';
 
 interface TaskDialogViewProps {
   task: Task;
@@ -101,6 +102,11 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         )}
       </DialogTitle>
       <DialogContent>
+        {task.links.length > 0 && (
+          <Box mb={1}>
+            <TaskLinks task={task} />
+          </Box>
+        )}
         <Box
           display="flex"
           gap={1}
