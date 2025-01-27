@@ -207,10 +207,10 @@ const TaskHeader: FC<TaskInfoProps> = ({task, showInfo, onToggleInfo, onUpdate})
         />
       )}
       <TaskDialog
-        taskId={task.id}
         open={showTaskDialog}
         onClose={handleCloseTaskDialog}
         onUpdate={onUpdate}
+        task={task}
       />
     </>
   );
