@@ -3,6 +3,7 @@ import {Box, CircularProgress} from '@mui/material';
 import {CommandFieldProps} from './CommandField';
 
 const CommandFieldAsync: FC<CommandFieldProps> = (props) => {
+  const {ref, defaultValue} = props;
   const [isLoading, setLoading] = useState(true);
   const refComponent = useRef<FunctionComponent<CommandFieldProps>>(null);
 
@@ -20,6 +21,12 @@ const CommandFieldAsync: FC<CommandFieldProps> = (props) => {
       mounted = false;
     };
   }, []);
+
+  if (!ref.current) {
+    ref.current = {
+      getValue: () => defaultValue ?? '',
+    };
+  }
 
   if (isLoading) {
     return (
