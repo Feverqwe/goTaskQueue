@@ -45,18 +45,20 @@ const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, 
             defaultValue={initLabel}
             label="Label"
             fullWidth
-            inputProps={{ref: refLabel}}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconActionButton type="submit" edge="end" onSubmit={handleSetLabel}>
-                    <SaveIcon />
-                  </IconActionButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              htmlInput: {ref: refLabel},
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconActionButton type="submit" edge="end" onSubmit={handleSetLabel}>
+                      <SaveIcon />
+                    </IconActionButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
         </Box>

@@ -76,15 +76,17 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
           size="small"
           sx={{my: 1}}
           key={index}
-          inputProps={{ref}}
           autoFocus={!isNew && index === 0}
           label={name}
           type="text"
           fullWidth
           variant="outlined"
           defaultValue={initVariables[value] ?? defaultValue}
-          InputLabelProps={{
-            shrink: true,
+          slotProps={{
+            inputLabel: {
+              shrink: true,
+            },
+            htmlInput: {ref},
           }}
         />
       );
@@ -229,11 +231,13 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
               sx={{my: 1}}
               label="TTL after finish (seconds)"
               defaultValue={ttl ?? 0}
-              inputProps={{ref: refTtl}}
               type="number"
               variant="outlined"
-              InputLabelProps={{
-                shrink: true,
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+                htmlInput: {ref: refTtl},
               }}
             />
             <Box display="flex" flexDirection="row" gap={1} my={1}>
@@ -241,24 +245,28 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 size="small"
                 label="Label"
                 defaultValue={label || ''}
-                inputProps={{ref: refLabel}}
                 fullWidth
                 type="text"
                 variant="outlined"
-                InputLabelProps={{
-                  shrink: true,
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                  htmlInput: {ref: refLabel},
                 }}
               />
               <TextField
                 size="small"
                 label="Group"
                 defaultValue={group || ''}
-                inputProps={{ref: refGroup}}
                 fullWidth
                 type="text"
                 variant="outlined"
-                InputLabelProps={{
-                  shrink: true,
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                  htmlInput: {ref: refGroup},
                 }}
               />
             </Box>

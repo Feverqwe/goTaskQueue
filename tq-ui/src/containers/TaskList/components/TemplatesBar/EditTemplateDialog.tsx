@@ -119,12 +119,14 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             size="small"
             sx={{flexGrow: 1, mr: 1}}
             label="Variable"
-            inputProps={{ref: refValue}}
             type="text"
             variant="outlined"
             required
-            InputLabelProps={{
-              shrink: true,
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              htmlInput: {ref: refValue},
             }}
             defaultValue={value}
           />
@@ -132,12 +134,14 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             size="small"
             sx={{flexGrow: 1, mr: 1}}
             label="Name"
-            inputProps={{ref: refName}}
             type="text"
             variant="outlined"
             required
-            InputLabelProps={{
-              shrink: true,
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              htmlInput: {ref: refName},
             }}
             defaultValue={name}
           />
@@ -145,13 +149,15 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             size="small"
             sx={{flexGrow: 1, mr: 1}}
             label="Default value"
-            inputProps={{ref: refDefaultValue}}
             type="text"
             variant="outlined"
-            InputLabelProps={{
-              shrink: true,
-            }}
             defaultValue={defaultValue || ''}
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              htmlInput: {ref: refDefaultValue},
+            }}
           />
           <IconButton onClick={handleDeleteVariable.bind(null, variable)} title="Delete">
             <RemoveIcon />
@@ -228,13 +234,15 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             label="Name"
             sx={{my: 1}}
             defaultValue={name || ''}
-            inputProps={{ref: refName}}
             fullWidth
             type="text"
             variant="outlined"
             required
-            InputLabelProps={{
-              shrink: true,
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              htmlInput: {ref: refName},
             }}
           />
           {variableInputs}
@@ -287,11 +295,13 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             sx={{my: 1}}
             label="TTL after finish (seconds)"
             defaultValue={ttl ?? 0}
-            inputProps={{ref: refTtl}}
             type="number"
             variant="outlined"
-            InputLabelProps={{
-              shrink: true,
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              htmlInput: {ref: refTtl},
             }}
           />
           <Box display="flex" flexDirection="row" gap={1} my={1}>
@@ -299,24 +309,28 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               size="small"
               label="Label"
               defaultValue={label || ''}
-              inputProps={{ref: refLabel}}
               fullWidth
               type="text"
               variant="outlined"
-              InputLabelProps={{
-                shrink: true,
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+                htmlInput: {ref: refLabel},
               }}
             />
             <TextField
               size="small"
               label="Group"
               defaultValue={group || ''}
-              inputProps={{ref: refGroup}}
               fullWidth
               type="text"
               variant="outlined"
-              InputLabelProps={{
-                shrink: true,
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+                htmlInput: {ref: refGroup},
               }}
             />
           </Box>
@@ -325,12 +339,14 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               size="small"
               label="Id"
               defaultValue={id || ''}
-              inputProps={{ref: refId}}
               fullWidth
               type="text"
               variant="outlined"
-              InputLabelProps={{
-                shrink: true,
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+                htmlInput: {ref: refId},
               }}
             />
             {!isNew && (
@@ -338,13 +354,15 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                 size="small"
                 label="Place"
                 defaultValue={place || ''}
-                inputProps={{ref: refPlace}}
                 fullWidth
                 type="text"
                 variant="outlined"
                 required
-                InputLabelProps={{
-                  shrink: true,
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                  htmlInput: {ref: refPlace},
                 }}
               />
             )}

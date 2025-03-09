@@ -56,13 +56,15 @@ const MoveTemplateFolderDialog: FC<MoveTemplateFolderDialogProps> = ({
             label="Place"
             sx={{my: 1}}
             defaultValue={place || ''}
-            inputProps={{ref: refPlace}}
             fullWidth
             type="text"
             variant="outlined"
             required
-            InputLabelProps={{
-              shrink: true,
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              htmlInput: {ref: refPlace},
             }}
           />
         </DialogContent>
