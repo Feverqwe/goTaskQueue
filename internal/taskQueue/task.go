@@ -1,6 +1,7 @@
 package taskQueue
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"goTaskQueue/internal/cfg"
@@ -89,6 +90,7 @@ type Task struct {
 	qCh            []chan int
 	stdin          io.Writer
 	combinedOffset int64
+	lastClrPos     int64
 	Links          []TaskLink `json:"links"`
 	queue          *Queue
 	Assets         []TaskAsset `json:"assets"`
@@ -127,6 +129,14 @@ func (s *Task) getWorkingDir() string {
 	return fullPlace
 }
 
+var clearSeqList = [][]byte{
+	[]byte{0x1b, '[', 'H', 0x1b, '[', 'J'},
+	[]byte{0x1b, '[', 'H', 0x1b, '[', '0', 'J'},
+	[]byte{0x1b, '[', '2', 'J'},
+	[]byte{0x1b, '[', '3', 'J'},
+}
+var maxClearSeqLen = int64(7)
+
 func (s *Task) RunPty(config *cfg.Config) error {
 	runAs := config.PtyRun
 	runCommand := runAs[0]
@@ -160,10 +170,31 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	go func() {
 		chunk := make([]byte, 16*1024)
 		for {
-			bytes, err := f.Read(chunk)
-			if bytes > 0 {
+			b, err := f.Read(chunk)
+			if b > 0 {
 				s.cmu.Lock()
-				if _, err := output.Write(chunk[0:bytes]); err != nil {
+
+				var readOffset int64 = 0
+				if output.Len() > maxClearSeqLen {
+					readOffset = output.Len() - maxClearSeqLen
+				}
+				data := chunk[0:b]
+				if lBuf, lBufErr := output.ReadAt(readOffset); lBufErr != nil {
+					log.Println("Read from output error", err)
+				} else {
+					data = append(lBuf, data...)
+				}
+				for _, clearSeq := range clearSeqList {
+					pos := bytes.LastIndex(data, clearSeq)
+
+					if pos != -1 {
+						splitPos := int64(len(data) - (pos + len(clearSeq)))
+						s.lastClrPos = s.combinedOffset + ((output.Len() + int64(b)) - splitPos)
+						break
+					}
+				}
+
+				if _, err := output.Write(chunk[0:b]); err != nil {
 					log.Println("Write output error", err)
 				}
 
@@ -376,10 +407,15 @@ func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
 		return offset, make([]byte, 0), nil
 	}
 	if offset == -1 {
-		if combined.Len() > HistorySize {
+		offset = combinedOffset
+		if s.IsPty {
+			if s.lastClrPos > combinedOffset {
+				offset = s.lastClrPos
+			} else if combined.Len() > HistorySize {
+				offset = combinedOffset + combined.Len() - HistorySize
+			}
+		} else if combined.Len() > HistorySize {
 			offset = combinedOffset + combined.Len() - HistorySize
-		} else {
-			offset = combinedOffset
 		}
 	}
 	if offset < combinedOffset {
