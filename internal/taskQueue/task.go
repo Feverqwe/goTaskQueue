@@ -130,12 +130,11 @@ func (s *Task) getWorkingDir() string {
 }
 
 var clearSeqList = [][]byte{
-	[]byte{0x1b, '[', 'H', 0x1b, '[', 'J'},
-	[]byte{0x1b, '[', 'H', 0x1b, '[', '0', 'J'},
-	[]byte{0x1b, '[', '2', 'J'},
-	[]byte{0x1b, '[', '3', 'J'},
+	{0x1b, '[', 'H', 0x1b, '[', 'J'},
+	{0x1b, '[', 'H', 0x1b, '[', '0', 'J'},
+	{0x1b, '[', '2', 'J'},
+	{0x1b, '[', '3', 'J'},
 }
-var maxClearSeqLen = int64(7)
 
 func (s *Task) RunPty(config *cfg.Config) error {
 	runAs := config.PtyRun
@@ -167,6 +166,13 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
+	var maxClearSeqLen int
+	for _, sep := range clearSeqList {
+		if maxClearSeqLen < len(sep) {
+			maxClearSeqLen = len(sep)
+		}
+	}
+
 	go func() {
 		chunk := make([]byte, 16*1024)
 		for {
@@ -175,8 +181,8 @@ func (s *Task) RunPty(config *cfg.Config) error {
 				s.cmu.Lock()
 
 				var readOffset int64 = 0
-				if output.Len() > maxClearSeqLen {
-					readOffset = output.Len() - maxClearSeqLen
+				if output.Len() > int64(maxClearSeqLen) {
+					readOffset = output.Len() - int64(maxClearSeqLen)
 				}
 				data := chunk[0:b]
 				if lBuf, lBufErr := output.ReadAt(readOffset); lBufErr != nil {
@@ -188,9 +194,11 @@ func (s *Task) RunPty(config *cfg.Config) error {
 					pos := bytes.LastIndex(data, clearSeq)
 
 					if pos != -1 {
-						splitPos := int64(len(data) - (pos + len(clearSeq)))
-						s.lastClrPos = s.combinedOffset + ((output.Len() + int64(b)) - splitPos)
-						break
+						splitPos := len(data) - (pos + len(clearSeq))
+						clrPos := s.combinedOffset + ((output.Len() + int64(b)) - int64(splitPos))
+						if s.lastClrPos < clrPos {
+							s.lastClrPos = clrPos
+						}
 					}
 				}
 
