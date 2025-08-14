@@ -158,15 +158,16 @@ func GetProfilePath() string {
 
 func getDefaultProfilePath() string {
 	place := ""
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "windows":
 		pwd, err := os.Getwd()
 		if err != nil {
 			panic(err)
 		}
 		place = pwd
-	} else if runtime.GOOS == "darwin" {
+	case "darwin":
 		place = os.Getenv("HOME") + "/Library/Application Support/" + APP_ID
-	} else {
+	default:
 		ex, err := os.Executable()
 		if err != nil {
 			panic(err)

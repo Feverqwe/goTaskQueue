@@ -158,9 +158,10 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				}
 
 				if len(data) > 0 {
-					if data[0:1] == "i" {
+					switch data[0:1] {
+					case "i":
 						task.Send(data[1:])
-					} else if data[0:1] == "r" {
+					case "r":
 						reader := strings.NewReader(data[1:])
 						payload, err := utils.ParseJson[taskQueue.PtyScreenSize](reader)
 						if err == nil {
