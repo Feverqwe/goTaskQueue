@@ -182,6 +182,24 @@ func (s *Queue) Cleanup(config *cfg.Config) {
 	}
 }
 
+func (s *Queue) CleanupByStatuses(statuses []string, config *cfg.Config) {
+	var delIds []string
+
+	for _, t := range s.Tasks {
+		for _, s := range statuses {
+			if (s == "CANCELED" && t.IsCanceled) || (s == "ERROR" && t.IsError) || (s == "FINISHED" && t.IsFinished) {
+				delIds = append(delIds, t.Id)
+			}
+		}
+	}
+
+	for _, id := range delIds {
+		if err := s.Del(config, id); err != nil {
+			log.Printf("Unable clenup task %s, cause: %s\n", id, err.Error())
+		}
+	}
+}
+
 func LoadQueue(config *cfg.Config) *Queue {
 	queue := NewQueue()
 

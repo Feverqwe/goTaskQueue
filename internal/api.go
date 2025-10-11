@@ -45,6 +45,10 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		Id string `json:"id"`
 	}
 
+	type CleanupPayload struct {
+		Statuses []string `json:"statuses"`
+	}
+
 	type CloneTaskPayload struct {
 		Id    string `json:"id"`
 		IsRun bool   `json:"isRun"`
@@ -193,6 +197,23 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			}
 
 			return task, err
+		})
+	})
+
+	router.Post("/api/cleanup", func(w http.ResponseWriter, r *http.Request) {
+		apiCall(w, func() (*bool, error) {
+			payload, err := utils.ParseJson[CleanupPayload](r.Body)
+			if err != nil {
+				return nil, err
+			}
+
+			statuses := payload.Statuses
+
+			queue.CleanupByStatuses(statuses, config)
+
+			res := true
+
+			return &res, err
 		})
 	})
 
