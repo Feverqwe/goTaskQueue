@@ -189,6 +189,7 @@ func (s *Queue) CleanupByStatuses(statuses []string, config *cfg.Config) {
 		for _, s := range statuses {
 			if (s == "CANCELED" && t.IsCanceled) || (s == "ERROR" && t.IsError) || (s == "FINISHED" && t.IsFinished) {
 				delIds = append(delIds, t.Id)
+				break
 			}
 		}
 	}
