@@ -1,5 +1,12 @@
 import {handleApiResponse} from './apiRequest';
-import {AddTaskRequest, Task, RawTemplate, CloneTaskRequest, TaskId} from '../components/types';
+import {
+  AddTaskRequest,
+  CleanupStatuses,
+  CloneTaskRequest,
+  RawTemplate,
+  Task,
+  TaskId,
+} from '../components/types';
 
 interface ActionParams {
   method?: 'GET' | 'POST';
@@ -117,6 +124,10 @@ export const api = {
   setTemplateOrder: action<{templateOrder: string[]}, string>({
     method: 'POST',
     path: '/api/setTemplateOrder',
+  }),
+  cleanup: action<{statuses: CleanupStatuses[]}, string>({
+    method: 'POST',
+    path: '/api/cleanup',
   }),
 
   memStorageGet: action<string[] | null, Record<string, unknown>>({

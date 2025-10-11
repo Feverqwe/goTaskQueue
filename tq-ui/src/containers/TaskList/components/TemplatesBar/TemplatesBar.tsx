@@ -5,10 +5,11 @@ import {useLocation, useNavigate} from 'react-router-dom';
 import path from 'path-browserify';
 import {api} from '../../../../tools/api';
 import {
+  AddTaskRequest,
+  CleanupStatuses,
   Template,
   TemplateButton,
   TemplateFolder,
-  AddTaskRequest,
 } from '../../../../components/types';
 import TemplateDialog, {
   TemplateDialogProps,
@@ -21,6 +22,7 @@ import DialogMenuItem from '../../../../components/DialogMenu/DialogMenuItem';
 import TemplatesBarView from './TemplatesBarView';
 import ChangeOrderDialog from './ChangeOrderDialog';
 import MoveTemplateFolderDialog from './MoveTemplateFolderDialog';
+import CleanupDialog from './CleanupDialog';
 
 interface TaskInputProps {
   onUpdate: () => void;
@@ -76,6 +78,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   } | null>(null);
   const [changeOrderDialog, setChangeOrderDialog] = useState<boolean>(false);
   const [moveFolderDialog, setMoveFolderDialog] = useState<TemplateFolder | null>(null);
+  const [cleanupDialog, setCleanupDialog] = useState<boolean>(false);
 
   const handleAdd = useCallback(
     async (runTask: AddTaskRequest, isNewTab = false) => {
@@ -142,6 +145,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
     setEditDialog(null);
     setChangeOrderDialog(false);
     setMoveFolderDialog(null);
+    setCleanupDialog(false);
   }, []);
 
   const handleRun = useCallback(() => {
@@ -216,6 +220,19 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
     [updateTemplates],
   );
 
+  const handleCleanupDialog = useCallback(() => {
+    setCleanupDialog(true);
+    handleCloseMenu();
+  }, [handleCloseMenu]);
+
+  const handleCleanup = useCallback(
+    async (statuses: CleanupStatuses[]) => {
+      await api.cleanup({statuses});
+      await updateTemplates();
+    },
+    [updateTemplates],
+  );
+
   return (
     <>
       <Box display="flex" flexWrap="wrap">
@@ -241,6 +258,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
             New template
           </DialogMenuItem>
           <DialogMenuItem onClick={handleOpenChangeOrderDialog}>Order</DialogMenuItem>
+          <DialogMenuItem onClick={handleCleanupDialog}>Cleanup</DialogMenuItem>
           <Divider />
           <DialogMenuItem onClick={handleReloadConfig}>Reload config</DialogMenuItem>
           <DialogMenuItem onClick={handleReloadTemplates}>Reload templates</DialogMenuItem>
@@ -276,6 +294,9 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
           onSubmit={handleMoveTemplateFolder}
           onClose={handleCloseTemplateDlg}
         />
+      )}
+      {cleanupDialog && (
+        <CleanupDialog open={true} onSubmit={handleCleanup} onClose={handleCloseTemplateDlg} />
       )}
     </>
   );

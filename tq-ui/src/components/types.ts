@@ -55,6 +55,8 @@ export enum TaskState {
   Idle = 'IDLE',
 }
 
+export type CleanupStatuses = TaskState.Canceled | TaskState.Error | TaskState.Finished;
+
 export interface TaskLink {
   name: string;
   type: string;
