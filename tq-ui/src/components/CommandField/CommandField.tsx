@@ -50,7 +50,7 @@ const CommandField: FC<CommandFieldProps> = ({defaultValue, ref, readOnly}) => {
     function setCtrHeight(ctrNode: HTMLDivElement) {
       const lineHeight = instance.getOptions().get(editor.EditorOption.lineHeight);
       const lineCount = instance.getModel()?.getLineCount() ?? 0;
-      ctrNode.style.height = `${Math.max(lineCount, 3) * lineHeight}px`;
+      ctrNode.style.height = `${Math.min(Math.max(lineCount, 16), 16) * lineHeight}px`;
     }
 
     instance.onDidContentSizeChange(({contentHeightChanged}) => {
