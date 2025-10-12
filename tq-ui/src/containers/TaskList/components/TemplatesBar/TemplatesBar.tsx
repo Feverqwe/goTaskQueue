@@ -228,7 +228,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
   const handleCleanup = useCallback(
     async (statuses: CleanupStatuses[]) => {
       await api.cleanup({statuses});
-      await onUpdate();
+      onUpdate();
     },
     [onUpdate],
   );
