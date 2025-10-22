@@ -72,7 +72,7 @@ const CleanupDialog: FC<ChangeOrderDialogProps> = ({onClose, onSubmit, open}) =>
           <Button variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-          <ActionButton variant="contained" type="submit" onSubmit={handleSubmit}>
+          <ActionButton variant="contained" type="submit" autoFocus onSubmit={handleSubmit}>
             Cleanup
           </ActionButton>
         </DialogActions>
