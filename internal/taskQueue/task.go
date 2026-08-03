@@ -426,7 +426,17 @@ func (s *Task) ptySnapshotLocked() []byte {
 	if s.ptyTerminal != nil {
 		scrollback := PtySnapshotScrollback
 		serializer := xterm.NewSerializeAddon(s.ptyTerminal)
-		return serializer.Serialize(&xterm.SerializeOptions{Scrollback: &scrollback})
+		snapshot := serializer.Serialize(&xterm.SerializeOptions{Scrollback: &scrollback})
+
+		// SerializeAddon restores mouse tracking, but currently omits the mouse
+		// encoding. A fresh browser xterm needs both modes to emit mouse input.
+		switch s.ptyTerminal.DecPrivateModes().MouseEncoding {
+		case "SGR":
+			snapshot = append(snapshot, "\x1b[?1006h"...)
+		case "SGR_PIXELS":
+			snapshot = append(snapshot, "\x1b[?1016h"...)
+		}
+		return snapshot
 	}
 	return append([]byte(nil), s.ptySnapshot...)
 }

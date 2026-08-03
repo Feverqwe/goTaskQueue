@@ -28,7 +28,7 @@ func TestReadCombinedReturnsPtySnapshotAndThenLiveOutput(t *testing.T) {
 		ptyTerminal: terminal,
 	}
 
-	initial := []byte("shell prompt\r\n\x1b[?1049h\x1b[2J\x1b[H\x1b[31mMC screen\x1b[0m\x1b[3;4H")
+	initial := []byte("shell prompt\r\n\x1b[?1049h\x1b[2J\x1b[H\x1b[31mMC screen\x1b[0m\x1b[3;4H\x1b[?1002h\x1b[?1006h")
 	for i := 0; i < 2000; i++ {
 		initial = append(initial, []byte(fmt.Sprintf("\x1b[2;1Hprogress %04d", i))...)
 	}
@@ -61,6 +61,12 @@ func TestReadCombinedReturnsPtySnapshotAndThenLiveOutput(t *testing.T) {
 	}
 	if replayed.IsAltBufferActive() != terminal.IsAltBufferActive() {
 		t.Fatalf("alternate buffer state was not restored")
+	}
+	if replayed.DecPrivateModes().MouseTrackingMode != terminal.DecPrivateModes().MouseTrackingMode {
+		t.Fatalf("mouse tracking mode was not restored")
+	}
+	if replayed.DecPrivateModes().MouseEncoding != terminal.DecPrivateModes().MouseEncoding {
+		t.Fatalf("mouse encoding was not restored")
 	}
 	if replayed.String() != terminal.String() {
 		t.Fatalf("screen was not restored:\n got: %q\nwant: %q", replayed.String(), terminal.String())
