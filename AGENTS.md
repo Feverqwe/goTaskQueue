@@ -1,0 +1,69 @@
+# Instructions for AI agents
+
+## Project overview
+
+GoTaskQueue is a cross-platform desktop task runner. The Go application owns the
+task queue, process execution, persistence, HTTP API, WebSocket log streaming,
+and system tray integration. The React/TypeScript application in `tq-ui/` is the
+browser UI served by the Go binary.
+
+Read these files before making a non-trivial change:
+
+- `docs/ARCHITECTURE.md` for component boundaries and data flow.
+- `docs/DEVELOPMENT.md` for build, test, and local-run commands.
+
+## Repository map
+
+- `main.go`: application entry point, server lifecycle, WebSocket endpoint, and
+  static UI serving.
+- `internal/api.go`: JSON HTTP API.
+- `internal/taskQueue/`: queue persistence, task lifecycle, templates, and logs.
+- `internal/cfg/`: profile location and persisted application configuration.
+- `internal/logStore/`, `internal/gzBuffer/`, `internal/memStorage/`: storage
+  implementations.
+- `internal/{dialogs,mutex,powerCtr,trayIcon}/`: platform-specific integration.
+- `tq-ui/src/`: React/TypeScript UI.
+- `assets/templates/`: built-in task templates.
+- `assets/bindata.go`: generated embedded assets; do not hand-edit.
+- `scripts/`: build and packaging scripts.
+
+## Working rules
+
+- Preserve the Go module path `goTaskQueue` unless the task explicitly changes
+  the module identity.
+- Keep platform-specific implementations in files with `_darwin.go`,
+  `_linux.go`, or `_windows.go` suffixes.
+- Treat persisted JSON and API payloads as compatibility-sensitive. Avoid
+  renaming JSON fields or changing their meaning without handling existing
+  profiles and updating both Go and TypeScript types.
+- When changing an API endpoint, update `internal/api.go`,
+  `tq-ui/src/tools/api.ts`, and the relevant types/call sites together.
+- Queue and task state is accessed by multiple goroutines. Preserve locking,
+  atomic writes, and notification behavior when changing lifecycle code.
+- Do not edit `assets/bindata.go` manually. Rebuild the UI and embedded assets
+  only when the change requires a production UI bundle; see
+  `docs/DEVELOPMENT.md`.
+- Do not commit `tq-ui/node_modules/`, `tq-ui/dist/`, `assets/www/`,
+  `internal/logStore/test/`, local profile data, logs, lock files, or compiled
+  binaries. The log-store tests currently leave their fixture directory behind.
+- Keep changes focused. Do not reformat unrelated Go or TypeScript files.
+- Add or update tests for behavior changes where practical. Existing Go tests
+  use the standard `testing` package.
+
+## Required validation
+
+Run the checks relevant to the files changed:
+
+```sh
+# Go changes (from the repository root)
+gofmt -w <changed-go-files>
+go test ./...
+
+# UI changes (from tq-ui/)
+npm run tsc
+npm run lint
+npm run build
+```
+
+For a cross-layer change, run both Go and UI checks. If a command cannot be run,
+state which command was skipped and why in the handoff.
