@@ -1,14 +1,14 @@
-FROM golang:1.21-alpine3.18 as build
+FROM golang:1.26-alpine3.24 AS build
 LABEL stage=build
 WORKDIR /build
-RUN apk add --no-cache git musl-dev
+RUN apk update && apk upgrade --no-cache && apk add --no-cache git musl-dev
 ADD . .
 RUN go build -o goTaskQueue
 
-FROM alpine:3.18 as release
+FROM alpine:3.24 AS release
 #>>>
-ARG BUILD_VERSION="2023.12.30"
-RUN apk add --no-cache \
+ARG BUILD_VERSION="2026.07.04"
+RUN apk update && apk upgrade --no-cache && apk add --no-cache \
         ca-certificates \
         curl \
         ffmpeg \
@@ -20,7 +20,7 @@ RUN curl -Lo /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/dow
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 #<<<
 
-RUN apk add --no-cache bash openssh-client nano htop mc jq
+RUN apk update && apk upgrade --no-cache && apk add --no-cache bash openssh-client nano htop mc jq
 
 COPY --from=build /build/goTaskQueue /opt/goTaskQueue
 
