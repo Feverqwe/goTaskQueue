@@ -48,6 +48,10 @@ waiters, output readers, WebSocket readers, cleanup, and persistence may operate
 at the same time. Changes must preserve mutex coverage and must not block queue
 notification channels indefinitely.
 
+PTY output is also fed into a bounded headless xterm instance. The persisted
+combined log remains the raw byte stream, while the headless terminal provides
+a compact snapshot of the current normal/alternate screen for browser attach.
+
 ### API and streaming
 
 `internal/api.go` registers `/api/*` endpoints. Successful responses use a
@@ -55,9 +59,11 @@ notification channels indefinitely.
 through to a 403 response.
 
 `/ws?id=<task-id>` streams combined terminal output. Server frames begin with
-`h` for history or `a` for current data. Client messages begin with `i` for
-terminal input or `r` for a JSON-encoded PTY resize request. Keep this protocol
-compatible when modifying either side.
+`h` for history (a serialized screen snapshot for PTY tasks) or `a` for current
+data. Client messages begin with `i` for terminal input or `r` for a JSON-encoded
+PTY resize request. Active PTY connections wait briefly for the initial resize
+before creating their snapshot. Keep this protocol compatible when modifying
+either side.
 
 ### Templates and embedded assets
 
@@ -92,4 +98,3 @@ Operating-system behavior is isolated under `internal/dialogs`,
 suffixes select the correct implementation. When adding platform behavior,
 maintain a buildable implementation (or an intentional stub) for every
 supported target.
-

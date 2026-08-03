@@ -145,12 +145,23 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		if err != nil {
 			return
 		}
+		historyReady := make(chan struct{}, 1)
+		signalHistoryReady := func() {
+			select {
+			case historyReady <- struct{}{}:
+			default:
+			}
+		}
+		if !task.IsPty || !task.IsStarted || task.IsFinished {
+			signalHistoryReady()
+		}
 
 		go func() {
 			for {
 				var data string
 				err := websocket.Message.Receive(ws, &data)
 				if err != nil {
+					signalHistoryReady()
 					if !errors.Is(err, io.EOF) && !errors.Is(err, net.ErrClosed) {
 						log.Println("ws receive error", err)
 					}
@@ -166,6 +177,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 						payload, err := utils.ParseJson[taskQueue.PtyScreenSize](reader)
 						if err == nil {
 							err = task.Resize(payload)
+							signalHistoryReady()
 							if err != nil {
 								log.Println("resize error", err)
 							}
@@ -174,6 +186,11 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				}
 			}
 		}()
+
+		select {
+		case <-historyReady:
+		case <-time.After(time.Second):
+		}
 
 		pushPart := func(part []byte, dataType string) error {
 			d := []byte(dataType)

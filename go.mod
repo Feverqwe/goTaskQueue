@@ -7,6 +7,7 @@ require (
 	github.com/caseymrm/go-caffeinate v0.0.0-20180507205639-f1d20cbcba98
 	github.com/gabyx/githooks/githooks v1.1.1
 	github.com/getlantern/systray v1.2.2
+	github.com/gitpod-io/xterm-go v0.0.0-20260731130354-8e117204ebed
 	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
 	github.com/natefinch/atomic v1.0.1
 	github.com/ncruces/zenity v0.10.14

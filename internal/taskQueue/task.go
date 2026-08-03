@@ -1,7 +1,6 @@
 package taskQueue
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"goTaskQueue/internal/cfg"
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/creack/pty"
+	xterm "github.com/gitpod-io/xterm-go"
 )
 
 const PtyLogSize = logstore.ChunkSize
@@ -27,6 +27,9 @@ const CombinedLogSize = logstore.ChunkSize
 const CombinedLogTrimLimit = CombinedLogSize * 2
 const MemBufSize = 256 * 1024
 const HistorySize = 64 * 1024
+const PtyInitialCols = 80
+const PtyInitialRows = 24
+const PtySnapshotScrollback = 0
 
 const LOG_COMBINED = "combined"
 const LOG_STDOUT = "out"
@@ -90,7 +93,8 @@ type Task struct {
 	qCh            []chan int
 	stdin          io.Writer
 	combinedOffset int64
-	lastClrPos     int64
+	ptyTerminal    *xterm.Terminal
+	ptySnapshot    []byte
 	Links          []TaskLink `json:"links"`
 	queue          *Queue
 	Assets         []TaskAsset `json:"assets"`
@@ -129,13 +133,6 @@ func (s *Task) getWorkingDir() string {
 	return fullPlace
 }
 
-var clearSeqList = [][]byte{
-	{0x1b, '[', 'H', 0x1b, '[', 'J'},
-	{0x1b, '[', 'H', 0x1b, '[', '0', 'J'},
-	{0x1b, '[', '2', 'J'},
-	{0x1b, '[', '3', 'J'},
-}
-
 func (s *Task) RunPty(config *cfg.Config) error {
 	runAs := config.PtyRun
 	runCommand := runAs[0]
@@ -150,7 +147,10 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	process.Env = append(append(process.Env, config.PtyRunEnv...), s.getEnvVariables(config)...)
 	process.Dir = s.getWorkingDir()
 
-	f, err := pty.Start(process)
+	f, err := pty.StartWithSize(process, &pty.Winsize{
+		Rows: PtyInitialRows,
+		Cols: PtyInitialCols,
+	})
 	if err != nil {
 		return err
 	}
@@ -162,16 +162,14 @@ func (s *Task) RunPty(config *cfg.Config) error {
 		return err
 	}
 	s.Combined = output
+	s.ptyTerminal = xterm.New(
+		xterm.WithCols(PtyInitialCols),
+		xterm.WithRows(PtyInitialRows),
+		xterm.WithScrollback(PtySnapshotScrollback),
+	)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-
-	var maxClearSeqLen int
-	for _, sep := range clearSeqList {
-		if maxClearSeqLen < len(sep) {
-			maxClearSeqLen = len(sep)
-		}
-	}
 
 	go func() {
 		chunk := make([]byte, 16*1024)
@@ -180,30 +178,14 @@ func (s *Task) RunPty(config *cfg.Config) error {
 			if b > 0 {
 				s.cmu.Lock()
 
-				var readOffset int64 = 0
-				if output.Len() > int64(maxClearSeqLen) {
-					readOffset = output.Len() - int64(maxClearSeqLen)
+				n, writeErr := output.Write(chunk[0:b])
+				if writeErr != nil {
+					log.Println("Write output error", writeErr)
 				}
-				data := chunk[0:b]
-				if lBuf, lBufErr := output.ReadAt(readOffset); lBufErr != nil {
-					log.Println("Read from output error", err)
-				} else {
-					data = append(lBuf, data...)
-				}
-				for _, clearSeq := range clearSeqList {
-					pos := bytes.LastIndex(data, clearSeq)
-
-					if pos != -1 {
-						splitPos := len(data) - (pos + len(clearSeq))
-						clrPos := s.combinedOffset + ((output.Len() + int64(b)) - int64(splitPos))
-						if s.lastClrPos < clrPos {
-							s.lastClrPos = clrPos
-						}
+				if n > 0 {
+					if _, err := s.ptyTerminal.Write(chunk[0:n]); err != nil {
+						log.Println("Update terminal state error", err)
 					}
-				}
-
-				if _, err := output.Write(chunk[0:b]); err != nil {
-					log.Println("Write output error", err)
 				}
 
 				if output.Len() > PtyTrimLimit {
@@ -244,11 +226,12 @@ func (s *Task) RunPty(config *cfg.Config) error {
 		s.FinishedAt = time.Now()
 
 		if s.Combined != nil {
-			s.cmu.RLock()
+			s.cmu.Lock()
+			s.freezePtyTerminalLocked()
 			if err := s.Combined.Close(); err != nil {
 				log.Println("Close combined error", err)
 			}
-			s.cmu.RUnlock()
+			s.cmu.Unlock()
 		}
 
 		s.IsFinished = true
@@ -408,22 +391,23 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 
 func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
 	s.cmu.RLock()
+	defer s.cmu.RUnlock()
+
 	combined := s.Combined
 	combinedOffset := s.combinedOffset
-	s.cmu.RUnlock()
-	if offset == combined.Len()+combinedOffset {
+	combinedLen := combined.Len()
+	if offset == -1 && s.IsPty {
+		if s.ptyTerminal != nil || s.ptySnapshot != nil || combinedLen == 0 {
+			return combinedOffset + combinedLen, s.ptySnapshotLocked(), nil
+		}
+	}
+	if offset == combinedLen+combinedOffset {
 		return offset, make([]byte, 0), nil
 	}
 	if offset == -1 {
 		offset = combinedOffset
-		if s.IsPty {
-			if s.lastClrPos > combinedOffset {
-				offset = s.lastClrPos
-			} else if combined.Len() > HistorySize {
-				offset = combinedOffset + combined.Len() - HistorySize
-			}
-		} else if combined.Len() > HistorySize {
-			offset = combinedOffset + combined.Len() - HistorySize
+		if combinedLen > HistorySize {
+			offset = combinedOffset + combinedLen - HistorySize
 		}
 	}
 	if offset < combinedOffset {
@@ -436,6 +420,24 @@ func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
 	}
 	offset += int64(len(fragment))
 	return offset, fragment, nil
+}
+
+func (s *Task) ptySnapshotLocked() []byte {
+	if s.ptyTerminal != nil {
+		scrollback := PtySnapshotScrollback
+		serializer := xterm.NewSerializeAddon(s.ptyTerminal)
+		return serializer.Serialize(&xterm.SerializeOptions{Scrollback: &scrollback})
+	}
+	return append([]byte(nil), s.ptySnapshot...)
+}
+
+func (s *Task) freezePtyTerminalLocked() {
+	if s.ptyTerminal == nil {
+		return
+	}
+	s.ptySnapshot = s.ptySnapshotLocked()
+	s.ptyTerminal.Dispose()
+	s.ptyTerminal = nil
 }
 
 func (s *Task) Send(data string) error {
@@ -458,6 +460,11 @@ func (s *Task) Resize(screenSize *PtyScreenSize) error {
 		X:    uint16(screenSize.X),
 		Y:    uint16(screenSize.Y),
 	}
+	s.cmu.Lock()
+	if s.ptyTerminal != nil {
+		s.ptyTerminal.Resize(screenSize.Cols, screenSize.Rows)
+	}
+	s.cmu.Unlock()
 	if f, ok := s.stdin.(*os.File); ok {
 		return pty.Setsize(f, &ws)
 	}
