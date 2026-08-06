@@ -20,7 +20,15 @@ const KeyValue: FC<KeyValueProps> = ({name, value, type, sx}) => {
   );
 
   return (
-    <Box display="flex" alignItems="baseline" sx={sx}>
+    <Box
+      sx={[
+        {
+          display: 'flex',
+          alignItems: 'baseline',
+        },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
+    >
       <span>{name}</span>
       <span style={lineStyle} />
       <span>{formattedValue ?? '–'}</span>

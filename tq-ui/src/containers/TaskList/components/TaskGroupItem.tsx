@@ -49,8 +49,20 @@ const TaskGroupItem: FC<TaskGroupItemProps> = ({group, onUpdate}) => {
       const count = typeCount.get(state);
       if (!count) return null;
       return (
-        <Box key={state} pr={1} display="flex" alignItems="center">
-          <Typography variant="body1" pr={1}>
+        <Box
+          key={state}
+          sx={{
+            pr: 1,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <Typography
+            variant="body1"
+            sx={{
+              pr: 1,
+            }}
+          >
             {count}
           </Typography>
           <TaskStatusIcon task={{state}} />
@@ -61,16 +73,33 @@ const TaskGroupItem: FC<TaskGroupItemProps> = ({group, onUpdate}) => {
 
   return (
     <>
-      <Box px={1} pb={1}>
+      <Box
+        sx={{
+          px: 1,
+          pb: 1,
+        }}
+      >
         <Card>
           <CardActionArea
             onClick={handleExpand}
             sx={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}
           >
-            <Box p={1} display="flex" alignItems="center">
+            <Box
+              sx={{
+                p: 1,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
               {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </Box>
-            <Box px={1} flexGrow={1} sx={{wordBreak: 'break-all'}}>
+            <Box
+              sx={{
+                px: 1,
+                flexGrow: 1,
+                wordBreak: 'break-all',
+              }}
+            >
               <Typography variant="body1">{name}</Typography>
             </Box>
             {status}

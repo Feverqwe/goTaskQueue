@@ -238,7 +238,15 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
   }, [scope]);
 
   return (
-    <Box mx={1} mb={1} sx={{flexGrow: 1, overflow: 'auto'}} ref={refCtr}>
+    <Box
+      ref={refCtr}
+      sx={{
+        mx: 1,
+        mb: 1,
+        flexGrow: 1,
+        overflow: 'auto',
+      }}
+    >
       <div style={{height: '100%', width: '100%'}} ref={refWrapper} />
       {!isOpen && !isConnecting && state === TaskState.Started && (
         <Snackbar anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true}>

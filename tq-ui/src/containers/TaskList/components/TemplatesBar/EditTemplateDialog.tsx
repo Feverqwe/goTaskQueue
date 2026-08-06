@@ -114,7 +114,14 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
       );
 
       return (
-        <Box py={1} key={variableIdMap.get(variable)} display="flex" alignItems="center">
+        <Box
+          key={variableIdMap.get(variable)}
+          sx={{
+            py: 1,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
           <TextField
             size="small"
             sx={{flexGrow: 1, mr: 1}}
@@ -257,20 +264,32 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             <FormControlLabel
               sx={{my: 1}}
               label="Pseudo-terminal"
-              control={<Checkbox size="small" inputRef={refPty} defaultChecked={isPty} />}
+              control={
+                <Checkbox size="small" slotProps={{input: {ref: refPty}}} defaultChecked={isPty} />
+              }
             />
           )}
           <FormControlLabel
             sx={{my: 1}}
             label="Combined output"
             control={
-              <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
+              <Checkbox
+                size="small"
+                slotProps={{input: {ref: refOnlyCombined}}}
+                defaultChecked={isOnlyCombined}
+              />
             }
           />
           <FormControlLabel
             sx={{my: 1}}
             label="Write logs"
-            control={<Checkbox size="small" inputRef={refWriteLogs} defaultChecked={isWriteLogs} />}
+            control={
+              <Checkbox
+                size="small"
+                slotProps={{input: {ref: refWriteLogs}}}
+                defaultChecked={isWriteLogs}
+              />
+            }
           />
           <FormControlLabel
             sx={{my: 1}}
@@ -278,7 +297,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             control={
               <Checkbox
                 size="small"
-                inputRef={refSingleInstance}
+                slotProps={{input: {ref: refSingleInstance}}}
                 defaultChecked={isSingleInstance}
               />
             }
@@ -287,7 +306,11 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             sx={{my: 1}}
             label="Start on boot"
             control={
-              <Checkbox size="small" inputRef={refStartOnBoot} defaultChecked={isStartOnBoot} />
+              <Checkbox
+                size="small"
+                slotProps={{input: {ref: refStartOnBoot}}}
+                defaultChecked={isStartOnBoot}
+              />
             }
           />
           <TextField
@@ -304,7 +327,14 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               htmlInput: {ref: refTtl},
             }}
           />
-          <Box display="flex" flexDirection="row" gap={1} my={1}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 1,
+              my: 1,
+            }}
+          >
             <TextField
               size="small"
               label="Label"
@@ -334,7 +364,14 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
               }}
             />
           </Box>
-          <Box display="flex" flexDirection="row" gap={1} my={1}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 1,
+              my: 1,
+            }}
+          >
             <TextField
               size="small"
               label="Id"

@@ -234,7 +234,12 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
 
   return (
     <>
-      <Box display="flex" flexWrap="wrap">
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+        }}
+      >
         <ButtonGroup sx={{m: 1, mt: 0}} variant="outlined">
           <Button sx={{p: 0}} onClick={handleShowMenu}>
             <MenuIcon />

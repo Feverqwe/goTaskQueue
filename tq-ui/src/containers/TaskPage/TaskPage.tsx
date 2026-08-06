@@ -67,13 +67,25 @@ const TaskPage: FC = () => {
         sx={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
         {loading && !task ? (
-          <Box p={1} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              p: 1,
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
             <CircularProgress />
           </Box>
         ) : null}
         {loading && task ? <SilentStatus status="loading" /> : null}
         {error && (
-          <Box p={1} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              p: 1,
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
             <DisplayError error={error} onRetry={handleRetry} back={true} />
           </Box>
         )}

@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import PlayCircleOutlinedIcon from '@mui/icons-material/PlayCircleOutlined';
 import LaunchIcon from '@mui/icons-material/Launch';
 import {SvgIconProps} from '@mui/material';
 import {TaskLink} from '../../../components/types';
@@ -11,7 +11,7 @@ interface LinkIconProps extends SvgIconProps {
 const LinkIcon: FC<LinkIconProps> = ({type, ...iconProps}) => {
   switch (type) {
     case 'play': {
-      return <PlayCircleOutlineIcon {...iconProps} />;
+      return <PlayCircleOutlinedIcon {...iconProps} />;
     }
     default: {
       return <LaunchIcon {...iconProps} />;

@@ -42,7 +42,13 @@ const useActionButton = <ELEMENT, EVENT>({
 
     if (!isIcon && icon) {
       icon = (
-        <Box display="flex" alignItems="center" ml={1}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            ml: 1,
+          }}
+        >
           {icon}
         </Box>
       );

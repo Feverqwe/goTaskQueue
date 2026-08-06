@@ -1,6 +1,6 @@
 import React, {FC, SyntheticEvent, useCallback, useMemo} from 'react';
 import {Button, IconButton, Stack, Typography} from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import {useNavigate} from 'react-router-dom';
 
@@ -30,13 +30,20 @@ const DisplayError: FC<DisplayErrorProps> = ({error, onRetry, back}) => {
   );
 
   return (
-    <Stack spacing={2} p={1} direction="row" alignItems="center">
+    <Stack
+      spacing={2}
+      direction="row"
+      sx={{
+        p: 1,
+        alignItems: 'center',
+      }}
+    >
       {back && (
         <IconButton href="/" onClick={handleBack} title="Back">
           <ChevronLeftIcon />
         </IconButton>
       )}
-      <ErrorOutlineIcon color="error" />
+      <ErrorOutlinedIcon color="error" />
       <Typography>{message}</Typography>
       <Button onClick={onRetry}>Retry</Button>
     </Stack>

@@ -88,7 +88,14 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
     const result = [];
     if ([TaskState.Started, TaskState.Idle].includes(state)) {
       result.push(
-        <Box key={result.length} display="flex" alignItems="center" pl={result.length ? 1 : 0}>
+        <Box
+          key={result.length}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            pl: result.length ? 1 : 0,
+          }}
+        >
           {(state === TaskState.Started && (
             <IconActionButton onSubmit={handleStop} title="Stop">
               <StopIcon />
@@ -106,7 +113,13 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       const {links, state} = task;
       const {type, title, url} = links[0];
       result.push(
-        <Box key={result.length} display="flex" alignItems="center">
+        <Box
+          key={result.length}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
           {links.length === 1 && state === TaskState.Finished ? (
             <IconButton href={url} target="_blank" title={title}>
               <LinkIcon color="success" type={type} />
@@ -124,13 +137,26 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
       );
     } else {
       result.push(
-        <Box key={result.length} display="flex" alignItems="center" px={1}>
+        <Box
+          key={result.length}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            px: 1,
+          }}
+        >
           <TaskStatusIcon task={task} />
         </Box>,
       );
     }
     result.push(
-      <Box key={result.length} display="flex" alignItems="center">
+      <Box
+        key={result.length}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
         <KeyboardArrowRightIcon />
       </Box>,
     );
@@ -139,10 +165,26 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
 
   return (
     <>
-      <Box px={1} pb={1}>
+      <Box
+        sx={{
+          px: 1,
+          pb: 1,
+        }}
+      >
         <Card>
-          <Box display="flex" flexDirection="row" alignItems="stretch">
-            <Box display="flex" alignItems="center">
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'stretch',
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
               <IconButton
                 size="medium"
                 disabled={state === TaskState.Started}
@@ -152,13 +194,23 @@ const TaskItem: FC<TaskItemProps> = ({task, onUpdate}) => {
                 <ClearIcon />
               </IconButton>
             </Box>
-            <Box flexGrow={1}>
+            <Box
+              sx={{
+                flexGrow: 1,
+              }}
+            >
               <CardActionArea
                 href={`task?id=${id}`}
                 onClick={handleOpen}
                 sx={{height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center'}}
               >
-                <Box px={1} width="100%" sx={{wordBreak: 'break-all'}}>
+                <Box
+                  sx={{
+                    px: 1,
+                    width: '100%',
+                    wordBreak: 'break-all',
+                  }}
+                >
                   <TaskName task={task} />
                 </Box>
               </CardActionArea>

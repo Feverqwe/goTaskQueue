@@ -32,7 +32,12 @@ const KillDialog: FC<KillDialogProps> = ({open, task, onClose, onSubmit}) => {
       open={open}
       title="Stop task?"
       message={
-        <Box display="flex" flexDirection="column">
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           <FormControl variant="standard" sx={{m: 1, minWidth: 120}}>
             <InputLabel>Signal</InputLabel>
             <Select

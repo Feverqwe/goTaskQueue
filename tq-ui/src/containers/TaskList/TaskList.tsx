@@ -54,17 +54,31 @@ const TaskList: FC = () => {
 
   return (
     <Container maxWidth={false} disableGutters={true}>
-      <Box pt={1}>
+      <Box
+        sx={{
+          pt: 1,
+        }}
+      >
         <TemplatesBar onUpdate={handleUpdate} />
       </Box>
       <>
         {!silent && loading && (
-          <Box display="flex" justifyContent="center">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
             <CircularProgress />
           </Box>
         )}
         {!silent && error && (
-          <Box display="flex" justifyContent="center">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
             <DisplayError error={error} onRetry={handleRetry} />
           </Box>
         )}

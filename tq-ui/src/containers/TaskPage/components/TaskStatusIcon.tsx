@@ -1,6 +1,6 @@
 import React, {FC} from 'react';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import BlockIcon from '@mui/icons-material/Block';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
@@ -8,8 +8,8 @@ import {SvgIconProps} from '@mui/material';
 import {Task, TaskState} from '../../../components/types';
 
 const typeIcon = {
-  [TaskState.Finished]: CheckCircleOutlineIcon,
-  [TaskState.Error]: ErrorOutlineIcon,
+  [TaskState.Finished]: CheckCircleOutlinedIcon,
+  [TaskState.Error]: ErrorOutlinedIcon,
   [TaskState.Canceled]: BlockIcon,
   [TaskState.Started]: HourglassEmptyIcon,
   [TaskState.Idle]: FiberManualRecordIcon,

@@ -142,29 +142,69 @@ const TaskHeader: FC<TaskInfoProps> = ({task, showInfo, onToggleInfo, onUpdate})
 
   return (
     <>
-      <Box p={1}>
+      <Box
+        sx={{
+          p: 1,
+        }}
+      >
         <Paper component="form">
-          <Box display="flex" flexDirection="row" alignItems="stretch">
-            <Box display="flex" alignItems="center">
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'stretch',
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
               <IconButton href="/" onClick={handleBack} title="Back">
                 <ChevronLeftIcon />
               </IconButton>
             </Box>
-            <Box flexGrow={1}>
+            <Box
+              sx={{
+                flexGrow: 1,
+              }}
+            >
               <CardActionArea onClick={handleTitleClick} sx={{height: '100%'}}>
-                <Box display="flex" px={1} flexDirection="row" sx={{wordBreak: 'break-all'}}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    px: 1,
+                    flexDirection: 'row',
+                    wordBreak: 'break-all',
+                  }}
+                >
                   <TaskName task={task} />
                 </Box>
                 {error && (
-                  <Box px={1}>
-                    <Typography variant="subtitle2" color="#ff8a80">
+                  <Box
+                    sx={{
+                      px: 1,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        color: '#ff8a80',
+                      }}
+                    >
                       {error}
                     </Typography>
                   </Box>
                 )}
               </CardActionArea>
             </Box>
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
               {(state === TaskState.Started && (
                 <IconButton onClick={handleStop} title="Stop">
                   <StopIcon />
@@ -182,7 +222,13 @@ const TaskHeader: FC<TaskInfoProps> = ({task, showInfo, onToggleInfo, onUpdate})
               <IconButton onClick={handleExpandClick} title="Expand">
                 {showInfo ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
-              <Box display="flex" alignItems="center" mx={1}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  mx: 1,
+                }}
+              >
                 <TaskStatusIcon task={task} />
               </Box>
             </Box>

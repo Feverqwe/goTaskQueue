@@ -13,7 +13,11 @@ const DialogMenu: FC<DialogMenuProps> = ({children, title, open, onClose}) => {
 
   return (
     <Dialog onClose={onClose} open={open}>
-      <Box minWidth="150px">
+      <Box
+        sx={{
+          minWidth: '150px',
+        }}
+      >
         <List
           sx={{py: 0, width: '100%'}}
           subheader={Boolean(title) && <ListSubheader>{title}</ListSubheader>}

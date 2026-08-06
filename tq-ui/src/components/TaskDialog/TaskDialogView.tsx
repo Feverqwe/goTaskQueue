@@ -64,10 +64,20 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
     <>
       <DialogTitle>
         {!isEditTitle && (
-          <Box display="flex" alignItems="center" fontSize="medium">
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              fontSize: 'medium',
+            }}
+          >
             <Box
-              sx={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}
-              flexGrow={1}
+              sx={{
+                flexGrow: 1,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
             >
               {getTaskName(task)}
             </Box>
@@ -103,15 +113,22 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
       </DialogTitle>
       <DialogContent>
         {task.links.length > 0 && (
-          <Box mb={1}>
+          <Box
+            sx={{
+              mb: 1,
+            }}
+          >
             <TaskLinks task={task} />
           </Box>
         )}
         <Box
-          display="flex"
-          gap={1}
-          mb={1}
-          sx={{flexDirection: {xs: 'column', sm: 'row'}, flexWrap: {xs: 'nowrap', sm: 'wrap'}}}
+          sx={{
+            display: 'flex',
+            gap: 1,
+            mb: 1,
+            flexDirection: {xs: 'column', sm: 'row'},
+            flexWrap: {xs: 'nowrap', sm: 'wrap'},
+          }}
         >
           <KeyValue name="Created at" value={task.createdAt} type="datetime" sx={KeyValueSx} />
           <KeyValue name="Started at" value={task.startedAt} type="datetime" sx={KeyValueSx} />

@@ -29,15 +29,29 @@ const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, 
   );
 
   return (
-    <Box m={1} mt={0} component={Paper}>
-      <Box display="flex" flexGrow={1} sx={{flexDirection: {xs: 'column', sm: 'row'}}}>
+    <Box
+      component={Paper}
+      sx={{
+        m: 1,
+        mt: 0,
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexGrow: 1,
+          flexDirection: {xs: 'column', sm: 'row'},
+        }}
+      >
         <Box
           component="form"
           onSubmit={handleSetLabel}
-          flexGrow={1}
-          alignItems="center"
-          m={1}
-          mr={{xs: 1, sm: 0}}
+          sx={{
+            flexGrow: 1,
+            alignItems: 'center',
+            m: 1,
+            mr: {xs: 1, sm: 0},
+          }}
         >
           <TextField
             size="small"
@@ -62,7 +76,13 @@ const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, 
             }}
           />
         </Box>
-        <Box display="flex" alignItems="center" sx={{flexWrap: {xs: 'wrap', sm: 'nowrap'}}}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: {xs: 'wrap', sm: 'nowrap'},
+          }}
+        >
           {!isOnlyCombined && (
             <>
               <Button
@@ -94,7 +114,13 @@ const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, 
           >
             combined.log
           </Button>
-          <Box mx={1} display="flex" alignItems="center">
+          <Box
+            sx={{
+              mx: 1,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
             <Checkbox checked={remapNewLine} onChange={onToggleRemapNewLine} /> Remap new line
           </Box>
         </Box>

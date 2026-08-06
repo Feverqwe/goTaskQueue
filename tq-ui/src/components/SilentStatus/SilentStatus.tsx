@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import {Box, CircularProgress, IconButton} from '@mui/material';
 import React, {FC} from 'react';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 
 const SilentStatusContainer = styled(Box)(() => {
   return {
@@ -20,13 +20,18 @@ const SilentStatus: FC<SilentStatusProps> = ({status, onRetry}) => {
   return (
     <SilentStatusContainer>
       {status === 'loading' && (
-        <Box m={1} display="flex">
+        <Box
+          sx={{
+            m: 1,
+            display: 'flex',
+          }}
+        >
           <CircularProgress size={20} />
         </Box>
       )}
       {status === 'error' && (
         <IconButton size="small" color="warning" onClick={onRetry}>
-          <ErrorOutlineIcon />
+          <ErrorOutlinedIcon />
         </IconButton>
       )}
     </SilentStatusContainer>

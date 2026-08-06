@@ -173,7 +173,11 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
         <DialogTitle>{name}</DialogTitle>
         <DialogContent>
           {variableInputs}
-          <Box display={isExtended ? 'block' : 'none'}>
+          <Box
+            sx={{
+              display: isExtended ? 'block' : 'none',
+            }}
+          >
             <CommandFieldAsync
               ref={refCommand as React.RefObject<CommandFieldRef>}
               defaultValue={command}
@@ -185,7 +189,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 control={
                   <Checkbox
                     size="small"
-                    inputRef={refPty}
+                    slotProps={{input: {ref: refPty}}}
                     defaultChecked={isPty}
                     onChange={handlePtyChange}
                   />
@@ -196,14 +200,22 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
               sx={{my: 1}}
               label="Combined output"
               control={
-                <Checkbox size="small" inputRef={refOnlyCombined} defaultChecked={isOnlyCombined} />
+                <Checkbox
+                  size="small"
+                  slotProps={{input: {ref: refOnlyCombined}}}
+                  defaultChecked={isOnlyCombined}
+                />
               }
             />
             <FormControlLabel
               sx={{my: 1}}
               label="Write logs"
               control={
-                <Checkbox size="small" inputRef={refWriteLogs} defaultChecked={isWriteLogs} />
+                <Checkbox
+                  size="small"
+                  slotProps={{input: {ref: refWriteLogs}}}
+                  defaultChecked={isWriteLogs}
+                />
               }
             />
             {place && (
@@ -213,7 +225,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 control={
                   <Checkbox
                     size="small"
-                    inputRef={refSingleInstance}
+                    slotProps={{input: {ref: refSingleInstance}}}
                     defaultChecked={isSingleInstance}
                   />
                 }
@@ -223,7 +235,11 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
               sx={{my: 1}}
               label="Start on boot"
               control={
-                <Checkbox size="small" inputRef={refStartOnBoot} defaultChecked={isStartOnBoot} />
+                <Checkbox
+                  size="small"
+                  slotProps={{input: {ref: refStartOnBoot}}}
+                  defaultChecked={isStartOnBoot}
+                />
               }
             />
             <TextField
@@ -240,7 +256,14 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 htmlInput: {ref: refTtl},
               }}
             />
-            <Box display="flex" flexDirection="row" gap={1} my={1}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: 1,
+                my: 1,
+              }}
+            >
               <TextField
                 size="small"
                 label="Label"
