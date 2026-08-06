@@ -72,8 +72,9 @@ with them by `internal/taskQueue/templates.go`. A template consists of metadata
 (`template.json`) and, commonly, a command file.
 
 Production UI files are generated into `tq-ui/dist`, copied to `assets/www`, and
-embedded into `assets/bindata.go`. In development mode (`DEBUG_UI=1`), the Go
-server reads `tq-ui/dist` directly instead.
+embedded by the Go standard library through `assets/embed.go`. The production
+build script stages the UI before compiling the binary. In development mode
+(`DEBUG_UI=1`), the Go server reads `tq-ui/dist` directly instead.
 
 ## Frontend boundaries
 

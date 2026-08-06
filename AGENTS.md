@@ -24,7 +24,7 @@ Read these files before making a non-trivial change:
 - `internal/{dialogs,mutex,powerCtr,trayIcon}/`: platform-specific integration.
 - `tq-ui/src/`: React/TypeScript UI.
 - `assets/templates/`: built-in task templates.
-- `assets/bindata.go`: generated embedded assets; do not hand-edit.
+- `assets/embed.go`: standard-library embedding for the UI, templates, and icon.
 - `scripts/`: build and packaging scripts.
 
 ## Working rules
@@ -40,8 +40,8 @@ Read these files before making a non-trivial change:
   `tq-ui/src/tools/api.ts`, and the relevant types/call sites together.
 - Queue and task state is accessed by multiple goroutines. Preserve locking,
   atomic writes, and notification behavior when changing lifecycle code.
-- Do not edit `assets/bindata.go` manually. Rebuild the UI and embedded assets
-  only when the change requires a production UI bundle; see
+- Production Go builds stage the UI in `assets/www` before compiling. Use
+  `scripts/build.ui.sh` when a standalone staged UI is needed; see
   `docs/DEVELOPMENT.md`.
 - Do not commit `tq-ui/node_modules/`, `tq-ui/dist/`, `assets/www/`,
   `internal/logStore/test/`, local profile data, logs, lock files, or compiled
@@ -57,6 +57,7 @@ Run the checks relevant to the files changed:
 ```sh
 # Go changes (from the repository root)
 gofmt -w <changed-go-files>
+./scripts/build.ui.sh # required once in a clean checkout for go:embed
 go test ./...
 
 # UI changes (from tq-ui/)

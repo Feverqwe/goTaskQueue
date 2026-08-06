@@ -281,7 +281,7 @@ func handleWww(router *internal.Router, queue *taskQueue.Queue, memStorage *mems
 				mTime = info.ModTime()
 			}
 		} else {
-			content, err = assets.Asset("www" + assetPath)
+			content, err = assets.Files.ReadFile("www" + assetPath)
 		}
 		if err != nil {
 			w.WriteHeader(404)

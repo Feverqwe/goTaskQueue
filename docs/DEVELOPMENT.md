@@ -19,6 +19,7 @@ npm ci
 Backend checks run from the repository root:
 
 ```sh
+./scripts/build.ui.sh # required once in a clean checkout for go:embed
 go test ./...
 ```
 
@@ -77,30 +78,21 @@ binary also supports `-disableTrayIcon` for headless execution.
 
 ## Production assets and builds
 
-Build the native binary from the repository root:
+Build the production UI and native binary from the repository root:
 
 ```sh
 ./scripts/build.sh
 ```
 
-Build and stage a production UI bundle:
+`build.sh` runs the UI release build first, stages its output in `assets/www`,
+and then compiles the Go binary. The staged directory is ignored by Git and is
+embedded through `assets/embed.go`; no generated Go resource file is needed.
+
+To build and stage only the production UI bundle, run:
 
 ```sh
-cd tq-ui
-npm run release
-cd ..
+./scripts/build.ui.sh
 ```
-
-Then regenerate embedded resources when a production bundle or built-in
-template changed:
-
-```sh
-./scripts/build.resources.sh
-```
-
-The resource script installs and invokes `go-bindata`, writes temporary files
-under `assets/www`, and replaces the generated `assets/bindata.go`. Review the
-generated diff; never make manual edits to `bindata.go`.
 
 Build the macOS application bundle with:
 

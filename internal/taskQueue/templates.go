@@ -7,6 +7,7 @@ import (
 	"goTaskQueue/assets"
 	"goTaskQueue/internal/cfg"
 	"goTaskQueue/internal/utils"
+	"io/fs"
 	"log"
 	"os"
 	"path"
@@ -371,26 +372,26 @@ func containFile(dir []os.DirEntry, name string) bool {
 }
 
 func copyDefaultTemplates(templatesPath string) error {
-	files := assets.AssetNames()
-	prefix := "templates/"
-	for _, assetName := range files {
-		if !strings.HasPrefix(assetName, prefix) {
-			continue
-		}
-		data, err := assets.Asset(assetName)
-		if err == nil {
-			sourcePath := assetName[len(prefix):]
-			fullPath := filepath.Join(templatesPath, sourcePath)
-			err = os.MkdirAll(filepath.Dir(fullPath), 0700)
-			if err != nil {
-				err = os.WriteFile(fullPath, data, 0600)
-			}
-		}
+	return fs.WalkDir(assets.Files, "templates", func(assetPath string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-	}
-	return nil
+		if entry.IsDir() {
+			return nil
+		}
+
+		data, err := assets.Files.ReadFile(assetPath)
+		if err != nil {
+			return err
+		}
+
+		sourcePath := strings.TrimPrefix(assetPath, "templates/")
+		fullPath := filepath.Join(templatesPath, sourcePath)
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0700); err != nil {
+			return err
+		}
+		return os.WriteFile(fullPath, data, 0600)
+	})
 }
 
 func InitTemplates() {

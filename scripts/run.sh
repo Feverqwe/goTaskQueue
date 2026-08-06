@@ -9,5 +9,5 @@ if [ "$1" = "dev" ]; then
     echo "Debug ui mode"
 fi
 
-sh ./scripts/build.sh
+sh ./scripts/build.sh "$1"
 ./$BINARY

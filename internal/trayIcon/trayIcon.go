@@ -17,7 +17,7 @@ var icon []byte
 
 func TrayIcon(config *cfg.Config, callChan chan string) {
 	if icon == nil {
-		data, err := assets.Asset("icon.ico")
+		data, err := assets.Files.ReadFile("icon.ico")
 		if err != nil {
 			panic(err)
 		}
