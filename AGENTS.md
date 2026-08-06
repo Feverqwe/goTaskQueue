@@ -43,6 +43,9 @@ Read these files before making a non-trivial change:
 - Production Go builds stage the UI in `assets/www` before compiling. Use
   `scripts/build.ui.sh` when a standalone staged UI is needed; see
   `docs/DEVELOPMENT.md`.
+- Use Node.js 24 for UI work. Run `nvm use` from the repository root to select
+  the version pinned in `.nvmrc` before installing dependencies or running UI
+  checks.
 - Do not commit `tq-ui/node_modules/`, `tq-ui/dist/`, `assets/www/`,
   `internal/logStore/test/`, local profile data, logs, lock files, or compiled
   binaries. The log-store tests currently leave their fixture directory behind.
@@ -60,7 +63,9 @@ gofmt -w <changed-go-files>
 ./scripts/build.ui.sh # required once in a clean checkout for go:embed
 go test ./...
 
-# UI changes (from tq-ui/)
+# UI changes
+nvm use # from the repository root
+cd tq-ui
 npm run tsc
 npm run lint
 npm run build

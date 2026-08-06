@@ -3,8 +3,8 @@
 ## Prerequisites
 
 - Go version matching `go.mod` (currently Go 1.25).
-- Node.js and npm for changes under `tq-ui/` (Node.js 20.19 or newer, or
-  Node.js 22.12 or newer).
+- Node.js 24 and npm for changes under `tq-ui/`. With nvm, run `nvm use` from
+  the repository root to select the version pinned in `.nvmrc`.
 - Platform libraries required by the tray and desktop dependencies.
 
 Install frontend dependencies from the UI directory:
