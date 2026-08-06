@@ -10,7 +10,7 @@ require (
 	github.com/gitpod-io/xterm-go v0.0.0-20260731130354-8e117204ebed
 	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
 	github.com/natefinch/atomic v1.0.1
-	github.com/ncruces/zenity v0.10.14
+	github.com/ncruces/zenity v0.10.15
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	golang.org/x/sys v0.47.0
 )

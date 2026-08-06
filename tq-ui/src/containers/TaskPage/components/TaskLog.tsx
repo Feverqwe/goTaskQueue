@@ -1,14 +1,14 @@
 import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Alert, Box, Button, Snackbar, useMediaQuery, useTheme} from '@mui/material';
-import {Terminal} from 'xterm';
-import {FitAddon} from 'xterm-addon-fit';
-import {WebLinksAddon} from 'xterm-addon-web-links';
+import {FitAddon} from '@xterm/addon-fit';
+import {WebLinksAddon} from '@xterm/addon-web-links';
+import {Terminal} from '@xterm/xterm';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
 import {PtyScreenSize, Task, TaskState} from '../../../components/types';
 import {waitGroup} from '../utils';
 
-import 'xterm/css/xterm.css';
+import '@xterm/xterm/css/xterm.css';
 import './XTerm.css';
 import {Command, InputCommand} from './constants';
 
