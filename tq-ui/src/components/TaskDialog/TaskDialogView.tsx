@@ -8,11 +8,11 @@ import {
   IconButton,
   InputAdornment,
   SxProps,
+  Theme,
   TextField,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import EditIcon from '@mui/icons-material/Edit';
-import {Theme as SystemTheme} from '@mui/system/createTheme/createTheme';
 import {Task} from '../types';
 import {api} from '../../tools/api';
 import IconActionButton from '../IconActionButton/IconActionButton';
@@ -28,7 +28,7 @@ interface TaskDialogViewProps {
   onClose: () => void;
 }
 
-const KeyValueSx: SxProps<SystemTheme> = {flexGrow: {sm: '1'}, width: {sm: '45%'}};
+const KeyValueSx: SxProps<Theme> = {flexGrow: {sm: '1'}, width: {sm: '45%'}};
 
 const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
   const {id, command, label, isOnlyCombined} = task;

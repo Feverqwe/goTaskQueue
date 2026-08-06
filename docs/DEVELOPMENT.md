@@ -3,7 +3,8 @@
 ## Prerequisites
 
 - Go version matching `go.mod` (currently Go 1.25).
-- Node.js and npm for changes under `tq-ui/`.
+- Node.js and npm for changes under `tq-ui/` (Node.js 20.19 or newer, or
+  Node.js 22.12 or newer).
 - Platform libraries required by the tray and desktop dependencies.
 
 Install frontend dependencies from the UI directory:
@@ -36,6 +37,9 @@ npm run tsc
 npm run lint
 npm run build
 ```
+
+The production bundle and watch build use Rspack. Type checking is a separate
+step because Rspack uses its built-in SWC transformer for TypeScript and JSX.
 
 `npm run lint` also checks Prettier formatting. Use `npm run lint:fix` only for
 files intentionally being changed.

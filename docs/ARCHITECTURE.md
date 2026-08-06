@@ -89,7 +89,8 @@ The main screens are:
 - `components/TemplateProvider/` and `GroupStorageProvider/`: shared UI state.
 
 React components use MUI, state uses MobX where needed, and terminal rendering
-uses xterm. Webpack emits the browser bundle into `tq-ui/dist`.
+uses xterm. Rspack transpiles TypeScript and emits the browser bundle into
+`tq-ui/dist`; `tsc` runs separately for type checking.
 
 ## Cross-platform code
 

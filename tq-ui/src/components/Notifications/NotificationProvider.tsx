@@ -1,6 +1,5 @@
 import React, {FC, ReactNode, useCallback, useState} from 'react';
-import {Alert, Snackbar} from '@mui/material';
-import {AlertColor} from '@mui/material/Alert/Alert';
+import {Alert, AlertColor, Snackbar} from '@mui/material';
 import {NotificationCtx} from './NotificationCtx';
 import {Task, TaskState} from '../types';
 

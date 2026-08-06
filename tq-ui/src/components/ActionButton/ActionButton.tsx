@@ -1,6 +1,5 @@
 import React, {FC, SyntheticEvent} from 'react';
-import {ButtonProps} from '@mui/material/Button/Button';
-import {Button} from '@mui/material';
+import {Button, ButtonProps} from '@mui/material';
 import useActionButton from '../../hooks/useActionButton';
 
 export type ActionButtonProps = Omit<ButtonProps, 'onSubmit' | 'onClick'> & {

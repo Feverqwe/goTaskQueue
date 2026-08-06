@@ -1,6 +1,5 @@
 import React, {FC, SyntheticEvent} from 'react';
-import {ListItemButton} from '@mui/material';
-import {ListItemButtonProps} from '@mui/material/ListItemButton/ListItemButton';
+import {ListItemButton, ListItemButtonProps} from '@mui/material';
 import useActionButton from '../../hooks/useActionButton';
 
 export type ActionListItemButtonProps = Omit<ListItemButtonProps, 'onSubmit' | 'onClick'> & {

@@ -1,14 +1,12 @@
 import React, {FC, useMemo} from 'react';
-import {Box, useTheme} from '@mui/material';
-import {SxProps} from '@mui/system/styleFunctionSx';
-import {Theme as SystemTheme} from '@mui/system/createTheme/createTheme';
+import {Box, SxProps, Theme, useTheme} from '@mui/material';
 import {formatValue} from '../../../utils/formatValue';
 
 interface KeyValueProps {
   name: string;
   value: string;
   type?: 'datetime';
-  sx?: SxProps<SystemTheme>;
+  sx?: SxProps<Theme>;
 }
 
 const KeyValue: FC<KeyValueProps> = ({name, value, type, sx}) => {
