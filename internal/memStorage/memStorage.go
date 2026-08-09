@@ -10,14 +10,17 @@ type MemStorage struct {
 
 func (s *MemStorage) GetKeys(keys []string) map[string]interface{} {
 	result := make(map[string]interface{})
+	s.mrw.RLock()
+	defer s.mrw.RUnlock()
+
 	if keys == nil {
-		s.mrw.RLock()
-		result = s.keyValue
-		s.mrw.RUnlock()
+		for key, value := range s.keyValue {
+			result[key] = value
+		}
 	} else {
 		for _, key := range keys {
-			if val, ok := s.GetKey(key); ok {
-				result[key] = val
+			if value, ok := s.keyValue[key]; ok {
+				result[key] = value
 			}
 		}
 	}

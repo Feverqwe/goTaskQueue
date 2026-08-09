@@ -188,6 +188,9 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			}
 
 			task, err := queue.Clone(config, payload.Id)
+			if err != nil {
+				return nil, err
+			}
 
 			if payload.IsRun {
 				err = task.Run(config, queue)
@@ -425,8 +428,13 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		}
 
 		var data *shared.DataStore
-		if logType == taskQueue.LOG_STDOUT || logType == taskQueue.LOG_STDERR || logType == taskQueue.LOG_COMBINED {
-			data = task.GetLog(logType)
+		switch logType {
+		case "stdout":
+			data = task.GetLog(taskQueue.LOG_STDOUT)
+		case "stderr":
+			data = task.GetLog(taskQueue.LOG_STDERR)
+		case "combined":
+			data = task.GetLog(taskQueue.LOG_COMBINED)
 		}
 		if data == nil {
 			sendStatus(w, 404)

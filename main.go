@@ -146,6 +146,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 			return
 		}
 		historyReady := make(chan struct{}, 1)
+		disconnected := make(chan struct{})
 		signalHistoryReady := func() {
 			select {
 			case historyReady <- struct{}{}:
@@ -157,6 +158,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		}
 
 		go func() {
+			defer close(disconnected)
 			for {
 				var data string
 				err := websocket.Message.Receive(ws, &data)
@@ -189,6 +191,8 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 
 		select {
 		case <-historyReady:
+		case <-disconnected:
+			return
 		case <-time.After(time.Second):
 		}
 
@@ -237,8 +241,13 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				}
 			}
 			dataType = ACTUAL_DATA
-			if <-changes == 0 {
-				break
+			select {
+			case value := <-changes:
+				if value == 0 {
+					return
+				}
+			case <-disconnected:
+				return
 			}
 		}
 	}
