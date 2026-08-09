@@ -27,6 +27,9 @@ func (s *LogChunk) OpenForReading() (f *os.File, r io.ReadCloser, err error) {
 }
 
 func (s *LogChunk) OpenForWriting() (f *os.File, err error) {
+	if s.Compressed {
+		return nil, errors.New("cannot_append_to_compressed_chunk")
+	}
 	filename := path.Join(s.store.place, s.Name)
 	f, err = os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
@@ -61,7 +64,15 @@ func (s *LogChunk) Compress() (lc *LogChunk, err error) {
 	if err != nil {
 		return
 	}
-	defer tf.Close()
+	keepTarget := false
+	defer func() {
+		if tf != nil {
+			_ = tf.Close()
+		}
+		if !keepTarget {
+			_ = os.Remove(tPath)
+		}
+	}()
 
 	cw, err := flate.NewWriter(tf, flate.BestCompression)
 	if err != nil {
@@ -75,10 +86,18 @@ func (s *LogChunk) Compress() (lc *LogChunk, err error) {
 	if err = cw.Close(); err != nil {
 		return
 	}
+	if err = tf.Sync(); err != nil {
+		return
+	}
+	if err = tf.Close(); err != nil {
+		return
+	}
+	tf = nil
 
 	lc = s.Clone(s.store)
 	lc.Name = cName
 	lc.Compressed = true
+	keepTarget = true
 
 	return
 }

@@ -2,16 +2,22 @@ package logstore
 
 const ChunkSize = 10 * 1024 * 1024
 
-func getChunkIndex(off int64, cSize int) int {
-	return int(off / int64(cSize))
+func getChunksSize(chunks []*LogChunk) (n int64) {
+	for _, chunk := range chunks {
+		n += int64(chunk.Len)
+	}
+	return n
 }
 
-func getChunksSize(chunks []*LogChunk, cSize int) (n int64) {
-	l := len(chunks)
-	if l == 0 {
-		return 0
+func getChunkOffset(chunks []*LogChunk, off int64) (index int, chunkOffset int64) {
+	for index, chunk := range chunks {
+		chunkSize := int64(chunk.Len)
+		if off < chunkSize {
+			return index, off
+		}
+		off -= chunkSize
 	}
-	return int64(chunks[l-1].Len + cSize*(l-1))
+	return len(chunks), 0
 }
 
 func getAvailableSize(chunk *LogChunk, cSize int) int {

@@ -13,125 +13,133 @@ type LogReader struct {
 	offset     int64
 	cFile      *os.File
 	cReader    io.ReadCloser
+	fileLocked bool
 }
 
 func (s *LogReader) Read(p []byte) (n int, err error) {
-	// log.Println("Read")
-	if s.cFile == nil {
-		chunks := s.store.GetChunks()
-
-		if s.chunkIndex >= len(chunks) {
-			return n, io.EOF
+	for {
+		if s.cFile == nil {
+			if err = s.openChunk(s.chunkIndex); err != nil {
+				return 0, err
+			}
 		}
 
-		chunk := chunks[s.chunkIndex]
-
-		if err = s.openChunk(chunk); err != nil {
-			return
+		if s.cReader == nil {
+			n, err = s.cFile.Read(p)
+		} else {
+			n, err = s.cReader.Read(p)
 		}
-	}
+		s.offset += int64(n)
+		if err != io.EOF {
+			return n, err
+		}
 
-	if s.cReader == nil {
-		n, err = s.cFile.Read(p)
-	} else {
-		n, err = s.cReader.Read(p)
-	}
-	s.offset += int64(n)
-	if err == io.EOF {
 		s.chunkIndex++
-		err = s.closeChunk()
+		closeErr := s.closeChunk()
+		if closeErr != nil {
+			return n, closeErr
+		}
+		if n > 0 {
+			return n, nil
+		}
 	}
-	return
 }
 
-func (s *LogReader) Seek(delta int64, whence int) (ret int64, err error) {
-	// log.Println("Seek", delta, whence)
-	if err = s.closeChunk(); err != nil {
-		return
-	}
-
+func (s *LogReader) Seek(delta int64, whence int) (int64, error) {
 	chunks := s.store.GetChunks()
-
-	size := getChunksSize(chunks, s.store.ChunkSize)
+	size := getChunksSize(chunks)
 
 	var off int64
 	switch whence {
-	case 0:
-		// 0 means relative to the origin of the file
+	case io.SeekStart:
 		off = delta
-	case 1:
-		// 1 means relative to the current offset
+	case io.SeekCurrent:
 		off = s.offset + delta
-	case 2:
-		// 2 means relative to the end
-		off = size - delta
+	case io.SeekEnd:
+		off = size + delta
+	default:
+		return s.offset, errors.New("invalid_whence")
 	}
-	if size < off {
-		return ret, errors.New("offset_more_than_size")
+	if off < 0 {
+		return s.offset, errors.New("negative_offset")
 	}
-
-	cIndex := getChunkIndex(off, s.store.ChunkSize)
-	s.chunkIndex = cIndex
-
-	if off == 0 && len(chunks) == 0 {
-		s.offset = off
-		return
+	if off > size {
+		return s.offset, errors.New("offset_more_than_size")
 	}
 
-	chunk := chunks[s.chunkIndex]
-
-	if err = s.openChunk(chunk); err != nil {
-		return
+	if err := s.closeChunk(); err != nil {
+		return s.offset, err
 	}
-
-	cOff := off - int64(cIndex*s.store.ChunkSize)
-	if cOff > 0 {
-		if s.cReader != nil {
-			if _, err = io.ReadFull(s.cReader, make([]byte, cOff)); err != nil {
-				return
-			}
-		} else {
-			if _, err = s.cFile.Seek(cOff, 0); err != nil {
-				return
-			}
-		}
-	}
-
 	s.offset = off
 
-	return
+	if off == size {
+		s.chunkIndex = len(chunks)
+		return off, nil
+	}
+
+	s.chunkIndex, _ = getChunkOffset(chunks, off)
+	if err := s.openChunk(s.chunkIndex); err != nil {
+		return s.offset, err
+	}
+
+	_, cOff := getChunkOffset(chunks, off)
+	if cOff == 0 {
+		return off, nil
+	}
+	if s.cReader != nil {
+		if _, err := io.CopyN(io.Discard, s.cReader, cOff); err != nil {
+			_ = s.closeChunk()
+			return s.offset, err
+		}
+	} else if _, err := s.cFile.Seek(cOff, io.SeekStart); err != nil {
+		_ = s.closeChunk()
+		return s.offset, err
+	}
+	return off, nil
 }
 
-func (s *LogReader) Close() (err error) {
-	// log.Println("Close")
+func (s *LogReader) Close() error {
 	return s.closeChunk()
 }
 
-func (s *LogReader) openChunk(chunk *LogChunk) (err error) {
-	f, r, err := chunk.OpenForReading()
+func (s *LogReader) openChunk(index int) error {
+	s.store.filesM.RLock()
+	s.fileLocked = true
+
+	chunks := s.store.GetChunks()
+	if index < 0 || index >= len(chunks) {
+		s.store.filesM.RUnlock()
+		s.fileLocked = false
+		return io.EOF
+	}
+
+	f, r, err := chunks[index].OpenForReading()
+	if err != nil {
+		s.store.filesM.RUnlock()
+		s.fileLocked = false
+		return err
+	}
 	s.cFile = f
 	s.cReader = r
-	return
+	return nil
 }
 
 func (s *LogReader) closeChunk() (err error) {
 	if s.cReader != nil {
-		if err = s.cReader.Close(); err != nil {
-			return
-		}
+		err = errors.Join(err, s.cReader.Close())
 	}
 	s.cReader = nil
 	if s.cFile != nil {
-		if err = s.cFile.Close(); err != nil {
-			return
-		}
+		err = errors.Join(err, s.cFile.Close())
 	}
 	s.cFile = nil
-	return
+	if s.fileLocked {
+		s.store.filesM.RUnlock()
+		s.fileLocked = false
+	}
+	return err
 }
 
 func NewLogReader(store *LogStore) *LogReader {
-	return &LogReader{
-		store: store,
-	}
+	return &LogReader{store: store}
 }

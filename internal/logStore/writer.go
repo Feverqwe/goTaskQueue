@@ -1,8 +1,10 @@
 package logstore
 
 import (
+	"errors"
 	"io"
 	"os"
+	"sync"
 )
 
 type LogWriter struct {
@@ -11,22 +13,27 @@ type LogWriter struct {
 	chunk  *LogChunk
 	inited bool
 	file   *os.File
+	closed bool
+	mu     sync.Mutex
 }
 
 func (s *LogWriter) Write(data []byte) (n int, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.closed {
+		return 0, os.ErrClosed
+	}
+
 	// log.Println("w Write", len(data))
 	if !s.inited {
 		s.inited = true
-		chunks := s.store.GetChunks()
-		if len(chunks) > 0 {
-			chunk := chunks[len(chunks)-1]
-			if getAvailableSize(chunk, s.store.ChunkSize) > 0 {
-				s.chunk = chunk
-				if err = s.openChunk(); err != nil {
-					return
-				}
-				s.chunk.Closed = false
+		if chunk := s.store.getAppendableChunk(); chunk != nil {
+			s.chunk = chunk
+			if err = s.openChunk(); err != nil {
+				return
 			}
+			s.store.setChunkClosed(s.chunk, false)
 		}
 	}
 
@@ -38,23 +45,35 @@ func (s *LogWriter) Write(data []byte) (n int, err error) {
 				return
 			}
 
-			s.store.AppendChunk(s.chunk)
+			if err = s.store.AppendChunk(s.chunk); err != nil {
+				_ = s.file.Close()
+				s.file = nil
+				s.store.rollbackAppendedChunk(s.chunk)
+				_ = s.chunk.Remove()
+				s.chunk = nil
+				return
+			}
 		}
 
-		l := s.chunk.Len
-		avail := getAvailableSize(s.chunk, s.store.ChunkSize)
+		avail := s.store.getChunkAvailableSize(s.chunk)
+		if avail <= 0 {
+			return n, errors.New("invalid_chunk_available_size")
+		}
 		size := min(len(data), avail)
 
 		cn, err = s.file.Write(data[0:size])
-		s.chunk.Len = l + cn
+		s.store.addChunkLen(s.chunk, cn)
 		n += cn
 		if err != nil {
 			return
 		}
+		if cn != size {
+			return n, io.ErrShortWrite
+		}
 
-		data = data[size:]
+		data = data[cn:]
 
-		if avail-cn == 0 {
+		if avail == cn {
 			if err = s.closeChunk(); err != nil {
 				return
 			}
@@ -64,6 +83,13 @@ func (s *LogWriter) Write(data []byte) (n int, err error) {
 }
 
 func (s *LogWriter) Close() (err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.closed {
+		return nil
+	}
+	s.closed = true
 	// log.Println("w Close")
 	return s.closeChunk()
 }
@@ -87,7 +113,7 @@ func (s *LogWriter) closeChunk() (err error) {
 	}
 	s.file = nil
 	if s.chunk != nil {
-		s.chunk.Closed = true
+		s.store.setChunkClosed(s.chunk, true)
 	}
 	s.chunk = nil
 	return
