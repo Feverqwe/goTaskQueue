@@ -1,14 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"goTaskQueue/internal"
 	"goTaskQueue/internal/cfg"
+	"goTaskQueue/internal/shared"
 	"goTaskQueue/internal/taskQueue"
 
 	"golang.org/x/net/websocket"
@@ -43,5 +46,53 @@ func TestWebsocketHandlerReturnsWhenIdleClientDisconnects(t *testing.T) {
 	case <-time.After(time.Second):
 		server.CloseClientConnections()
 		t.Fatal("WebSocket handler remained subscribed after client disconnect")
+	}
+}
+
+func TestWebsocketHandlerDrainsFinalOutputBeforeClosing(t *testing.T) {
+	queue := taskQueue.NewQueue()
+	task := queue.Add(&cfg.Config{}, taskQueue.TaskBase{})
+	task.IsFinished = true
+
+	var lenCalls atomic.Int32
+	task.Combined = &shared.DataStore{
+		Len: func() int64 {
+			if lenCalls.Add(1) <= 2 {
+				return 5
+			}
+			return 9
+		},
+		ReadAt: func(offset int64) ([]byte, error) {
+			switch offset {
+			case 0:
+				return []byte("first"), nil
+			case 5:
+				return []byte("tail"), nil
+			default:
+				return nil, fmt.Errorf("unexpected read offset %d", offset)
+			}
+		},
+	}
+
+	router := internal.NewRouter()
+	handleWebsocket(router, queue)
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws?id=" + task.Id
+	client, err := websocket.Dial(wsURL, "", server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	for _, want := range []string{"hfirst", "atail"} {
+		var message []byte
+		if err := websocket.Message.Receive(client, &message); err != nil {
+			t.Fatalf("receive %q: %v", want, err)
+		}
+		if string(message) != want {
+			t.Fatalf("message = %q, want %q", message, want)
+		}
 	}
 }

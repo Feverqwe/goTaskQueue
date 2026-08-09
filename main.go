@@ -218,6 +218,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 
 		offset := int64(-1)
 		dataType := HISTORY_DATA
+		finished := false
 		changes, unsubscribe := task.SubscribeChanges()
 		defer unsubscribe()
 		for {
@@ -241,10 +242,13 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				}
 			}
 			dataType = ACTUAL_DATA
+			if finished {
+				return
+			}
 			select {
 			case value := <-changes:
 				if value == 0 {
-					return
+					finished = true
 				}
 			case <-disconnected:
 				return
