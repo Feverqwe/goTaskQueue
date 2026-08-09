@@ -3,7 +3,7 @@ package gzbuffer
 import (
 	"bytes"
 	"compress/flate"
-	"errors"
+	"fmt"
 	"goTaskQueue/internal/shared"
 	"io"
 	"log"
@@ -45,6 +45,10 @@ func (s *GzBuffer) GetDataStore() *shared.DataStore {
 
 func (s *GzBuffer) Write(data []byte) (n int, err error) {
 	s.mu.Lock()
+	if s.finished {
+		s.mu.Unlock()
+		return 0, io.ErrClosedPipe
+	}
 	n = len(data)
 	s.buf = append(s.buf, data...)
 	s.mu.Unlock()
@@ -61,9 +65,8 @@ func (s *GzBuffer) ReadAt(offset int64) ([]byte, error) {
 	chunksSize := s.chunksSize
 	s.mu.RUnlock()
 
-	if size < offset {
-		log.Println("Read offset more than len", offset, size)
-		return nil, errors.New("read_icorrect_offset")
+	if offset < 0 || offset > size {
+		return nil, fmt.Errorf("read offset %d outside buffer size %d", offset, size)
 	}
 
 	bufferOffset := 0
@@ -80,7 +83,9 @@ func (s *GzBuffer) ReadAt(offset int64) ([]byte, error) {
 	if chunksOffset < chunksSize {
 		chR := NewChunkReader(&chunks, &chunksSize, getChunkExtractor(), nil)
 		defer chR.Close()
-		chR.Seek(chunksOffset, 0)
+		if _, err := chR.Seek(chunksOffset, io.SeekStart); err != nil {
+			return nil, err
+		}
 		var err error
 		b, err = io.ReadAll(chR)
 		if err != nil {
@@ -93,17 +98,20 @@ func (s *GzBuffer) ReadAt(offset int64) ([]byte, error) {
 	return b, nil
 }
 
+// PipeTo writes a consistent snapshot of the buffer to w.
 func (s *GzBuffer) PipeTo(w io.Writer) error {
+	s.mu.RLock()
+	chunks := s.chunks
+	chunksSize := s.chunksSize
+	buf := s.buf
+	s.mu.RUnlock()
+
 	extractor := getChunkExtractor()
-	chR := NewChunkReader(&s.chunks, &s.chunksSize, extractor, &s.mu)
+	chR := NewChunkReader(&chunks, &chunksSize, extractor, nil)
 	defer chR.Close()
 	if _, err := io.Copy(w, chR); err != nil {
 		return err
 	}
-
-	s.mu.RLock()
-	buf := s.buf
-	s.mu.RUnlock()
 
 	r := bytes.NewReader(buf)
 	if _, err := io.Copy(w, r); err != nil {
@@ -112,27 +120,31 @@ func (s *GzBuffer) PipeTo(w io.Writer) error {
 	return nil
 }
 
-func (s *GzBuffer) Slice(offset int64, approx bool) (*GzBuffer, error) {
-	// log.Println("Slice", offset)
+// Slice returns a new buffer containing the rightmost rightSize bytes. When
+// approx is true, the result may include extra bytes from the first kept chunk.
+func (s *GzBuffer) Slice(rightSize int64, approx bool) (*GzBuffer, error) {
 	s.mu.RLock()
-	newSize := s.len() - offset
+	size := s.len()
 	buf := s.buf
 	chunks := s.chunks
 	s.mu.RUnlock()
-
-	newChunks := make([]CChunk, 0)
-	newChunksSize := int64(0)
-
-	if newSize < int64(len(buf)) {
-		buf = buf[int64(len(buf))-newSize:]
+	if rightSize < 0 || rightSize > size {
+		return nil, fmt.Errorf("slice size %d outside buffer size %d", rightSize, size)
 	}
 
+	newChunks := make([]CChunk, 0, len(chunks))
+	newChunksSize := int64(0)
+
+	if rightSize < int64(len(buf)) {
+		buf = buf[int64(len(buf))-rightSize:]
+	}
+	buf = append([]byte(nil), buf...)
+
 	i := len(chunks) - 1
-	readSize := newSize - int64(len(buf))
+	readSize := rightSize - int64(len(buf))
 	for readSize > 0 && i >= 0 {
-		idx := i
-		i -= 1
-		cChunk := chunks[idx]
+		cChunk := chunks[i]
+		i--
 		cc := cChunk.data
 		ccSize := cChunk.size
 
@@ -147,9 +159,15 @@ func (s *GzBuffer) Slice(offset int64, approx bool) (*GzBuffer, error) {
 
 		newCChunk := CChunk{cc, ccSize}
 
-		newChunks = append([]CChunk{newCChunk}, newChunks...)
+		newChunks = append(newChunks, newCChunk)
 		newChunksSize += int64(ccSize)
 		readSize -= int64(ccSize)
+	}
+	if readSize > 0 {
+		return nil, fmt.Errorf("slice size %d not covered by buffer data", rightSize)
+	}
+	for left, right := 0, len(newChunks)-1; left < right; left, right = left+1, right-1 {
+		newChunks[left], newChunks[right] = newChunks[right], newChunks[left]
 	}
 
 	cbuf := NewGzBuffer()
@@ -170,11 +188,15 @@ func (s *GzBuffer) len() int64 {
 	return s.chunksSize + int64(len(s.buf))
 }
 
+// Close synchronously compresses the remaining data and rejects future writes.
 func (s *GzBuffer) Close() error {
-	// log.Println("finish")
+	s.mu.Lock()
 	s.finished = true
-	s.runCompress()
-	return nil
+	s.mu.Unlock()
+
+	s.cmu.Lock()
+	defer s.cmu.Unlock()
+	return s.compress()
 }
 
 func (s *GzBuffer) runCompress() {
@@ -185,9 +207,16 @@ func (s *GzBuffer) runCompress() {
 		return
 	}
 	go func() {
-		defer s.cmu.Unlock()
-		if err := s.compress(); err != nil {
-			log.Println("Compress error", err)
+		for {
+			err := s.compress()
+			s.cmu.Unlock()
+			if err != nil {
+				log.Println("Compress error", err)
+				return
+			}
+			if s.GetCompressSize() == 0 || !s.cmu.TryLock() {
+				return
+			}
 		}
 	}()
 }

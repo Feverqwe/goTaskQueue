@@ -1,120 +1,125 @@
 package gzbuffer
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"sync"
 )
 
-type Transfromer func(chunk []byte) (io.ReadCloser, error)
+type Transformer func(chunk []byte) (io.ReadCloser, error)
 
 type ChunkReader struct {
-	io.ReadCloser
 	index      int
 	offset     int64
 	chunks     *[]CChunk
 	size       *int64
 	chM        *sync.RWMutex
-	tr         Transfromer
+	tr         Transformer
 	lastReader io.ReadCloser
 }
 
 func (s *ChunkReader) Read(p []byte) (int, error) {
-	// log.Println("read")
-	if s.lastReader == nil {
-		s.chM.RLock()
-		chunks := *s.chunks
-		s.chM.RUnlock()
-
-		if s.index >= len(chunks) {
-			return 0, io.EOF
-		}
-
-		c := chunks[s.index]
-		var err error
-		s.lastReader, err = s.tr(c.data)
-		if err != nil {
-			return 0, err
-		}
+	if len(p) == 0 {
+		return 0, nil
 	}
+	for {
+		if s.lastReader == nil {
+			s.chM.RLock()
+			chunks := *s.chunks
+			s.chM.RUnlock()
 
-	n, err := s.lastReader.Read(p)
-	if err == io.EOF {
+			if s.index >= len(chunks) {
+				return 0, io.EOF
+			}
+
+			c := chunks[s.index]
+			reader, err := s.tr(c.data)
+			if err != nil {
+				if reader != nil {
+					_ = reader.Close()
+				}
+				return 0, err
+			}
+			s.lastReader = reader
+		}
+
+		n, err := s.lastReader.Read(p)
+		s.offset += int64(n)
+		if err != io.EOF {
+			return n, err
+		}
+
 		s.index++
-		err = s.resetLastReader()
+		closeErr := s.resetLastReader()
+		if n > 0 || closeErr != nil {
+			return n, closeErr
+		}
 	}
-	s.offset += int64(n)
-	return n, err
 }
 
-func (s *ChunkReader) Seek(delta int64, whense int) error {
-	// log.Println("seek", delta, whense)
+func (s *ChunkReader) Seek(delta int64, whence int) (int64, error) {
 	s.chM.RLock()
 	chunks := *s.chunks
 	size := *s.size
 	s.chM.RUnlock()
 
 	var off int64
-	switch whense {
-	case 0:
-		// 0 means relative to the origin of the file
+	switch whence {
+	case io.SeekStart:
 		off = delta
-	case 1:
-		// 1 means relative to the current offset
+	case io.SeekCurrent:
 		off = s.offset + delta
-	case 2:
-		// 2 means relative to the end
-		off = size - delta
+	case io.SeekEnd:
+		off = size + delta
+	default:
+		return s.offset, fmt.Errorf("invalid seek whence %d", whence)
 	}
-	if size < off {
-		return errors.New("offset_more_than_size")
+	if off < 0 || off > size {
+		return s.offset, fmt.Errorf("seek offset %d outside chunk size %d", off, size)
 	}
 
-	var left int64
-	if off > size/2 {
-		left = size
-		i := len(chunks) - 1
-		for i >= 0 {
-			left -= int64(chunks[i].size)
-			if left < off {
-				s.index = i
-				break
-			}
-			i--
+	if err := s.resetLastReader(); err != nil {
+		return s.offset, err
+	}
+	if off == size {
+		s.index = len(chunks)
+		s.offset = off
+		return off, nil
+	}
+
+	left := int64(0)
+	index := len(chunks)
+	for i, chunk := range chunks {
+		right := left + int64(chunk.size)
+		if off < right {
+			index = i
+			break
 		}
-	} else {
-		left = 0
-		for i, c := range chunks {
-			nextLeft := left + int64(c.size)
-			if nextLeft >= off {
-				s.index = i
-				break
-			}
-			left = nextLeft
+		left = right
+	}
+	if index == len(chunks) {
+		return s.offset, fmt.Errorf("seek offset %d not covered by chunks", off)
+	}
+
+	reader, err := s.tr(chunks[index].data)
+	if err != nil {
+		if reader != nil {
+			_ = reader.Close()
 		}
+		return s.offset, err
 	}
-
-	chunk := chunks[s.index]
-	s.offset = off
-
-	err := s.resetLastReader()
-	if err != nil {
-		return err
-	}
-	s.lastReader, err = s.tr(chunk.data)
-	if err != nil {
-		return err
-	}
-
 	chunkOffset := off - left
 	if chunkOffset > 0 {
-		_, err := io.ReadFull(s.lastReader, make([]byte, chunkOffset))
-		if err != nil {
-			return err
+		if _, err := io.CopyN(io.Discard, reader, chunkOffset); err != nil {
+			_ = reader.Close()
+			return s.offset, err
 		}
 	}
 
-	return nil
+	s.index = index
+	s.offset = off
+	s.lastReader = reader
+	return off, nil
 }
 
 func (s *ChunkReader) Close() error {
@@ -131,7 +136,7 @@ func (s *ChunkReader) resetLastReader() error {
 	return err
 }
 
-func NewChunkReader(chunks *[]CChunk, chunksSize *int64, t Transfromer, m *sync.RWMutex) *ChunkReader {
+func NewChunkReader(chunks *[]CChunk, chunksSize *int64, t Transformer, m *sync.RWMutex) *ChunkReader {
 	if m == nil {
 		m = &sync.RWMutex{}
 	}
