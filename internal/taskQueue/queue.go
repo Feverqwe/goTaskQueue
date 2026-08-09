@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"goTaskQueue/internal/cfg"
 	"log"
 	"os"
@@ -19,14 +20,18 @@ type Queue struct {
 	Tasks  []*Task `json:"tasks"`
 	idTask map[string]*Task
 	ch     chan int
-	mu     sync.Mutex
+	mu     sync.RWMutex
 }
 
 func (s *Queue) GetAll(config *cfg.Config) []*Task {
-	return s.Tasks
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return append([]*Task(nil), s.Tasks...)
 }
 
 func (s *Queue) Get(id string) (*Task, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	task, ok := s.idTask[id]
 	if !ok {
 		return nil, errors.New("Task not found")
@@ -35,15 +40,14 @@ func (s *Queue) Get(id string) (*Task, error) {
 }
 
 func (s *Queue) Add(config *cfg.Config, taskBase TaskBase) *Task {
-	id := s.getId()
-	task := NewTask(id, taskBase)
-
 	s.mu.Lock()
+	id := s.getIdLocked()
+	task := NewTask(id, taskBase)
+	task.Init(config, s)
 	s.Tasks = append(s.Tasks, task)
 	s.idTask[task.Id] = task
 	s.mu.Unlock()
 
-	task.Init(config, s)
 	s.Save()
 	return task
 }
@@ -54,36 +58,42 @@ func (s *Queue) Clone(config *cfg.Config, id string) (*Task, error) {
 		return nil, err
 	}
 
-	task := s.Add(config, origTask.TaskBase)
+	task := s.Add(config, origTask.taskBaseSnapshot())
 
 	return task, nil
 }
 
 func (s *Queue) Del(config *cfg.Config, id string) error {
-	task, err := s.Get(id)
-	if err != nil {
-		return err
+	s.mu.Lock()
+	task, ok := s.idTask[id]
+	if !ok {
+		s.mu.Unlock()
+		return errors.New("Task not found")
 	}
-	if task.IsStarted && !task.IsFinished {
+	if !task.canDelete() {
+		s.mu.Unlock()
 		return errors.New("Task is not finished")
 	}
 
-	var index int
+	index := -1
 	for i, t := range s.Tasks {
-		if t.Id == id {
+		if t == task {
 			index = i
 			break
 		}
 	}
+	if index == -1 {
+		s.mu.Unlock()
+		return errors.New("Task not found in queue")
+	}
 
-	s.mu.Lock()
 	s.Tasks = append(s.Tasks[:index], s.Tasks[index+1:]...)
 	delete(s.idTask, task.Id)
 	s.mu.Unlock()
 
 	s.Save()
 
-	if task.IsWriteLogs {
+	if task.taskBaseSnapshot().IsWriteLogs {
 		err := CleanTaskLogs(config, task.Id)
 		if err != nil {
 			log.Println("Clean task logs error", err)
@@ -94,15 +104,47 @@ func (s *Queue) Del(config *cfg.Config, id string) error {
 }
 
 func (s *Queue) HasInstance(templatePlace string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	for _, t := range s.Tasks {
-		if t.IsStarted && !t.IsFinished && t.TemplatePlace == templatePlace {
+		if t.isActiveInstance(templatePlace) {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *Queue) getId() string {
+func (s *Queue) beginRun(task *Task) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	queuedTask, ok := s.idTask[task.Id]
+	if !ok || queuedTask != task {
+		return errors.New("Task not found")
+	}
+
+	task.mu.Lock()
+	defer task.mu.Unlock()
+	if task.IsStarted || task.isStarting {
+		return errors.New("Task already started")
+	}
+
+	if task.IsSingleInstance && task.TemplatePlace != "" {
+		for _, other := range s.Tasks {
+			if other == task {
+				continue
+			}
+			if other.isActiveInstance(task.TemplatePlace) {
+				return fmt.Errorf("active instance exists %v", task.TemplatePlace)
+			}
+		}
+	}
+
+	task.isStarting = true
+	return nil
+}
+
+func (s *Queue) getIdLocked() string {
 	var id string
 	for {
 		id = uuid.New().String()[:7]
@@ -115,34 +157,34 @@ func (s *Queue) getId() string {
 }
 
 func (s *Queue) Save() {
-	if len(s.ch) == 0 {
-		s.ch <- 1
+	select {
+	case s.ch <- 1:
+	default:
 	}
 }
 
 func (s *Queue) WriteQueue() error {
-	reader := bytes.NewReader(nil)
+	s.mu.RLock()
+	tasks := append([]*Task(nil), s.Tasks...)
+	s.mu.RUnlock()
 
-	s.mu.Lock()
-	data, err := json.Marshal(s)
-	s.mu.Unlock()
-
-	if err == nil {
-		reader.Reset(data)
-		path := getQueuePath()
-		err = atomic.WriteFile(path, reader)
+	data, err := json.Marshal(struct {
+		Tasks []*Task `json:"tasks"`
+	}{Tasks: tasks})
+	if err != nil {
 		return err
 	}
-	return nil
+	return atomic.WriteFile(getQueuePath(), bytes.NewReader(data))
 }
 
 func (s *Queue) RunOnBoot(config *cfg.Config) {
 	unic := map[string]bool{}
 	ids := make([]string, 0)
 
-	for _, task := range s.Tasks {
-		if task.IsStartOnBoot && !unic[task.TemplatePlace] {
-			unic[task.TemplatePlace] = true
+	for _, task := range s.GetAll(config) {
+		taskBase := task.taskBaseSnapshot()
+		if taskBase.IsStartOnBoot && !unic[taskBase.TemplatePlace] {
+			unic[taskBase.TemplatePlace] = true
 			ids = append(ids, task.Id)
 		}
 	}
@@ -161,16 +203,9 @@ func (s *Queue) RunOnBoot(config *cfg.Config) {
 func (s *Queue) Cleanup(config *cfg.Config) {
 	var delIds []string
 
-	for _, task := range s.Tasks {
-		if !task.IsStarted ||
-			!task.IsFinished ||
-			task.IsCanceled ||
-			task.IsError ||
-			task.ExpiresAt.IsZero() {
-			continue
-		}
-
-		if time.Now().After(task.ExpiresAt) {
+	now := time.Now()
+	for _, task := range s.GetAll(config) {
+		if task.isExpired(now) {
 			delIds = append(delIds, task.Id)
 		}
 	}
@@ -185,9 +220,9 @@ func (s *Queue) Cleanup(config *cfg.Config) {
 func (s *Queue) CleanupByStatuses(statuses []string, config *cfg.Config) {
 	var delIds []string
 
-	for _, t := range s.Tasks {
+	for _, t := range s.GetAll(config) {
 		for _, s := range statuses {
-			if (s == "CANCELED" && t.IsCanceled) || (s == "ERROR" && t.IsError) || (s == "FINISHED" && t.IsFinished) {
+			if t.hasExactStatus(s) {
 				delIds = append(delIds, t.Id)
 				break
 			}
@@ -207,9 +242,15 @@ func LoadQueue(config *cfg.Config) *Queue {
 	path := getQueuePath()
 	data, err := os.ReadFile(path)
 	if err == nil {
-		err = json.Unmarshal(data, &queue)
+		var persisted struct {
+			Tasks []*Task `json:"tasks"`
+		}
+		err = json.Unmarshal(data, &persisted)
+		if err == nil {
+			queue.Tasks = persisted.Tasks
+		}
 	}
-	if err != nil && os.IsNotExist(err) {
+	if err != nil && !os.IsNotExist(err) {
 		log.Println("Load queue error", err)
 	}
 

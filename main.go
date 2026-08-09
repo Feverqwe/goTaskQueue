@@ -152,7 +152,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 			default:
 			}
 		}
-		if !task.IsPty || !task.IsStarted || task.IsFinished {
+		if !task.NeedsInitialPtyResize() {
 			signalHistoryReady()
 		}
 
@@ -213,10 +213,11 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		}
 
 		offset := int64(-1)
-		lastValue := -1
 		dataType := HISTORY_DATA
+		changes, unsubscribe := task.SubscribeChanges()
+		defer unsubscribe()
 		for {
-			if task.Combined != nil {
+			if task.HasCombinedLog() {
 				for {
 					newOffset, fragment, err := task.ReadCombined(offset)
 					if err != nil {
@@ -236,10 +237,9 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				}
 			}
 			dataType = ACTUAL_DATA
-			if lastValue == 0 {
+			if <-changes == 0 {
 				break
 			}
-			lastValue = task.Wait()
 		}
 	}
 

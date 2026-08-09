@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/natefinch/atomic"
 )
@@ -299,8 +300,11 @@ func cleanEmptyFolders(place string) error {
 }
 
 var TEMPLATES_CACHE []Template
+var templatesCacheMu sync.Mutex
 
 func GetTemplates() []Template {
+	templatesCacheMu.Lock()
+	defer templatesCacheMu.Unlock()
 	root := getTemplatesPath()
 
 	if TEMPLATES_CACHE == nil {
@@ -308,10 +312,12 @@ func GetTemplates() []Template {
 		TEMPLATES_CACHE = templates
 	}
 
-	return TEMPLATES_CACHE
+	return append([]Template(nil), TEMPLATES_CACHE...)
 }
 
 func FlushTemplateCache() {
+	templatesCacheMu.Lock()
+	defer templatesCacheMu.Unlock()
 	TEMPLATES_CACHE = nil
 }
 

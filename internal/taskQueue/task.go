@@ -1,8 +1,8 @@
 package taskQueue
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
 	logstore "goTaskQueue/internal/logStore"
@@ -88,9 +88,10 @@ type Task struct {
 	StartedAt      time.Time         `json:"startedAt"`
 	FinishedAt     time.Time         `json:"finishedAt"`
 	ExpiresAt      time.Time         `json:"expiresAt"`
-	mu             sync.Mutex
+	mu             sync.RWMutex
 	cmu            sync.RWMutex
 	qCh            []chan int
+	isStarting     bool
 	stdin          io.Writer
 	combinedOffset int64
 	ptyTerminal    *xterm.Terminal
@@ -100,20 +101,97 @@ type Task struct {
 	Assets         []TaskAsset `json:"assets"`
 }
 
-func (s *Task) Run(config *cfg.Config, queue *Queue) error {
-	if s.IsSingleInstance && s.TemplatePlace != "" && queue.HasInstance(s.TemplatePlace) {
-		return fmt.Errorf("active instance exists %v", s.TemplatePlace)
+func (s *Task) MarshalJSON() ([]byte, error) {
+	type taskJSON Task
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return json.Marshal((*taskJSON)(s))
+}
+
+func (s *Task) taskBaseSnapshot() TaskBase {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.TaskBase
+}
+
+func (s *Task) canDelete() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return !s.isStarting && (!s.IsStarted || s.IsFinished)
+}
+
+func (s *Task) isActiveInstance(templatePlace string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.TemplatePlace == templatePlace && (s.isStarting || (s.IsStarted && !s.IsFinished))
+}
+
+func (s *Task) isExpired(now time.Time) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.IsStarted && s.IsFinished && !s.IsCanceled && !s.IsError &&
+		!s.ExpiresAt.IsZero() && now.After(s.ExpiresAt)
+}
+
+func (s *Task) hasExactStatus(status string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.State == status && (status == "CANCELED" || status == "ERROR" || status == "FINISHED")
+}
+
+func (s *Task) NeedsInitialPtyResize() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.IsPty && s.IsStarted && !s.IsFinished
+}
+
+func (s *Task) HasCombinedLog() bool {
+	s.cmu.RLock()
+	defer s.cmu.RUnlock()
+	return s.Combined != nil
+}
+
+func (s *Task) GetLog(logType string) *shared.DataStore {
+	if logType == LOG_COMBINED {
+		s.cmu.RLock()
+		defer s.cmu.RUnlock()
+		return s.Combined
 	}
 
-	if s.IsPty {
-		return s.RunPty(config)
-	} else {
-		return s.RunDirect(config)
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if logType == LOG_STDOUT {
+		return s.Stdout
 	}
+	if logType == LOG_STDERR {
+		return s.Stderr
+	}
+	return nil
+}
+
+func (s *Task) Run(config *cfg.Config, queue *Queue) error {
+	if err := queue.beginRun(s); err != nil {
+		return err
+	}
+
+	var err error
+	if s.IsPty {
+		err = s.RunPty(config)
+	} else {
+		err = s.RunDirect(config)
+	}
+	if err != nil {
+		s.mu.Lock()
+		s.isStarting = false
+		s.mu.Unlock()
+	}
+	return err
 }
 
 func (s *Task) getEnvVariables(config *cfg.Config) []string {
-	return append(config.RunEnv,
+	env := append([]string(nil), config.RunEnv...)
+	return append(env,
 		"TASK_QUEUE_ID="+s.Id,
 		"TASK_QUEUE_URL="+config.GetBrowserAddress(),
 		"TASK_TEMPLATE_PLACE="+s.TemplatePlace,
@@ -135,6 +213,9 @@ func (s *Task) getWorkingDir() string {
 
 func (s *Task) RunPty(config *cfg.Config) error {
 	runAs := config.PtyRun
+	if len(runAs) == 0 || runAs[0] == "" {
+		return errors.New("PTY run command is not configured")
+	}
 	runCommand := runAs[0]
 	runArgs := make([]string, 0)
 	if len(runAs) > 1 {
@@ -155,18 +236,21 @@ func (s *Task) RunPty(config *cfg.Config) error {
 		return err
 	}
 
-	s.stdin = f
-
 	output, err := s.getStdWriter(config, s.IsWriteLogs, LOG_COMBINED, MemBufSize)
 	if err != nil {
+		_ = f.Close()
+		_ = process.Process.Kill()
+		_ = process.Wait()
 		return err
 	}
+	s.cmu.Lock()
 	s.Combined = output
 	s.ptyTerminal = xterm.New(
 		xterm.WithCols(PtyInitialCols),
 		xterm.WithRows(PtyInitialRows),
 		xterm.WithScrollback(PtySnapshotScrollback),
 	)
+	s.cmu.Unlock()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -199,7 +283,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 				}
 				s.cmu.Unlock()
 
-				go s.pushChanges(1)
+				s.pushChanges(1)
 			}
 			if err != nil {
 				if !errors.Is(err, io.EOF) && !errors.Is(err, syscall.EIO) {
@@ -211,40 +295,44 @@ func (s *Task) RunPty(config *cfg.Config) error {
 		wg.Done()
 	}()
 
+	s.mu.Lock()
+	s.stdin = f
 	s.StartedAt = time.Now()
-
 	s.process = process
 	s.IsStarted = true
-	s.syncStatusAndSave()
+	s.isStarting = false
+	s.syncStatusLocked()
+	s.mu.Unlock()
+	s.queue.Save()
 
 	go func() {
 		defer f.Close()
 
 		wg.Wait()
-		err = process.Wait()
+		waitErr := process.Wait()
 
-		s.FinishedAt = time.Now()
-
+		s.cmu.Lock()
 		if s.Combined != nil {
-			s.cmu.Lock()
 			s.freezePtyTerminalLocked()
 			if err := s.Combined.Close(); err != nil {
 				log.Println("Close combined error", err)
 			}
-			s.cmu.Unlock()
 		}
+		s.cmu.Unlock()
 
+		s.mu.Lock()
+		s.FinishedAt = time.Now()
 		s.IsFinished = true
-		if err != nil {
+		if waitErr != nil {
 			s.IsError = true
-			s.Error = err.Error()
+			s.Error = waitErr.Error()
 		}
+		s.onFinishLocked()
+		s.syncStatusLocked()
+		s.mu.Unlock()
+		s.queue.Save()
 
-		s.onFinish()
-
-		s.syncStatusAndSave()
-
-		go s.pushChanges(0)
+		s.pushChanges(0)
 	}()
 
 	return nil
@@ -252,6 +340,9 @@ func (s *Task) RunPty(config *cfg.Config) error {
 
 func (s *Task) RunDirect(config *cfg.Config) error {
 	runAs := config.Run
+	if len(runAs) == 0 || runAs[0] == "" {
+		return errors.New("run command is not configured")
+	}
 	runCommand := runAs[0]
 	runArgs := make([]string, 0)
 	if len(runAs) > 1 {
@@ -273,10 +364,11 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	if err != nil {
 		return err
 	}
+	s.cmu.Lock()
 	s.Combined = output
+	s.cmu.Unlock()
 
 	stdin, _ := process.StdinPipe()
-	s.stdin = stdin
 
 	var wg sync.WaitGroup
 	for _, pt := range pipes {
@@ -294,10 +386,14 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 		}
 		if pT == Err {
 			pipe, _ = process.StderrPipe()
+			s.mu.Lock()
 			s.Stderr = buffer
+			s.mu.Unlock()
 		} else {
 			pipe, _ = process.StdoutPipe()
+			s.mu.Lock()
 			s.Stdout = buffer
+			s.mu.Unlock()
 		}
 
 		go func() {
@@ -323,7 +419,7 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 					}
 					s.cmu.Unlock()
 
-					go s.pushChanges(1)
+					s.pushChanges(1)
 				}
 				if err != nil {
 					if err != io.EOF {
@@ -341,49 +437,57 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 		return err
 	}
 
+	s.mu.Lock()
+	s.stdin = stdin
 	s.StartedAt = time.Now()
-
 	s.process = process
 	s.IsStarted = true
-	s.syncStatusAndSave()
+	s.isStarting = false
+	s.syncStatusLocked()
+	s.mu.Unlock()
+	s.queue.Save()
 
 	go func() {
 		defer stdin.Close()
 
 		wg.Wait()
-		err = process.Wait()
+		waitErr := process.Wait()
 
-		s.FinishedAt = time.Now()
-
-		if s.Stderr != nil {
-			if err := s.Stderr.Close(); err != nil {
+		s.mu.RLock()
+		stderr := s.Stderr
+		stdout := s.Stdout
+		s.mu.RUnlock()
+		if stderr != nil {
+			if err := stderr.Close(); err != nil {
 				log.Println("Close stderr error", err)
 			}
 		}
-		if s.Stdout != nil {
-			if err := s.Stdout.Close(); err != nil {
+		if stdout != nil {
+			if err := stdout.Close(); err != nil {
 				log.Println("Close stdout error", err)
 			}
 		}
+		s.cmu.Lock()
 		if s.Combined != nil {
-			s.cmu.RLock()
 			if err := s.Combined.Close(); err != nil {
 				log.Println("Close combined error", err)
 			}
-			s.cmu.RUnlock()
 		}
+		s.cmu.Unlock()
 
+		s.mu.Lock()
+		s.FinishedAt = time.Now()
 		s.IsFinished = true
-		if err != nil {
+		if waitErr != nil {
 			s.IsError = true
-			s.Error = err.Error()
+			s.Error = waitErr.Error()
 		}
+		s.onFinishLocked()
+		s.syncStatusLocked()
+		s.mu.Unlock()
+		s.queue.Save()
 
-		s.onFinish()
-
-		s.syncStatusAndSave()
-
-		go s.pushChanges(0)
+		s.pushChanges(0)
 	}()
 
 	return nil
@@ -394,6 +498,9 @@ func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
 	defer s.cmu.RUnlock()
 
 	combined := s.Combined
+	if combined == nil {
+		return offset, nil, errors.New("combined log is not available")
+	}
 	combinedOffset := s.combinedOffset
 	combinedLen := combined.Len()
 	if offset == -1 && s.IsPty {
@@ -451,11 +558,18 @@ func (s *Task) freezePtyTerminalLocked() {
 }
 
 func (s *Task) Send(data string) error {
+	s.mu.RLock()
 	if !s.IsStarted || s.IsFinished {
+		s.mu.RUnlock()
 		return nil
 	}
+	stdin := s.stdin
+	s.mu.RUnlock()
+	if stdin == nil {
+		return errors.New("process input is not available")
+	}
 
-	_, err := io.WriteString(s.stdin, data)
+	_, err := io.WriteString(stdin, data)
 	return err
 }
 
@@ -475,21 +589,45 @@ func (s *Task) Resize(screenSize *PtyScreenSize) error {
 		s.ptyTerminal.Resize(screenSize.Cols, screenSize.Rows)
 	}
 	s.cmu.Unlock()
-	if f, ok := s.stdin.(*os.File); ok {
+	s.mu.RLock()
+	stdin := s.stdin
+	s.mu.RUnlock()
+	if f, ok := stdin.(*os.File); ok {
 		return pty.Setsize(f, &ws)
 	}
 	return nil
 }
 
 func (s *Task) Wait() int {
-	if s.IsFinished {
-		return 0
-	}
+	changes, unsubscribe := s.SubscribeChanges()
+	defer unsubscribe()
+	return <-changes
+}
+
+func (s *Task) SubscribeChanges() (<-chan int, func()) {
 	s.mu.Lock()
-	ch := make(chan int)
+	ch := make(chan int, 1)
+	if s.IsFinished {
+		ch <- 0
+		s.mu.Unlock()
+		return ch, func() {}
+	}
 	s.qCh = append(s.qCh, ch)
 	s.mu.Unlock()
-	return <-ch
+
+	var once sync.Once
+	return ch, func() {
+		once.Do(func() {
+			s.mu.Lock()
+			for index, candidate := range s.qCh {
+				if candidate == ch {
+					s.qCh = append(s.qCh[:index], s.qCh[index+1:]...)
+					break
+				}
+			}
+			s.mu.Unlock()
+		})
+	}
 }
 
 func (s *Task) Kill() error {
@@ -497,11 +635,19 @@ func (s *Task) Kill() error {
 }
 
 func (s *Task) Signal(sig syscall.Signal) error {
+	s.mu.RLock()
+	if !s.IsStarted || s.process == nil || s.process.Process == nil {
+		s.mu.RUnlock()
+		return errors.New("process_not_started")
+	}
 	if s.IsFinished {
+		s.mu.RUnlock()
 		return errors.New("process_finished")
 	}
+	process := s.process.Process
+	s.mu.RUnlock()
 	if runtime.GOOS == "linux" {
-		if pids, err := GetProcessPids(s.process.Process.Pid); err == nil {
+		if pids, err := GetProcessPids(process.Pid); err == nil {
 			var err error
 			for _, pid := range pids {
 				suberr := syscall.Kill(pid, sig)
@@ -510,10 +656,10 @@ func (s *Task) Signal(sig syscall.Signal) error {
 			return err
 		} else {
 			log.Printf("Get child pids error, use default signal: %s\n", err)
-			return s.process.Process.Signal(sig)
+			return process.Signal(sig)
 		}
 	} else {
-		return s.process.Process.Signal(sig)
+		return process.Signal(sig)
 	}
 }
 
@@ -527,28 +673,35 @@ func (s *Task) getLinkIndex(name string) int {
 }
 
 func (s *Task) GetLink(name string) *TaskLink {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	index := s.getLinkIndex(name)
 	if index != -1 {
-		return &s.Links[index]
+		link := s.Links[index]
+		return &link
 	}
 	return nil
 }
 
 func (s *Task) AddLink(taskLink TaskLink) {
+	s.mu.Lock()
 	idx := s.getLinkIndex(taskLink.Name)
 	if idx == -1 {
 		s.Links = append(s.Links, taskLink)
 	} else {
-		s.Links = append(append(s.Links[:idx], taskLink), s.Links[:idx+1]...)
+		s.Links[idx] = taskLink
 	}
+	s.mu.Unlock()
 	s.queue.Save()
 }
 
 func (s *Task) DelLink(name string) {
+	s.mu.Lock()
 	index := s.getLinkIndex(name)
 	if index != -1 {
-		s.Links = append(s.Links[:index], s.Links[:index+1]...)
+		s.Links = append(s.Links[:index], s.Links[index+1:]...)
 	}
+	s.mu.Unlock()
 	s.queue.Save()
 }
 
@@ -567,35 +720,48 @@ func (s *Task) AddAsset(path string) (*TaskAsset, error) {
 		return nil, err
 	}
 	asset := TaskAsset{Path: path, IsDir: info.IsDir()}
+	s.mu.Lock()
 	idx := s.getAssetIndex(path)
 	if idx == -1 {
 		s.Assets = append(s.Assets, asset)
 	} else {
-		s.Assets = append(append(s.Assets[:idx], asset), s.Assets[:idx+1]...)
+		s.Assets[idx] = asset
 	}
+	s.mu.Unlock()
 	s.queue.Save()
 	return &asset, nil
 }
 
 func (s *Task) DelAsset(path string) {
+	s.mu.Lock()
 	index := s.getAssetIndex(path)
 	if index != -1 {
-		s.Assets = append(s.Assets[:index], s.Assets[:index+1]...)
+		s.Assets = append(s.Assets[:index], s.Assets[index+1:]...)
 	}
+	s.mu.Unlock()
 	s.queue.Save()
 }
 
 func (s *Task) pushChanges(value int) {
-	s.mu.Lock()
-	q := s.qCh
-	s.qCh = make([]chan int, 0)
-	s.mu.Unlock()
+	s.mu.RLock()
+	q := append([]chan int(nil), s.qCh...)
+	s.mu.RUnlock()
 	for _, ch := range q {
-		ch <- value
+		select {
+		case ch <- value:
+		default:
+			if value == 0 {
+				select {
+				case <-ch:
+				default:
+				}
+				ch <- value
+			}
+		}
 	}
 }
 
-func (s *Task) syncStatus() {
+func (s *Task) syncStatusLocked() {
 	if s.IsCanceled {
 		s.State = "CANCELED"
 	} else if s.IsError {
@@ -609,32 +775,53 @@ func (s *Task) syncStatus() {
 	}
 }
 
-func (s *Task) syncStatusAndSave() {
-	s.syncStatus()
-	s.queue.Save()
-}
-
 func (s *Task) Init(config *cfg.Config, queue *Queue) {
 	s.queue = queue
 
+	s.cmu.Lock()
 	if s.IsWriteLogs {
-		s.Combined, _ = s.openStdWriter(config, LOG_COMBINED)
+		if combined, err := s.openStdWriter(config, LOG_COMBINED); err == nil {
+			s.Combined = combined
+		} else if !os.IsNotExist(err) {
+			log.Println("Open combined log error", err)
+		}
 		if !s.IsOnlyCombined {
-			s.Stdout, _ = s.openStdWriter(config, LOG_STDOUT)
-			s.Stderr, _ = s.openStdWriter(config, LOG_STDERR)
+			if stdout, err := s.openStdWriter(config, LOG_STDOUT); err == nil {
+				s.Stdout = stdout
+			} else if !os.IsNotExist(err) {
+				log.Println("Open stdout log error", err)
+			}
+			if stderr, err := s.openStdWriter(config, LOG_STDERR); err == nil {
+				s.Stderr = stderr
+			} else if !os.IsNotExist(err) {
+				log.Println("Open stderr log error", err)
+			}
 		}
 	}
+	s.cmu.Unlock()
 
+	recovered := false
+	s.mu.Lock()
 	if s.IsStarted && !s.IsFinished {
 		s.IsCanceled = true
 		s.IsFinished = true
-		s.onFinish()
-		s.syncStatus()
+		if s.FinishedAt.IsZero() {
+			s.FinishedAt = time.Now()
+		}
+		s.onFinishLocked()
+		s.syncStatusLocked()
+		recovered = true
+	}
+	s.mu.Unlock()
+	if recovered {
+		queue.Save()
 	}
 }
 
 func (s *Task) SetLabel(label string) {
+	s.mu.Lock()
 	s.Label = label
+	s.mu.Unlock()
 	s.queue.Save()
 }
 
@@ -664,7 +851,7 @@ func (s *Task) getLogFilename(c *cfg.Config, t string) string {
 	return path.Join(c.GetLogsFolder(), s.Id+"-"+t)
 }
 
-func (s *Task) onFinish() {
+func (s *Task) onFinishLocked() {
 	if s.IsCanceled || s.IsError {
 		return
 	}
@@ -682,7 +869,7 @@ func NewTask(id string, taskBase TaskBase) *Task {
 		Links:     make([]TaskLink, 0),
 	}
 
-	task.syncStatus()
+	task.syncStatusLocked()
 
 	return &task
 }

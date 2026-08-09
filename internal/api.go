@@ -425,12 +425,8 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		}
 
 		var data *shared.DataStore
-		if logType == "stdout" && task.Stdout != nil {
-			data = task.Stdout
-		} else if logType == "stderr" && task.Stderr != nil {
-			data = task.Stderr
-		} else if logType == "combined" && task.Combined != nil {
-			data = task.Combined
+		if logType == taskQueue.LOG_STDOUT || logType == taskQueue.LOG_STDERR || logType == taskQueue.LOG_COMBINED {
+			data = task.GetLog(logType)
 		}
 		if data == nil {
 			sendStatus(w, 404)
