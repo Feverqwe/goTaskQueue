@@ -402,8 +402,12 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			config.TemplateOrder = payload.TemplateOrder
-			cfg.SaveConfig(*config)
+			nextConfig := *config
+			nextConfig.TemplateOrder = append([]string(nil), payload.TemplateOrder...)
+			if err := cfg.SaveConfig(nextConfig); err != nil {
+				return "", err
+			}
+			config.TemplateOrder = nextConfig.TemplateOrder
 
 			return "ok", nil
 		})

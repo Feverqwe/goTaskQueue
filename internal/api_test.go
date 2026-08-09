@@ -4,6 +4,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -68,6 +70,39 @@ func TestCloneAndRunUnknownTaskReturnsApiError(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), "Task not found") {
 		t.Fatalf("body = %q, want task-not-found error", response.Body.String())
+	}
+}
+
+func TestSetTemplateOrderReturnsSaveErrorAndKeepsConfig(t *testing.T) {
+	originalProfilePath := cfg.PROFILE_PATH_CACHE
+	t.Cleanup(func() {
+		cfg.PROFILE_PATH_CACHE = originalProfilePath
+	})
+
+	profileFile := filepath.Join(t.TempDir(), "profile-file")
+	if err := os.WriteFile(profileFile, []byte("not a directory"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cfg.PROFILE_PATH_CACHE = profileFile
+
+	config := &cfg.Config{TemplateOrder: []string{"old"}}
+	router := NewRouter()
+	HandleApi(router, taskQueue.NewQueue(), memstorage.GetMemStorage(), config, make(chan string))
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/api/setTemplateOrder",
+		strings.NewReader(`{"templateOrder":["new"]}`),
+	)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusInternalServerError)
+	}
+	if len(config.TemplateOrder) != 1 || config.TemplateOrder[0] != "old" {
+		t.Fatalf("template order = %#v, want unchanged order", config.TemplateOrder)
 	}
 }
 
