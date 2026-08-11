@@ -46,9 +46,16 @@ Read these files before making a non-trivial change:
 - Use Node.js 24 for UI work. Run `nvm use` from the repository root to select
   the version pinned in `.nvmrc` before installing dependencies or running UI
   checks.
+- Use Storybook as the default isolated environment for visual UI work. Add or
+  update stories for reusable components whose rendered states change, then
+  inspect the relevant stories at both desktop and narrow viewport widths.
+- Keep stories deterministic and independent of the Go server. Represent
+  loading, empty, error, disabled, and other important states with story args or
+  local mocks instead of live API calls.
 - Do not commit `tq-ui/node_modules/`, `tq-ui/dist/`, `assets/www/`,
-  `internal/logStore/test/`, local profile data, logs, lock files, or compiled
-  binaries. The log-store tests currently leave their fixture directory behind.
+  `tq-ui/storybook-static/`, `internal/logStore/test/`, local profile data,
+  logs, lock files, or compiled binaries. The log-store tests currently leave
+  their fixture directory behind.
 - Keep changes focused. Do not reformat unrelated Go or TypeScript files.
 - Add or update tests for behavior changes where practical. Existing Go tests
   use the standard `testing` package.
@@ -69,7 +76,12 @@ cd tq-ui
 npm run tsc
 npm run lint
 npm run build
+npm run build-storybook # required for changes that affect rendered UI
 ```
+
+For visual changes, also run `npm run storybook`, open the relevant stories,
+and check the layout at desktop and narrow viewport widths. Report which stories
+and states were inspected in the handoff.
 
 For a cross-layer change, run both Go and UI checks. If a command cannot be run,
 state which command was skipped and why in the handoff.

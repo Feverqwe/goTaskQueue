@@ -7,5 +7,6 @@ storage.json
 open.lock
 goTaskQueue
 /ui/dist
+/tq-ui/storybook-static
 /assets/www
 scripts/appify

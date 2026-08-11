@@ -37,6 +37,7 @@ cd tq-ui
 npm run tsc
 npm run lint
 npm run build
+npm run build-storybook # for changes that affect rendered UI
 ```
 
 The production bundle and watch build use Rspack. Type checking is a separate
@@ -44,6 +45,23 @@ step because Rspack uses its built-in SWC transformer for TypeScript and JSX.
 
 `npm run lint` also checks Prettier formatting. Use `npm run lint:fix` only for
 files intentionally being changed.
+
+## Storybook
+
+Use Storybook to develop and visually inspect UI components without running the
+Go server:
+
+```sh
+cd tq-ui
+npm run storybook
+```
+
+Storybook is served at `http://localhost:6006`. Stories live next to their
+components as `*.stories.tsx` files and use the same MUI theme as the
+application. For a rendered UI change, inspect the relevant states at desktop
+and narrow viewport widths, then verify the standalone bundle with
+`npm run build-storybook`. The generated `storybook-static/` directory is not
+committed.
 
 ## Local run
 
@@ -116,6 +134,8 @@ For a UI-only change:
    `src/components/types.ts`.
 2. Run `npm run tsc` and `npm run lint`.
 3. Run `npm run build` to catch bundling errors.
+4. For rendered UI changes, update the relevant stories, inspect them in
+   Storybook at desktop and narrow widths, and run `npm run build-storybook`.
 
 For an API or task-model change, validate both layers and consider compatibility
 with existing `config.json`, `queue.json`, templates, and stored logs.

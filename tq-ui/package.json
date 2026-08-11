@@ -10,11 +10,13 @@
     "build": "rspack build --mode production",
     "dev": "rspack build --mode development --watch",
     "release": "npm run clean:dist && npm run build && npm run clean:www && npm run copy:dist",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "build-storybook": "storybook build",
     "tsc": "tsc --noEmit",
-    "lint": "npx eslint ./src && npm run prettier",
-    "prettier": "npx prettier --check ./src",
-    "prettier:fix": "npx prettier --write ./src",
-    "lint:fix": "npx eslint --fix ./src && npm run prettier:fix"
+    "lint": "npx eslint ./src ./.storybook && npm run prettier",
+    "prettier": "npx prettier --check ./src ./.storybook",
+    "prettier:fix": "npx prettier --write ./src ./.storybook",
+    "lint:fix": "npx eslint --fix ./src ./.storybook && npm run prettier:fix"
   },
   "author": "",
   "license": "ISC",
@@ -43,6 +45,7 @@
     "@gravity-ui/eslint-config": "^4.3.2",
     "@rspack/cli": "^2.1.8",
     "@rspack/core": "^2.1.8",
+    "@storybook/react-vite": "^10.5.7",
     "@types/lodash.throttle": "^4.1.9",
     "@types/path-browserify": "^1.0.3",
     "@types/react-dom": "^19.2.4",
@@ -50,7 +53,9 @@
     "eslint": "^9.39.5",
     "ncp": "^2.0.0",
     "prettier": "^3.9.6",
-    "typescript": "^6.0.3"
+    "storybook": "^10.5.7",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.1"
   },
   "overrides": {
     "dompurify": "^3.4.13"
