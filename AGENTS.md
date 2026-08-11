@@ -47,8 +47,11 @@ Read these files before making a non-trivial change:
   the version pinned in `.nvmrc` before installing dependencies or running UI
   checks.
 - Use Storybook as the default isolated environment for visual UI work. Add or
-  update stories for reusable components whose rendered states change, then
-  inspect the relevant stories at both desktop and narrow viewport widths.
+  update stories for reusable components whose rendered states change. Do not
+  launch Storybook after every incremental edit; first complete a coherent UI
+  implementation that broadly matches the user's request, then inspect the
+  relevant stories at both desktop and narrow viewport widths and refine the
+  implementation if the inspection reveals issues.
 - Keep stories deterministic and independent of the Go server. Represent
   loading, empty, error, disabled, and other important states with story args or
   local mocks instead of live API calls.
@@ -79,9 +82,11 @@ npm run build
 npm run build-storybook # required for changes that affect rendered UI
 ```
 
-For visual changes, also run `npm run storybook`, open the relevant stories,
-and check the layout at desktop and narrow viewport widths. Report which stories
-and states were inspected in the handoff.
+For visual changes, once the implementation is coherent and broadly matches the
+user's request, run `npm run storybook`, open the relevant stories, and check the
+layout at desktop and narrow viewport widths. Treat this as a near-final visual
+validation step rather than a check after each edit. Report which stories and
+states were inspected in the handoff.
 
 For a cross-layer change, run both Go and UI checks. If a command cannot be run,
 state which command was skipped and why in the handoff.

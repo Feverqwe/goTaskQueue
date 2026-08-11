@@ -22,7 +22,7 @@ const CommandFieldAsync: FC<CommandFieldProps> = (props) => {
     };
   }, []);
 
-  if (!ref.current) {
+  if (ref && !ref.current) {
     ref.current = {
       getValue: () => defaultValue ?? '',
     };

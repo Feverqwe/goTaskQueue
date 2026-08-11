@@ -12,16 +12,20 @@ export interface CommandFieldRef {
 
 export interface CommandFieldProps {
   defaultValue?: string;
-  ref: React.RefObject<CommandFieldRef>;
+  ref?: React.RefObject<CommandFieldRef>;
   readOnly?: boolean;
+  onChange?: (value: string) => void;
 }
 
-const CommandField: FC<CommandFieldProps> = ({defaultValue, ref, readOnly}) => {
+const CommandField: FC<CommandFieldProps> = ({defaultValue, ref, readOnly, onChange}) => {
   const refDefaultValue = useRef(defaultValue);
+  const refOnChange = useRef(onChange);
   const refCtr = useRef<HTMLDivElement>(null);
   const refEditor = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  ref.current = useMemo(
+  refOnChange.current = onChange;
+
+  const commandField = useMemo(
     () => ({
       getValue(): string {
         return refEditor.current?.getValue() ?? '';
@@ -29,6 +33,9 @@ const CommandField: FC<CommandFieldProps> = ({defaultValue, ref, readOnly}) => {
     }),
     [],
   );
+  if (ref) {
+    ref.current = commandField;
+  }
 
   useEffect(() => {
     const ctrNode = refCtr.current;
@@ -57,6 +64,9 @@ const CommandField: FC<CommandFieldProps> = ({defaultValue, ref, readOnly}) => {
       if (contentHeightChanged) {
         setCtrHeight(ctrNode);
       }
+    });
+    instance.onDidChangeModelContent(() => {
+      refOnChange.current?.(instance.getValue());
     });
 
     setCtrHeight(ctrNode);
