@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import EditIcon from '@mui/icons-material/Edit';
+import DownloadIcon from '@mui/icons-material/Download';
 import {Task} from '../types';
 import {api} from '../../tools/api';
 import IconActionButton from '../IconActionButton/IconActionButton';
@@ -152,7 +153,43 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
           </>
         ) : null} */}
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{flexWrap: 'wrap'}}>
+        <Box sx={{display: 'flex', gap: 1, mr: 'auto', flexWrap: 'wrap'}}>
+          {!isOnlyCombined && (
+            <>
+              <Button
+                variant="outlined"
+                component="a"
+                href={`/api/task/stdout?id=${encodeURIComponent(id)}`}
+                download="stdout.log"
+                startIcon={<DownloadIcon />}
+              >
+                stdout.log
+              </Button>
+              <Button
+                variant="outlined"
+                component="a"
+                href={`/api/task/stderr?id=${encodeURIComponent(id)}`}
+                download="stderr.log"
+                startIcon={<DownloadIcon />}
+              >
+                stderr.log
+              </Button>
+            </>
+          )}
+          <Button
+            variant="outlined"
+            component="a"
+            href={`/api/task/combined?id=${encodeURIComponent(id)}`}
+            download="combined.log"
+            startIcon={<DownloadIcon />}
+          >
+            combined.log
+          </Button>
+        </Box>
+        <Button variant="outlined" onClick={onUpdate}>
+          Refresh
+        </Button>
         <Button sx={{ml: 1}} variant="outlined" onClick={onClose}>
           Close
         </Button>

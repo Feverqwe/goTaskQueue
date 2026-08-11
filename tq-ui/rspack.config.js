@@ -28,6 +28,9 @@ module.exports = (_env, argv) => {
         },
       },
     },
+    performance: {
+      hints: false,
+    },
     module: {
       rules: [
         {
