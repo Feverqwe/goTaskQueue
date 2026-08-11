@@ -23,10 +23,10 @@ const TaskPage: FC = () => {
   const refTaskStore = useRef(taskStore);
   refTaskStore.current = taskStore;
 
-  const handleUpdate = useCallback(() => {
+  const handleUpdate = useCallback(async () => {
     const {task} = refTaskStore.current;
     if (!task) return;
-    fetchTask(task.id);
+    await fetchTask(task.id);
   }, [fetchTask]);
 
   useEffect(() => {

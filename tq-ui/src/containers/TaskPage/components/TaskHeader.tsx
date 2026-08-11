@@ -13,8 +13,7 @@ import StopIcon from '@mui/icons-material/Stop';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {useNavigate} from 'react-router-dom';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import TaskName from './TaskName';
 import TaskStatusIcon from './TaskStatusIcon';
 import {api} from '../../../tools/api';
@@ -25,14 +24,12 @@ import IconActionButton from '../../../components/IconActionButton/IconActionBut
 import {RootStoreCtx} from '../../../components/RootStore/RootStoreCtx';
 import TaskDialog from '../../../components/TaskDialog/TaskDialog';
 
-interface TaskInfoProps {
+interface TaskHeaderProps {
   task: Task;
-  showInfo: boolean;
-  onToggleInfo: () => void;
   onUpdate: () => void;
 }
 
-const TaskHeader: FC<TaskInfoProps> = ({task, showInfo, onToggleInfo, onUpdate}) => {
+const TaskHeader: FC<TaskHeaderProps> = ({task, onUpdate}) => {
   const navigate = useNavigate();
   const {name} = useContext(RootStoreCtx);
   const {id, state, label, command, error} = task;
@@ -70,6 +67,7 @@ const TaskHeader: FC<TaskInfoProps> = ({task, showInfo, onToggleInfo, onUpdate})
       startedAt: _d,
       finishedAt: _e,
       links: _f,
+      assets: _g,
       ...newTaskProps
     } = task;
 
@@ -88,10 +86,6 @@ const TaskHeader: FC<TaskInfoProps> = ({task, showInfo, onToggleInfo, onUpdate})
   const handleCloseTaskDialog = useCallback(() => {
     setShowTaskDialog(false);
   }, []);
-
-  const handleExpandClick = useCallback(() => {
-    onToggleInfo();
-  }, [onToggleInfo]);
 
   const handleRestartTask = useCallback(
     async (runTask: AddTaskRequest) => {
@@ -219,8 +213,8 @@ const TaskHeader: FC<TaskInfoProps> = ({task, showInfo, onToggleInfo, onUpdate})
                     <RestartAltIcon />
                   </IconButton>
                 )}
-              <IconButton onClick={handleExpandClick} title="Expand">
-                {showInfo ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              <IconButton onClick={() => setShowTaskDialog(true)} title="Task details">
+                <InfoOutlinedIcon />
               </IconButton>
               <Box
                 sx={{

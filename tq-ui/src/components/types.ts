@@ -64,6 +64,11 @@ export interface TaskLink {
   title: string;
 }
 
+export interface TaskAsset {
+  path: string;
+  isDir: boolean;
+}
+
 export interface Task extends Omit<Required<RawTemplate>, 'place' | 'name' | 'variables'> {
   templatePlace: string;
   state: TaskState;
@@ -73,6 +78,7 @@ export interface Task extends Omit<Required<RawTemplate>, 'place' | 'name' | 'va
   finishedAt: string;
   expiresAt: string;
   links: TaskLink[];
+  assets: TaskAsset[] | null;
 }
 
 export interface PtyScreenSize {

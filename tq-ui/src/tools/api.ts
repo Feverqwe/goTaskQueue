@@ -5,6 +5,7 @@ import {
   CloneTaskRequest,
   RawTemplate,
   Task,
+  TaskAsset,
   TaskId,
 } from '../components/types';
 
@@ -78,6 +79,14 @@ export const api = {
   delTaskLink: action<{id: string; name: string}, string>({
     method: 'POST',
     path: '/api/task/delLink',
+  }),
+  addTaskAsset: action<{id: string; path: string}, TaskAsset>({
+    method: 'POST',
+    path: '/api/task/addAsset',
+  }),
+  delTaskAsset: action<{id: string; path: string}, string>({
+    method: 'POST',
+    path: '/api/task/delAsset',
   }),
   reloadConfig: action<void>({
     method: 'POST',

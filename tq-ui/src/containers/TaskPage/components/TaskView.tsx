@@ -1,7 +1,6 @@
-import React, {FC, useCallback, useState} from 'react';
+import React, {FC} from 'react';
 import {Task} from '../../../components/types';
 import TaskHeader from './TaskHeader';
-import TaskInfo from './TaskInfo';
 import TaskLog from './TaskLog';
 
 interface TaskViewProps {
@@ -10,21 +9,9 @@ interface TaskViewProps {
 }
 
 const TaskView: FC<TaskViewProps> = ({task, onUpdate}) => {
-  const [showInfo, setInfo] = useState(false);
-
-  const handleToggleInfo = useCallback(() => {
-    setInfo((v) => !v);
-  }, []);
-
   return (
     <>
-      <TaskHeader
-        task={task}
-        showInfo={showInfo}
-        onToggleInfo={handleToggleInfo}
-        onUpdate={onUpdate}
-      />
-      {showInfo && <TaskInfo task={task} onUpdate={onUpdate} />}
+      <TaskHeader task={task} onUpdate={onUpdate} />
       <TaskLog task={task} onUpdate={onUpdate} />
     </>
   );

@@ -1,27 +1,54 @@
-import React, {FC, SyntheticEvent, useCallback, useRef, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useEffect, useMemo, useState} from 'react';
 import {
+  Alert,
   Box,
   Button,
+  Chip,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   IconButton,
-  InputAdornment,
-  SxProps,
-  Theme,
-  TextField,
+  Input,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Snackbar,
+  Tab,
+  Tabs,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import EditIcon from '@mui/icons-material/Edit';
-import DownloadIcon from '@mui/icons-material/Download';
-import {Task} from '../types';
+import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
+import LinkIcon from '@mui/icons-material/Link';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import SaveIcon from '@mui/icons-material/Save';
+import StopIcon from '@mui/icons-material/Stop';
+import {useNavigate} from 'react-router-dom';
+import {AddTaskRequest, RawTemplate, Task, TaskState} from '../types';
 import {api} from '../../tools/api';
+import ActionButton from '../ActionButton/ActionButton';
 import IconActionButton from '../IconActionButton/IconActionButton';
+import KillDialog from '../KillDialog/KillDialog';
+import TemplateDialog from '../TemplateDialog/TemplateDialog';
+import {useConfirmDialog} from '../../hooks/useConfirmDialog';
 import {getTaskName} from '../../containers/TaskPage/utils';
-import KeyValue from './components/KeyValue';
-import {CommandFieldRef} from '../CommandField/CommandField';
-import CommandFieldAsync from '../CommandField/CommandFieldAsync';
-import TaskLinks from '../../containers/TaskPage/components/TaskLinks';
+import TaskStatusIcon from '../../containers/TaskPage/components/TaskStatusIcon';
+import {copyText} from './components/CopyButton';
+import TaskCommand from './components/TaskCommand';
+import TaskOutput from './components/TaskOutput';
+import TaskOverview from './components/TaskOverview';
+import TaskResources from './components/TaskResources';
 
 interface TaskDialogViewProps {
   task: Task;
@@ -29,171 +56,371 @@ interface TaskDialogViewProps {
   onClose: () => void;
 }
 
-const KeyValueSx: SxProps<Theme> = {flexGrow: {sm: '1'}, width: {sm: '45%'}};
+const stateLabel: Record<TaskState, string> = {
+  [TaskState.Canceled]: 'Canceled',
+  [TaskState.Error]: 'Error',
+  [TaskState.Finished]: 'Finished',
+  [TaskState.Started]: 'Running',
+  [TaskState.Idle]: 'Idle',
+};
+
+function getTaskTemplate(task: Task): RawTemplate {
+  return {
+    place: task.templatePlace,
+    name: 'New task',
+    variables: [],
+    command: task.command,
+    label: task.label,
+    group: task.group,
+    isPty: task.isPty,
+    isOnlyCombined: task.isOnlyCombined,
+    isWriteLogs: task.isWriteLogs,
+    isSingleInstance: task.isSingleInstance,
+    isStartOnBoot: task.isStartOnBoot,
+    ttl: task.ttl,
+  };
+}
 
 const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
-  const {id, command, label, isOnlyCombined} = task;
-  const refCommand = useRef<CommandFieldRef>(null);
-  const refLabel = useRef<HTMLInputElement>(null);
-  const initLabel = label || command;
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [activeTab, setActiveTab] = useState(0);
   const [isEditTitle, setEditTitle] = useState(false);
-  /* const [isExtended, setExtended] = useState(false); */
+  const [draftLabel, setDraftLabel] = useState(task.label);
+  const [isStopDialogOpen, setStopDialogOpen] = useState(false);
+  const [restartTemplate, setRestartTemplate] = useState<RawTemplate | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const resourceCount = task.links.length + (task.assets?.length ?? 0);
+
+  useEffect(() => {
+    setDraftLabel(task.label);
+  }, [task.id, task.label]);
 
   const handleSetLabel = useCallback(
-    async (e: SyntheticEvent) => {
-      e.preventDefault();
-      const label = refLabel.current?.value || '';
-      if (label !== initLabel) {
-        await api.setTaskLabel({
-          id,
-          label,
-        });
+    async (event: SyntheticEvent) => {
+      event.preventDefault();
+      if (draftLabel !== task.label) {
+        await api.setTaskLabel({id: task.id, label: draftLabel});
         await onUpdate();
       }
       setEditTitle(false);
     },
-    [id, initLabel, onUpdate],
+    [draftLabel, onUpdate, task.id, task.label],
   );
 
-  const handleEdit = useCallback(() => setEditTitle(true), []);
+  const handleStart = useCallback(async () => {
+    await api.taskRun({id: task.id});
+    await onUpdate();
+  }, [onUpdate, task.id]);
 
-  /* const handleAdvancedClick = useCallback(() => {
-    setExtended((v) => !v);
-  }, []); */
+  const handleRunAgain = useCallback(async () => {
+    const newTask = await api.clone({id: task.id, isRun: true});
+    onClose();
+    navigate(`/task?id=${newTask.id}`);
+  }, [navigate, onClose, task.id]);
+
+  const handleStop = useCallback(() => setStopDialogOpen(true), []);
+
+  const handleStopSubmit = useCallback(
+    async (signal: number) => {
+      await api.taskSignal({id: task.id, signal});
+      await onUpdate();
+    },
+    [onUpdate, task.id],
+  );
+
+  const handleDuplicate = useCallback(async () => {
+    setMenuAnchor(null);
+    setActionError(null);
+    try {
+      const newTask = await api.clone({id: task.id});
+      onClose();
+      navigate(`/task?id=${newTask.id}`);
+    } catch (error) {
+      setActionError((error as Error).message);
+    }
+  }, [navigate, onClose, task.id]);
+
+  const handleEditAndRun = useCallback(() => {
+    setMenuAnchor(null);
+    setRestartTemplate(getTaskTemplate(task));
+  }, [task]);
+
+  const handleCreateFromTask = useCallback(
+    async (request: AddTaskRequest) => {
+      const newTask = await api.add(request);
+      onClose();
+      navigate(`/task?id=${newTask.id}`);
+    },
+    [navigate, onClose],
+  );
+
+  const handleDelete = useCallback(async () => {
+    await api.delete({id: task.id});
+    onClose();
+    navigate('/');
+  }, [navigate, onClose, task.id]);
+
+  const {onConfirmSubmit: handleConfirmDelete, confirmNode: deleteConfirmNode} = useConfirmDialog({
+    onSubmit: handleDelete,
+    title: 'Delete task?',
+    message: getTaskName(task),
+  });
+
+  const taskUrl = useMemo(
+    () => new URL(`/task?id=${encodeURIComponent(task.id)}`, window.location.href).toString(),
+    [task.id],
+  );
+
+  const handleCopy = useCallback(async (value: string, message: string) => {
+    setMenuAnchor(null);
+    setActionError(null);
+    try {
+      await copyText(value);
+      setCopyMessage(message);
+    } catch (error) {
+      setActionError((error as Error).message);
+    }
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setMenuAnchor(null);
+    setActionError(null);
+    try {
+      await onUpdate();
+    } catch (error) {
+      setActionError((error as Error).message);
+    }
+  }, [onUpdate]);
+
+  const primaryAction = useMemo(() => {
+    if (task.state === TaskState.Started) {
+      return (
+        <Button
+          size="small"
+          variant="contained"
+          color="warning"
+          startIcon={<StopIcon />}
+          onClick={handleStop}
+        >
+          Stop
+        </Button>
+      );
+    }
+    if (task.state === TaskState.Idle) {
+      return (
+        <ActionButton
+          size="small"
+          variant="contained"
+          startIcon={<PlayArrowIcon />}
+          onSubmit={handleStart}
+        >
+          Start
+        </ActionButton>
+      );
+    }
+    return (
+      <ActionButton
+        size="small"
+        variant="contained"
+        startIcon={<RestartAltIcon />}
+        onSubmit={handleRunAgain}
+      >
+        Run again
+      </ActionButton>
+    );
+  }, [handleRunAgain, handleStart, handleStop, task.state]);
 
   return (
     <>
-      <DialogTitle>
-        {!isEditTitle && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              fontSize: 'medium',
-            }}
-          >
-            <Box
-              sx={{
-                flexGrow: 1,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {getTaskName(task)}
-            </Box>
-            <IconButton size="small" onClick={handleEdit} sx={{ml: 1}}>
-              <EditIcon />
-            </IconButton>
-          </Box>
-        )}
-        {isEditTitle && (
-          <Box component="form" onSubmit={handleSetLabel}>
-            <TextField
-              size="small"
+      <DialogTitle sx={{px: {xs: 1.5, sm: 2}, py: 1}}>
+        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, minHeight: 30}}>
+          {!isEditTitle && (
+            <Chip
               variant="outlined"
-              defaultValue={initLabel}
-              label="Label"
-              fullWidth
-              slotProps={{
-                htmlInput: {ref: refLabel},
-                inputLabel: {shrink: true},
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconActionButton type="submit" edge="end" onSubmit={handleSetLabel}>
-                        <SaveIcon />
-                      </IconActionButton>
-                    </InputAdornment>
-                  ),
-                },
-              }}
+              size="small"
+              icon={<TaskStatusIcon task={task} />}
+              label={stateLabel[task.state]}
+              sx={{height: 24}}
             />
-          </Box>
-        )}
-      </DialogTitle>
-      <DialogContent>
-        {task.links.length > 0 && (
-          <Box
-            sx={{
-              mb: 1,
-            }}
-          >
-            <TaskLinks task={task} />
-          </Box>
-        )}
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 1,
-            mb: 1,
-            flexDirection: {xs: 'column', sm: 'row'},
-            flexWrap: {xs: 'nowrap', sm: 'wrap'},
-          }}
-        >
-          <KeyValue name="Created at" value={task.createdAt} type="datetime" sx={KeyValueSx} />
-          <KeyValue name="Started at" value={task.startedAt} type="datetime" sx={KeyValueSx} />
-          <KeyValue name="Finished at" value={task.finishedAt} type="datetime" sx={KeyValueSx} />
-          <KeyValue name="Expires at" value={task.expiresAt} type="datetime" sx={KeyValueSx} />
-        </Box>
-        <CommandFieldAsync
-          ref={refCommand as React.RefObject<CommandFieldRef>}
-          defaultValue={command}
-          readOnly
-        />
-        {/* <Button
-          size="small"
-          onClick={handleAdvancedClick}
-          startIcon={isExtended ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-        >
-          Advanced
-        </Button>
-        {isExtended ? (
-          <>
-          </>
-        ) : null} */}
-      </DialogContent>
-      <DialogActions sx={{flexWrap: 'wrap'}}>
-        <Box sx={{display: 'flex', gap: 1, mr: 'auto', flexWrap: 'wrap'}}>
-          {!isOnlyCombined && (
+          )}
+          {isEditTitle ? (
+            <Box
+              component="form"
+              onSubmit={handleSetLabel}
+              sx={{display: 'flex', alignItems: 'center', gap: 0.5, flexGrow: 1}}
+            >
+              <Input
+                autoFocus
+                fullWidth
+                placeholder={task.command}
+                value={draftLabel}
+                onChange={(event) => setDraftLabel(event.target.value)}
+                inputProps={{'aria-label': 'Label'}}
+                sx={{height: 30, fontSize: '1rem', fontWeight: 600}}
+              />
+              <IconActionButton size="small" aria-label="Save label" onSubmit={handleSetLabel}>
+                <SaveIcon fontSize="inherit" />
+              </IconActionButton>
+              <IconButton
+                size="small"
+                aria-label="Cancel editing"
+                onClick={() => {
+                  setDraftLabel(task.label);
+                  setEditTitle(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            </Box>
+          ) : (
+            <Box sx={{display: 'flex', alignItems: 'center', minWidth: 0, flexGrow: 1}}>
+              <Typography
+                variant="subtitle1"
+                noWrap
+                title={getTaskName(task)}
+                sx={{fontWeight: 600}}
+              >
+                {getTaskName(task)}
+              </Typography>
+              <Tooltip title="Edit label">
+                <IconButton size="small" onClick={() => setEditTitle(true)} sx={{ml: 0.5}}>
+                  <EditIcon fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+          {!isEditTitle && (
             <>
-              <Button
-                variant="outlined"
-                component="a"
-                href={`/api/task/stdout?id=${encodeURIComponent(id)}`}
-                download="stdout.log"
-                startIcon={<DownloadIcon />}
-              >
-                stdout.log
-              </Button>
-              <Button
-                variant="outlined"
-                component="a"
-                href={`/api/task/stderr?id=${encodeURIComponent(id)}`}
-                download="stderr.log"
-                startIcon={<DownloadIcon />}
-              >
-                stderr.log
-              </Button>
+              <Tooltip title="More actions">
+                <IconButton size="small" onClick={(event) => setMenuAnchor(event.currentTarget)}>
+                  <MoreVertIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <IconButton size="small" onClick={onClose} aria-label="Close">
+                <CloseIcon fontSize="small" />
+              </IconButton>
             </>
           )}
-          <Button
-            variant="outlined"
-            component="a"
-            href={`/api/task/combined?id=${encodeURIComponent(id)}`}
-            download="combined.log"
-            startIcon={<DownloadIcon />}
-          >
-            combined.log
-          </Button>
         </Box>
-        <Button variant="outlined" onClick={onUpdate}>
-          Refresh
-        </Button>
-        <Button sx={{ml: 1}} variant="outlined" onClick={onClose}>
+      </DialogTitle>
+
+      <DialogContent dividers sx={{p: 0}}>
+        {(task.error || actionError) && (
+          <Alert severity="error" onClose={actionError ? () => setActionError(null) : undefined}>
+            {actionError || task.error}
+          </Alert>
+        )}
+        <Tabs
+          value={activeTab}
+          onChange={(_, value: number) => setActiveTab(value)}
+          variant={isMobile ? 'fullWidth' : 'scrollable'}
+          scrollButtons={isMobile ? false : 'auto'}
+          aria-label="Task details"
+          sx={{
+            px: {xs: 0.5, sm: 2},
+            minHeight: 36,
+            '& .MuiTab-root': {
+              minWidth: {xs: 0, sm: 90},
+              minHeight: 36,
+              px: {xs: 0.5, sm: 1.25},
+              py: 0.5,
+              fontSize: {xs: '0.72rem', sm: '0.8125rem'},
+              lineHeight: 1.2,
+              textTransform: 'none',
+            },
+          }}
+        >
+          <Tab label="Overview" />
+          <Tab label="Command" />
+          <Tab label={`Resources (${resourceCount})`} />
+          <Tab label="Output" />
+        </Tabs>
+        <Divider />
+        <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 320}}}>
+          {activeTab === 0 && <TaskOverview task={task} />}
+          {activeTab === 1 && <TaskCommand task={task} />}
+          {activeTab === 2 && <TaskResources task={task} onUpdate={onUpdate} />}
+          {activeTab === 3 && <TaskOutput task={task} />}
+        </Box>
+      </DialogContent>
+
+      <DialogActions sx={{px: {xs: 1.5, sm: 2}, py: 1}}>
+        <Box sx={{mr: 'auto'}}>{primaryAction}</Box>
+        <Button size="small" variant="outlined" onClick={onClose}>
           Close
         </Button>
       </DialogActions>
+
+      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
+        <MenuItem onClick={handleEditAndRun}>
+          <ListItemIcon>
+            <DriveFileRenameOutlineIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Edit &amp; run</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDuplicate}>
+          <ListItemIcon>
+            <FileCopyOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Duplicate</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => handleCopy(taskUrl, 'Task link copied')}>
+          <ListItemIcon>
+            <LinkIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Copy task link</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleRefresh}>
+          <ListItemIcon>
+            <RefreshIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Refresh</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          disabled={task.state === TaskState.Started}
+          onClick={() => {
+            setMenuAnchor(null);
+            handleConfirmDelete();
+          }}
+          sx={{color: 'error.main'}}
+        >
+          <ListItemIcon sx={{color: 'inherit'}}>
+            <DeleteOutlineIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {isStopDialogOpen && (
+        <KillDialog
+          open={isStopDialogOpen}
+          task={task}
+          onClose={() => setStopDialogOpen(false)}
+          onSubmit={handleStopSubmit}
+        />
+      )}
+      {restartTemplate && (
+        <TemplateDialog
+          open={true}
+          template={restartTemplate}
+          isNew={true}
+          onClose={() => setRestartTemplate(null)}
+          onSubmit={handleCreateFromTask}
+        />
+      )}
+      {deleteConfirmNode}
+      <Snackbar
+        open={Boolean(copyMessage)}
+        autoHideDuration={1800}
+        onClose={() => setCopyMessage(null)}
+        message={copyMessage}
+      />
     </>
   );
 };
