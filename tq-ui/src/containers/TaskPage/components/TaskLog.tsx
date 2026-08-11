@@ -14,11 +14,10 @@ import {Command, InputCommand} from './constants';
 
 interface TaskLogProps {
   task: Task;
-  remapNewLine: boolean;
   onUpdate: () => void;
 }
 
-const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
+const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
   const {id, state} = task;
   const [isOpen, setOpen] = useState(false);
   const [isConnecting, setConnecting] = useState(false);
@@ -27,8 +26,6 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
 
   const refTask = useRef<Task>(task);
   refTask.current = task;
-  const refRemapNewLine = useRef(remapNewLine);
-  refRemapNewLine.current = remapNewLine;
 
   const muiTheme = useTheme();
   const isDesktop = useMediaQuery(muiTheme.breakpoints.up('sm'));
@@ -125,16 +122,12 @@ const TaskLog: FC<TaskLogProps> = ({task, remapNewLine, onUpdate}) => {
       ws.send(payload);
     };
 
-    terminal.onData((char) => {
+    terminal.onData((data) => {
       if (isHistory) return;
-      if (refRemapNewLine.current) {
-        if (char === '\r') {
-          char = '\n';
-        } else if (char === '\n') {
-          char = '\r';
-        }
+      if (!refTask.current.isPty) {
+        data = data.replace(/\r\n|\r/g, '\n');
       }
-      sendCommand(Command.Input, char);
+      sendCommand(Command.Input, data);
     });
 
     const handleResize = (cols: number, rows: number) => {

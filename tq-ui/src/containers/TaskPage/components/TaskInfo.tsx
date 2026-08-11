@@ -1,5 +1,5 @@
 import React, {FC, SyntheticEvent, useCallback, useRef} from 'react';
-import {Box, Button, Checkbox, InputAdornment, Paper, TextField} from '@mui/material';
+import {Box, Button, InputAdornment, Paper, TextField} from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import {Task} from '../../../components/types';
 import {api} from '../../../tools/api';
@@ -7,12 +7,10 @@ import IconActionButton from '../../../components/IconActionButton/IconActionBut
 
 interface TaskInfoProps {
   task: Task;
-  remapNewLine: boolean;
-  onToggleRemapNewLine: () => void;
   onUpdate: () => void;
 }
 
-const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, onUpdate}) => {
+const TaskInfo: FC<TaskInfoProps> = ({task, onUpdate}) => {
   const {id, command, label, isOnlyCombined} = task;
   const refLabel = useRef<HTMLInputElement>(null);
   const initLabel = label || command;
@@ -106,7 +104,7 @@ const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, 
             </>
           )}
           <Button
-            sx={{ml: 1}}
+            sx={{mx: 1}}
             variant="outlined"
             component="a"
             href={`/api/task/combined?id=${id}`}
@@ -114,15 +112,6 @@ const TaskInfo: FC<TaskInfoProps> = ({task, remapNewLine, onToggleRemapNewLine, 
           >
             combined.log
           </Button>
-          <Box
-            sx={{
-              mx: 1,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Checkbox checked={remapNewLine} onChange={onToggleRemapNewLine} /> Remap new line
-          </Box>
         </Box>
       </Box>
     </Box>

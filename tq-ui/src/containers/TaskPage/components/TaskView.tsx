@@ -10,13 +10,7 @@ interface TaskViewProps {
 }
 
 const TaskView: FC<TaskViewProps> = ({task, onUpdate}) => {
-  const {isPty} = task;
-  const [remapNewLine, setRemapNewLine] = useState(!isPty);
   const [showInfo, setInfo] = useState(false);
-
-  const handleToggleRemapNewLine = useCallback(() => {
-    setRemapNewLine((v) => !v);
-  }, []);
 
   const handleToggleInfo = useCallback(() => {
     setInfo((v) => !v);
@@ -30,15 +24,8 @@ const TaskView: FC<TaskViewProps> = ({task, onUpdate}) => {
         onToggleInfo={handleToggleInfo}
         onUpdate={onUpdate}
       />
-      {showInfo && (
-        <TaskInfo
-          remapNewLine={remapNewLine}
-          onToggleRemapNewLine={handleToggleRemapNewLine}
-          task={task}
-          onUpdate={onUpdate}
-        />
-      )}
-      <TaskLog task={task} remapNewLine={remapNewLine} onUpdate={onUpdate} />
+      {showInfo && <TaskInfo task={task} onUpdate={onUpdate} />}
+      <TaskLog task={task} onUpdate={onUpdate} />
     </>
   );
 };
