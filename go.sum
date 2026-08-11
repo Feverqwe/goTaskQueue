@@ -37,6 +37,7 @@ github.com/caseymrm/go-caffeinate v1.0.0 h1:fbHfzQkNK6l/WqC9k5ZXUE2+P5Iwy34kPtxB
 github.com/caseymrm/go-caffeinate v1.0.0/go.mod h1:gXx40jOf0W/tasszHsTf5Uxe6+zS9+5SMyBudE75Pzs=
 github.com/caseymrm/go-pmset v1.0.0 h1:iXc5GlLSqdR0C0GW9nvxvF02ynUkbeVNhAPoYPW+psg=
 github.com/caseymrm/go-pmset v1.0.0/go.mod h1:MYha1Z8OJEvuLrM+7xZGkPGwpkzJ5uZ+M89hJkQoFD4=
+github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
@@ -87,11 +88,13 @@ github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA
 github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
 github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534 h1:3BwvWj0JZzFEvNNiMhCu4bf60nqcIuQpTYb00Ezm1ag=
 github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534/go.mod h1:ZsLfOY6gKQOTyEcPYNA9ws5/XHZQFroxqCOhHjGcs9Y=
-github.com/getlantern/systray v1.2.2 h1:dCEHtfmvkJG7HZ8lS/sLklTH4RKUcIsKrAD9sThoEBE=
-github.com/getlantern/systray v1.2.2/go.mod h1:pXFOI1wwqwYXEhLPm9ZGjS2u/vVELeIgNMY5HvhHhcE=
+github.com/getlantern/systray v1.2.3-0.20231110083711-22c167e80905 h1:Z6KiId/S55bvSwp8IwoUW62vWxSxv2fdmQ2yTThqsJY=
+github.com/getlantern/systray v1.2.3-0.20231110083711-22c167e80905/go.mod h1:pXFOI1wwqwYXEhLPm9ZGjS2u/vVELeIgNMY5HvhHhcE=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gitpod-io/xterm-go v0.0.0-20260731130354-8e117204ebed h1:WkULERhSu85KvqnuDe0bOBnvDDs8d38dXAiKbtG2Ers=
 github.com/gitpod-io/xterm-go v0.0.0-20260731130354-8e117204ebed/go.mod h1:xCLG6CEiFPk1bB7Fa2ahEexQm4h4de04NpQrm8Qkxyw=
+github.com/gitpod-io/xterm-go v0.0.0-20260810130540-73e8ebcf2735 h1:cEJkbZALLGzDVlQhLtZ07eC4UCYOGWisnWZR975/+6s=
+github.com/gitpod-io/xterm-go v0.0.0-20260810130540-73e8ebcf2735/go.mod h1:xCLG6CEiFPk1bB7Fa2ahEexQm4h4de04NpQrm8Qkxyw=
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9GBnD5lWE=
@@ -341,6 +344,8 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMx
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e h1:JVG44RsyaB9T2KIHavMF/ppJZNG9ZpyihvCd0w101no=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e/go.mod h1:RbqR21r5mrJuqunuUZ/Dhy/avygyECGrLceyNeo4LiM=
+github.com/xo/terminfo v1.0.0 h1:2ZpYzqWzyyytjk3TP6aJVDhkMAkc99/1xKQdA3TDTBY=
+github.com/xo/terminfo v1.0.0/go.mod h1:RbqR21r5mrJuqunuUZ/Dhy/avygyECGrLceyNeo4LiM=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

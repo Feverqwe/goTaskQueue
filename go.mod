@@ -6,8 +6,8 @@ require (
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/caseymrm/go-caffeinate v1.0.0
 	github.com/gabyx/githooks/githooks v1.1.1
-	github.com/getlantern/systray v1.2.2
-	github.com/gitpod-io/xterm-go v0.0.0-20260731130354-8e117204ebed
+	github.com/getlantern/systray v1.2.3-0.20231110083711-22c167e80905
+	github.com/gitpod-io/xterm-go v0.0.0-20260810130540-73e8ebcf2735
 	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
 	github.com/natefinch/atomic v1.0.1
 	github.com/ncruces/zenity v0.10.15
@@ -56,7 +56,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sbinet/pstree v0.5.1
 	github.com/schollz/progressbar/v3 v3.19.1 // indirect
-	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
+	github.com/xo/terminfo v1.0.0 // indirect
 	go.opentelemetry.io/otel v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
