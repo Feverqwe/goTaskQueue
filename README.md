@@ -30,6 +30,12 @@ Build the production UI and application
 
 The build script compiles the UI and embeds it in the Go binary automatically.
 
+Template variables
+---
+
+See [docs/TEMPLATES.md](docs/TEMPLATES.md) for variable types, `TASK_VAR_*`
+environment variables, text placeholders, and legacy-template migration.
+
 File icon, use rsrc 
 ---
 ````

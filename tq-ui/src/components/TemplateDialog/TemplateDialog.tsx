@@ -97,9 +97,11 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
       isWriteLogs: Boolean(isWriteLogs),
       label: label || '',
       ttl: ttl ?? 0,
-      variables: templateVariables.map(
-        ({value, defaultValue}) => initVariables[value] ?? defaultValue ?? '',
-      ),
+      variables: templateVariables.map(({value, defaultValue, type, options}) => {
+        const initialValue = initVariables[value] ?? defaultValue ?? '';
+        if (type !== 'select') return initialValue;
+        return options?.includes(initialValue) ? initialValue : options?.[0] || '';
+      }),
     }),
     [
       command,
@@ -118,9 +120,16 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
 
   const handleFormSubmit = useCallback(
     async (values: TemplateFormValues) => {
-      const variables = Object.fromEntries(
-        templateVariables.map(({value}, index) => [value, values.variables[index] ?? '']),
-      );
+      const variables: Record<string, string> = {
+        ...Object.fromEntries(
+          Object.entries(initVariables).filter(
+            (entry): entry is [string, string] => entry[1] !== undefined,
+          ),
+        ),
+        ...Object.fromEntries(
+          templateVariables.map(({value}, index) => [value, values.variables[index] ?? '']),
+        ),
+      };
       const {isRun, isNewTab} = refSubmitOptions.current;
       const request: AddTaskRequest = {
         command: values.command,
@@ -140,7 +149,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
       await onSubmit(request, isNewTab);
       onClose();
     },
-    [isPtySupported, onClose, onSubmit, place, templateVariables],
+    [initVariables, isPtySupported, onClose, onSubmit, place, templateVariables],
   );
 
   const handleClose = useCallback(

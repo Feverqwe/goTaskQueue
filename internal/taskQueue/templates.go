@@ -19,9 +19,11 @@ import (
 )
 
 type TemplateVariable struct {
-	Name         string `json:"name"`
-	Value        string `json:"value"`
-	DefaultValue string `json:"defaultValue"`
+	Name         string   `json:"name"`
+	Value        string   `json:"value"`
+	DefaultValue string   `json:"defaultValue"`
+	Type         string   `json:"type,omitempty"`
+	Options      []string `json:"options,omitempty"`
 }
 
 type Template struct {

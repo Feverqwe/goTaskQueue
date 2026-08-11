@@ -234,6 +234,7 @@ const TaskHeader: FC<TaskHeaderProps> = ({task, onUpdate}) => {
           open={true}
           template={restartDialogTemplate}
           isNew={true}
+          initVariables={task.variables}
           onClose={handleCloseRestartDlg}
           onSubmit={handleRestartTask}
         />

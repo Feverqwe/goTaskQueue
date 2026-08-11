@@ -9,7 +9,6 @@ import (
 	"goTaskQueue/internal/taskQueue"
 	"goTaskQueue/internal/utils"
 	"net/http"
-	"strings"
 	"syscall"
 
 	"github.com/NYTimes/gziphandler"
@@ -157,14 +156,15 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			taskBase.IsWriteLogs = setValue(payload.IsWriteLogs, template.IsWriteLogs)
 			taskBase.TTL = setValue(payload.TTL, template.TTL)
 
-			for _, variable := range template.Variables {
-				old := fmt.Sprintf("{%v}", variable.Value)
-				value, ok := payload.Variables[variable.Value]
-				if !ok {
-					value = variable.DefaultValue
-				}
-				taskBase.Command = strings.ReplaceAll(taskBase.Command, old, value)
-				taskBase.Label = strings.ReplaceAll(taskBase.Label, old, value)
+			taskBase.Variables = taskQueue.ResolveTemplateVariables(template.Variables, payload.Variables)
+			taskBase.Command = taskQueue.RenderLegacyCommand(taskBase.Command, taskBase.Variables)
+			taskBase.Label, err = taskQueue.RenderTemplateText(taskBase.Label, taskBase.Variables)
+			if err != nil {
+				return nil, err
+			}
+			taskBase.Group, err = taskQueue.RenderTemplateText(taskBase.Group, taskBase.Variables)
+			if err != nil {
+				return nil, err
 			}
 
 			task := queue.Add(config, taskBase)

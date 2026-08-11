@@ -1,1 +1,1 @@
-{"place":"","command":"","name":"Youtube","label":"Youtube {url}","group":"","variables":[{"name":"URL","value":"url","defaultValue":""}],"isPty":false,"isOnlyCombined":true}
+{"place":"","command":"","name":"Youtube","label":"Youtube {{ vars.url }}","group":"","variables":[{"name":"URL","value":"url","defaultValue":""}],"isPty":false,"isOnlyCombined":true}

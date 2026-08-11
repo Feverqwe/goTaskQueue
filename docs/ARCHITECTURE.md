@@ -71,6 +71,10 @@ Built-in templates live in `assets/templates/`; profile templates are combined
 with them by `internal/taskQueue/templates.go`. A template consists of metadata
 (`template.json`) and, commonly, a command file.
 
+Template variables are passed to commands through `TASK_VAR_*` environment
+variables. Labels and groups use `{{ vars.key }}` text placeholders. The full
+format and compatibility rules are documented in [TEMPLATES.md](TEMPLATES.md).
+
 Production UI files are generated into `tq-ui/dist`, copied to `assets/www`, and
 embedded by the Go standard library through `assets/embed.go`. The production
 build script stages the UI before compiling the binary. In development mode

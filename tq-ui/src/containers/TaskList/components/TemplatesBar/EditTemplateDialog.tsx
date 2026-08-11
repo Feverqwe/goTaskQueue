@@ -1,24 +1,37 @@
-import React, {FC, SyntheticEvent, useCallback, useContext, useMemo, useRef, useState} from 'react';
+import React, {FC, SyntheticEvent, useCallback, useContext, useMemo, useState} from 'react';
 import {
   Box,
+  Badge,
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
+  Divider,
   IconButton,
-  TextField,
+  Tab,
+  Tabs,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import CloseIcon from '@mui/icons-material/Close';
 import path from 'path-browserify';
-import {RawTemplate, Template, TemplateFolder} from '../../../../components/types';
+import {Form} from 'react-final-form';
+import {RawTemplate, TemplateFolder} from '../../../../components/types';
 import {RootStoreCtx} from '../../../../components/RootStore/RootStoreCtx';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
-import {CommandFieldRef} from '../../../../components/CommandField/CommandField';
-import CommandFieldAsync from '../../../../components/CommandField/CommandFieldAsync';
+import CommandTab from './EditTemplateDialog/CommandTab';
+import GeneralTab from './EditTemplateDialog/GeneralTab';
+import SettingsTab from './EditTemplateDialog/SettingsTab';
+import VariablesTab from './EditTemplateDialog/VariablesTab';
+import {
+  createVariable,
+  getInitialValues,
+  getTemplateVariables,
+  validateTemplateReferences,
+} from './EditTemplateDialog/formUtils';
+import {EditorTab, TemplateEditorValues} from './EditTemplateDialog/types';
 
 interface TemplateDialogProps {
   folder: TemplateFolder;
@@ -29,10 +42,6 @@ interface TemplateDialogProps {
   isNew?: boolean;
 }
 
-type Variable = RawTemplate['variables'][number];
-
-const variableIdMap = new WeakMap<Variable, string>();
-
 const EditTemplateDialog: FC<TemplateDialogProps> = ({
   folder,
   template,
@@ -41,379 +50,156 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
   onClose,
   isNew,
 }) => {
-  const {
-    place,
-    id,
-    name,
-    command,
-    label,
-    group,
-    isPty,
-    isOnlyCombined,
-    isSingleInstance,
-    isStartOnBoot,
-    isWriteLogs,
-    ttl,
-  } = template;
   const {isPtySupported} = useContext(RootStoreCtx);
-  const [variables, setVariables] = useState([...template.variables]);
-  const refCommand = useRef<CommandFieldRef>(null);
-  const refMap = useRef(new Map<string, HTMLInputElement>());
-  const refLabel = useRef<HTMLInputElement>(null);
-  const refGroup = useRef<HTMLInputElement>(null);
-  const refName = useRef<HTMLInputElement>(null);
-  const refPty = useRef<HTMLInputElement>(null);
-  const refId = useRef<HTMLInputElement>(null);
-  const refOnlyCombined = useRef<HTMLInputElement>(null);
-  const refWriteLogs = useRef<HTMLInputElement>(null);
-  const refSingleInstance = useRef<HTMLInputElement>(null);
-  const refStartOnBoot = useRef<HTMLInputElement>(null);
-  const refPlace = useRef<HTMLInputElement>(null);
-  const refTtl = useRef<HTMLInputElement>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [activeTab, setActiveTab] = useState<EditorTab>('general');
+  const initialValues = useMemo(() => getInitialValues(template), [template]);
 
-  useMemo(() => {
-    variables.forEach((variable) => {
-      if (!variableIdMap.has(variable)) {
-        variableIdMap.set(variable, String(Math.random()));
-      }
-    });
-  }, [variables]);
+  const handleFormSubmit = useCallback(
+    async (values: TemplateEditorValues) => {
+      const newTemplate: RawTemplate = {
+        place: isNew ? path.join(folder.place, values.name.trim()) : values.place.trim(),
+        command: values.command,
+        label: values.label,
+        group: values.group,
+        name: values.name.trim(),
+        id: values.id,
+        variables: getTemplateVariables(values.variables),
+        isPty: isPtySupported && values.isPty,
+        isOnlyCombined: values.isOnlyCombined,
+        isWriteLogs: values.isWriteLogs,
+        isSingleInstance: values.isSingleInstance,
+        isStartOnBoot: values.isStartOnBoot,
+        ttl: Number.parseInt(String(values.ttl), 10) || 0,
+      };
 
-  const handleDeleteVariable = useCallback(
-    (variable: Variable) => {
-      if (!variable) return;
-      setVariables((prev) => {
-        const newValue = [...prev];
-        const pos = variables.indexOf(variable);
-        if (pos !== -1) {
-          newValue.splice(pos, 1);
-        }
-        return newValue;
-      });
+      await onSubmit(isNew ? '' : template.place, newTemplate);
+      onClose();
     },
-    [variables],
+    [folder.place, isNew, isPtySupported, onClose, onSubmit, template.place],
   );
 
-  const variableInputs = useMemo(() => {
-    refMap.current.clear();
-
-    return variables.map((variable, index) => {
-      const {name, value, defaultValue} = variable;
-      const {
-        name: refName,
-        value: refValue,
-        defaultValue: refDefaultValue,
-      } = Object.keys(variable).reduce(
-        (acc, key) => {
-          acc[key as keyof Variable] = (el: HTMLInputElement) => {
-            refMap.current.set(`${key}_${index}`, el);
-          };
-          return acc;
-        },
-        {} as Record<keyof Variable, (el: HTMLInputElement) => void>,
-      );
-
-      return (
-        <Box
-          key={variableIdMap.get(variable)}
-          sx={{
-            py: 1,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <TextField
-            size="small"
-            sx={{flexGrow: 1, mr: 1}}
-            label="Variable"
-            type="text"
-            variant="outlined"
-            required
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-              htmlInput: {ref: refValue},
-            }}
-            defaultValue={value}
-          />
-          <TextField
-            size="small"
-            sx={{flexGrow: 1, mr: 1}}
-            label="Name"
-            type="text"
-            variant="outlined"
-            required
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-              htmlInput: {ref: refName},
-            }}
-            defaultValue={name}
-          />
-          <TextField
-            size="small"
-            sx={{flexGrow: 1, mr: 1}}
-            label="Default value"
-            type="text"
-            variant="outlined"
-            defaultValue={defaultValue || ''}
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-              htmlInput: {ref: refDefaultValue},
-            }}
-          />
-          <IconButton onClick={handleDeleteVariable.bind(null, variable)} title="Delete">
-            <RemoveIcon />
-          </IconButton>
-        </Box>
-      );
-    });
-  }, [variables, refMap, handleDeleteVariable]);
-
-  const handleAddVariable = useCallback((e: SyntheticEvent) => {
-    e.preventDefault();
-    setVariables((prev) => [...prev, {name: '', value: '', defaultValue: ''}]);
-  }, []);
-
   const handleClose = useCallback(
-    (e: Event, reason: string) => {
+    (_event: Event, reason: string) => {
       if (reason === 'backdropClick') return;
       onClose();
     },
     [onClose],
   );
 
-  const getTemplate = useCallback(() => {
-    const map = refMap.current;
-
-    const name = refName.current?.value || '';
-    const place = isNew ? path.join(folder.place, name) : refPlace.current?.value || '';
-
-    const template: Template = {
-      place,
-      command: refCommand.current?.getValue() ?? '',
-      label: refLabel.current?.value || '',
-      group: refGroup.current?.value || '',
-      name,
-      id: refId.current?.value || '',
-      variables: variables.map((item, index) => {
-        return Object.keys(item).reduce((acc, key) => {
-          const value = map.get(`${key}_${index}`)?.value;
-          if (value === undefined) {
-            throw new Error('Incorrect value');
-          }
-          acc[key as keyof Variable] = value;
-          return acc;
-        }, {} as Variable);
-      }),
-      isPty: refPty.current?.checked,
-      isOnlyCombined: refOnlyCombined.current?.checked,
-      isWriteLogs: refWriteLogs.current?.checked,
-      isSingleInstance: refSingleInstance.current?.checked,
-      isStartOnBoot: refStartOnBoot.current?.checked,
-      ttl: parseInt(refTtl.current?.value ?? '0', 10),
-    };
-    return template;
-  }, [variables, folder, isNew]);
-
-  const handleSubmit = useCallback(
-    async (e: SyntheticEvent) => {
-      e.preventDefault();
-      const newTemplate = getTemplate();
-      const prevPlace = isNew ? '' : template.place;
-      await onSubmit(prevPlace, newTemplate);
-      onClose();
-    },
-    [isNew, getTemplate, onSubmit, onClose, template],
-  );
-
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
-      <Box component="form" onSubmit={handleSubmit}>
-        <DialogTitle>{isNew ? 'Add template' : 'Edit template'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            size="small"
-            label="Name"
-            sx={{my: 1}}
-            defaultValue={name || ''}
-            fullWidth
-            type="text"
-            variant="outlined"
-            required
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-              htmlInput: {ref: refName},
-            }}
-          />
-          {variableInputs}
-          <Button sx={{my: 1}} onClick={handleAddVariable} size="small" startIcon={<AddIcon />}>
-            Add variable
-          </Button>
-          <CommandFieldAsync
-            defaultValue={command}
-            ref={refCommand as React.RefObject<CommandFieldRef>}
-          />
-          {isPtySupported && (
-            <FormControlLabel
-              sx={{my: 1}}
-              label="Pseudo-terminal"
-              control={
-                <Checkbox size="small" slotProps={{input: {ref: refPty}}} defaultChecked={isPty} />
-              }
-            />
-          )}
-          <FormControlLabel
-            sx={{my: 1}}
-            label="Combined output"
-            control={
-              <Checkbox
-                size="small"
-                slotProps={{input: {ref: refOnlyCombined}}}
-                defaultChecked={isOnlyCombined}
-              />
-            }
-          />
-          <FormControlLabel
-            sx={{my: 1}}
-            label="Write logs"
-            control={
-              <Checkbox
-                size="small"
-                slotProps={{input: {ref: refWriteLogs}}}
-                defaultChecked={isWriteLogs}
-              />
-            }
-          />
-          <FormControlLabel
-            sx={{my: 1}}
-            label="Single instance"
-            control={
-              <Checkbox
-                size="small"
-                slotProps={{input: {ref: refSingleInstance}}}
-                defaultChecked={isSingleInstance}
-              />
-            }
-          />
-          <FormControlLabel
-            sx={{my: 1}}
-            label="Start on boot"
-            control={
-              <Checkbox
-                size="small"
-                slotProps={{input: {ref: refStartOnBoot}}}
-                defaultChecked={isStartOnBoot}
-              />
-            }
-          />
-          <TextField
-            size="small"
-            sx={{my: 1}}
-            label="TTL after finish (seconds)"
-            defaultValue={ttl ?? 0}
-            type="number"
-            variant="outlined"
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-              htmlInput: {ref: refTtl},
-            }}
-          />
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              gap: 1,
-              my: 1,
-            }}
-          >
-            <TextField
-              size="small"
-              label="Label"
-              defaultValue={label || ''}
-              fullWidth
-              type="text"
-              variant="outlined"
-              slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
-                htmlInput: {ref: refLabel},
-              }}
-            />
-            <TextField
-              size="small"
-              label="Group"
-              defaultValue={group || ''}
-              fullWidth
-              type="text"
-              variant="outlined"
-              slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
-                htmlInput: {ref: refGroup},
-              }}
-            />
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              gap: 1,
-              my: 1,
-            }}
-          >
-            <TextField
-              size="small"
-              label="Id"
-              defaultValue={id || ''}
-              fullWidth
-              type="text"
-              variant="outlined"
-              slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
-                htmlInput: {ref: refId},
-              }}
-            />
-            {!isNew && (
-              <TextField
-                size="small"
-                label="Place"
-                defaultValue={place || ''}
-                fullWidth
-                type="text"
-                variant="outlined"
-                required
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                  htmlInput: {ref: refPlace},
-                }}
-              />
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" onClick={onClose}>
-            Cancel
-          </Button>
-          <ActionButton variant="contained" type="submit" onSubmit={handleSubmit}>
-            Save
-          </ActionButton>
-        </DialogActions>
-      </Box>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      fullScreen={isMobile}
+      maxWidth="md"
+      scroll="paper"
+      aria-labelledby="template-editor-title"
+    >
+      <Form<TemplateEditorValues>
+        onSubmit={handleFormSubmit}
+        initialValues={initialValues}
+        validate={validateTemplateReferences}
+      >
+        {({errors, form, invalid, values}) => {
+          const submit = async (event: SyntheticEvent) => {
+            event.preventDefault();
+            await form.submit();
+          };
+          const addVariable = () => {
+            form.change('variables', [...values.variables, createVariable()]);
+            setActiveTab('variables');
+          };
+          const removeVariable = (index: number) => {
+            form.change(
+              'variables',
+              values.variables.filter((_, variableIndex) => variableIndex !== index),
+            );
+          };
+
+          return (
+            <Box component="form" onSubmit={submit} sx={{display: 'contents'}}>
+              <DialogTitle id="template-editor-title" sx={{px: {xs: 1.5, sm: 2}, py: 1}}>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minHeight: 30}}>
+                  <Box sx={{minWidth: 0, flexGrow: 1}}>
+                    <Typography variant="subtitle1" sx={{fontWeight: 600}}>
+                      {isNew ? 'Add template' : 'Edit template'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap component="div">
+                      {isNew ? `New template in ${folder.place || 'root'}` : template.place}
+                    </Typography>
+                  </Box>
+                  <IconButton size="small" onClick={onClose} aria-label="Close">
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </DialogTitle>
+
+              <DialogContent dividers sx={{p: 0}}>
+                <Tabs
+                  value={activeTab}
+                  onChange={(_, value: EditorTab) => setActiveTab(value)}
+                  variant={isMobile ? 'scrollable' : 'standard'}
+                  scrollButtons={isMobile ? 'auto' : false}
+                  aria-label="Template editor sections"
+                  sx={{
+                    px: {xs: 0.5, sm: 2},
+                    minHeight: 40,
+                    '& .MuiTab-root': {
+                      minHeight: 40,
+                      px: {xs: 1.25, sm: 2},
+                      py: 0.5,
+                      textTransform: 'none',
+                    },
+                  }}
+                >
+                  <Tab value="general" label="General" />
+                  <Tab value="variables" label={`Variables (${values.variables.length})`} />
+                  <Tab
+                    value="command"
+                    label={
+                      <Badge color="error" variant="dot" invisible={!errors?.command}>
+                        Command
+                      </Badge>
+                    }
+                  />
+                  <Tab value="settings" label="Settings" />
+                </Tabs>
+                <Divider />
+
+                <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 320}}}>
+                  <GeneralTab hidden={activeTab !== 'general'} isNew={isNew} />
+                  <VariablesTab
+                    hidden={activeTab !== 'variables'}
+                    variables={values.variables}
+                    onAdd={addVariable}
+                    onRemove={removeVariable}
+                  />
+                  <CommandTab hidden={activeTab !== 'command'} />
+                  <SettingsTab hidden={activeTab !== 'settings'} isPtySupported={isPtySupported} />
+                </Box>
+              </DialogContent>
+
+              <DialogActions sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 0.5}}>
+                <Button size="small" variant="outlined" onClick={onClose}>
+                  Cancel
+                </Button>
+                <ActionButton
+                  size="small"
+                  variant="contained"
+                  type="submit"
+                  disabled={invalid}
+                  onSubmit={submit}
+                >
+                  Save
+                </ActionButton>
+              </DialogActions>
+            </Box>
+          );
+        }}
+      </Form>
     </Dialog>
   );
 };

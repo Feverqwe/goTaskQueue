@@ -1,6 +1,6 @@
-import React, {FC, useEffect, useMemo, useRef} from 'react';
+import React, {FC, ReactNode, useEffect, useId, useMemo, useRef} from 'react';
 import {editor} from 'monaco-editor';
-import {Box, InputLabel} from '@mui/material';
+import {Box, FormHelperText, InputLabel} from '@mui/material';
 
 const CTR_STYLE = {
   width: '100%',
@@ -12,16 +12,26 @@ export interface CommandFieldRef {
 
 export interface CommandFieldProps {
   defaultValue?: string;
+  labelAdornment?: ReactNode;
+  validationError?: string;
   ref?: React.RefObject<CommandFieldRef>;
   readOnly?: boolean;
   onChange?: (value: string) => void;
 }
 
-const CommandField: FC<CommandFieldProps> = ({defaultValue, ref, readOnly, onChange}) => {
+const CommandField: FC<CommandFieldProps> = ({
+  defaultValue,
+  labelAdornment,
+  validationError,
+  ref,
+  readOnly,
+  onChange,
+}) => {
   const refDefaultValue = useRef(defaultValue);
   const refOnChange = useRef(onChange);
   const refCtr = useRef<HTMLDivElement>(null);
   const refEditor = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const errorId = useId();
 
   refOnChange.current = onChange;
 
@@ -81,8 +91,21 @@ const CommandField: FC<CommandFieldProps> = ({defaultValue, ref, readOnly, onCha
 
   return (
     <Box sx={{my: 1}}>
-      <InputLabel>Command:</InputLabel>
-      <div ref={refCtr} style={CTR_STYLE} />
+      <Box sx={{display: 'flex', alignItems: 'center', minHeight: 28}}>
+        <InputLabel error={Boolean(validationError)}>Command:</InputLabel>
+        {labelAdornment}
+      </Box>
+      <div
+        ref={refCtr}
+        style={CTR_STYLE}
+        aria-invalid={Boolean(validationError)}
+        aria-describedby={validationError ? errorId : undefined}
+      />
+      {validationError && (
+        <FormHelperText id={errorId} error>
+          {validationError}
+        </FormHelperText>
+      )}
     </Box>
   );
 };

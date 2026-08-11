@@ -1,14 +1,20 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
-import React from 'react';
-import {RootStoreCtx} from '../RootStore/RootStoreCtx';
-import {RawTemplate} from '../types';
-import TemplateDialog from './TemplateDialog';
+import {RawTemplate, TemplateFolder, TemplateType} from '../../../../components/types';
+import EditTemplateDialog from './EditTemplateDialog';
+
+const folder: TemplateFolder = {
+  type: TemplateType.Folder,
+  place: 'deploy',
+  name: 'deploy',
+  templates: [],
+};
 
 const deployTemplate: RawTemplate = {
   place: 'deploy/worker',
-  name: 'Deploy task queue worker',
+  name: 'Deploy worker',
+  id: 'deploy-worker',
   command:
-    'deploy-tool release --environment "$TASK_VAR_ENVIRONMENT" --service task-queue-worker --image "$TASK_VAR_IMAGE" --strategy rolling --timeout 15m',
+    'deploy-tool release --environment "$TASK_VAR_ENVIRONMENT" --service task-queue-worker --image "$TASK_VAR_IMAGE"',
   label: 'Deploy worker to {{ vars.environment }}',
   group: 'Production',
   variables: [
@@ -34,12 +40,13 @@ const deployTemplate: RawTemplate = {
 };
 
 const meta = {
-  title: 'Components/TemplateDialog',
-  component: TemplateDialog,
+  title: 'TaskList/EditTemplateDialog',
+  component: EditTemplateDialog,
   parameters: {
     layout: 'fullscreen',
   },
   args: {
+    folder,
     open: true,
     template: deployTemplate,
     onClose: () => {},
@@ -49,52 +56,39 @@ const meta = {
     onClose: {control: false},
     onSubmit: {control: false},
   },
-} satisfies Meta<typeof TemplateDialog>;
+} satisfies Meta<typeof EditTemplateDialog>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const TemplateVariables: Story = {};
+export const ExistingTemplate: Story = {};
 
-export const NewTask: Story = {
+export const InvalidVariableReferences: Story = {
   args: {
-    isNew: true,
     template: {
       ...deployTemplate,
-      place: '',
-      name: 'New task',
-      variables: [],
-      command: 'echo "Hello, world"',
-      label: '',
-      group: '',
-      isSingleInstance: false,
-      ttl: 0,
+      command: 'deploy-tool release --environment "$TASK_VAR_REGION"',
+      label: 'Deploy worker to {{ vars.region }}',
     },
   },
 };
 
-export const PtyUnsupported: Story = {
-  decorators: [
-    (Story) => (
-      <RootStoreCtx.Provider
-        value={{
-          name: 'GoTaskQueue',
-          templates: [],
-          templateOrder: [],
-          memStorage: {},
-          isPtySupported: false,
-        }}
-      >
-        <Story />
-      </RootStoreCtx.Provider>
-    ),
-  ],
+export const NewTemplate: Story = {
   args: {
     isNew: true,
     template: {
-      ...deployTemplate,
-      name: 'Run maintenance command',
+      place: '',
+      name: '',
+      command: '',
+      label: '',
+      group: '',
       variables: [],
+      isPty: false,
+      isOnlyCombined: true,
+      isWriteLogs: true,
+      isSingleInstance: false,
+      isStartOnBoot: false,
+      ttl: 0,
     },
   },
 };

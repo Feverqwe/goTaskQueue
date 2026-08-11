@@ -1,3 +1,13 @@
+export type TemplateVariableType = 'text' | 'select';
+
+export interface TemplateVariable {
+  name: string;
+  value: string;
+  defaultValue?: string;
+  type?: TemplateVariableType;
+  options?: string[];
+}
+
 export interface RawTemplate {
   place: string;
   command: string;
@@ -6,11 +16,7 @@ export interface RawTemplate {
   label?: string;
   group?: string;
   name: string;
-  variables: {
-    name: string;
-    value: string;
-    defaultValue?: string;
-  }[];
+  variables: TemplateVariable[];
   isPty?: boolean;
   isOnlyCombined?: boolean;
   isWriteLogs?: boolean;
@@ -71,6 +77,7 @@ export interface TaskAsset {
 
 export interface Task extends Omit<Required<RawTemplate>, 'place' | 'name' | 'variables'> {
   templatePlace: string;
+  variables?: Record<string, string>;
   state: TaskState;
   error: string;
   createdAt: string;

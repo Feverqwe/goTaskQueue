@@ -410,6 +410,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
           open={true}
           template={restartTemplate}
           isNew={true}
+          initVariables={task.variables}
           onClose={() => setRestartTemplate(null)}
           onSubmit={handleCreateFromTask}
         />

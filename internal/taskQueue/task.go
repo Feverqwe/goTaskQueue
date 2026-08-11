@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"sort"
 	"sync"
 	"syscall"
 	"time"
@@ -66,8 +67,9 @@ type NewTaskBase struct {
 }
 
 type TaskBase struct {
-	Command       string `json:"command"`
-	TemplatePlace string `json:"templatePlace"`
+	Command       string            `json:"command"`
+	TemplatePlace string            `json:"templatePlace"`
+	Variables     map[string]string `json:"variables,omitempty"`
 	NewTaskBase
 }
 
@@ -191,12 +193,25 @@ func (s *Task) Run(config *cfg.Config, queue *Queue) error {
 
 func (s *Task) getEnvVariables(config *cfg.Config) []string {
 	env := append([]string(nil), config.RunEnv...)
-	return append(env,
+	env = append(env,
 		"TASK_QUEUE_ID="+s.Id,
 		"TASK_QUEUE_URL="+config.GetBrowserAddress(),
 		"TASK_TEMPLATE_PLACE="+s.TemplatePlace,
 		"TASK_TEMPLATES_PLACE="+GetTemplatesPath(),
 	)
+
+	keys := make([]string, 0, len(s.Variables))
+	for key := range s.Variables {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		name, ok := templateVariableEnvName(key)
+		if ok {
+			env = append(env, name+"="+s.Variables[key])
+		}
+	}
+	return env
 }
 
 func (s *Task) getWorkingDir() string {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"sync"
 	"testing"
@@ -11,6 +12,29 @@ import (
 
 	"goTaskQueue/internal/cfg"
 )
+
+func TestTaskEnvironmentIncludesTemplateVariables(t *testing.T) {
+	task := NewTask("task-id", TaskBase{
+		Variables: map[string]string{
+			"environment": "production",
+			"image":       "registry.example.com/app:latest",
+			"invalid-key": "ignored",
+		},
+	})
+
+	env := task.getEnvVariables(&cfg.Config{})
+	for _, want := range []string{
+		"TASK_VAR_ENVIRONMENT=production",
+		"TASK_VAR_IMAGE=registry.example.com/app:latest",
+	} {
+		if !slices.Contains(env, want) {
+			t.Fatalf("environment does not contain %q: %#v", want, env)
+		}
+	}
+	if slices.Contains(env, "TASK_VAR_INVALID-KEY=ignored") {
+		t.Fatalf("invalid variable key was exported: %#v", env)
+	}
+}
 
 func newTestTask(queue *Queue) *Task {
 	task := NewTask("test-id", TaskBase{})

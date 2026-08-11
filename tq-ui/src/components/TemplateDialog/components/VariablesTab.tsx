@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import {Box, TextField} from '@mui/material';
+import {Box, MenuItem, TextField} from '@mui/material';
 import {Field} from 'react-final-form';
 import {RawTemplate} from '../../types';
 
@@ -18,20 +18,34 @@ const VariablesTab: FC<VariablesTabProps> = ({hidden, isNew, variables}) => (
         gap: 1.5,
       }}
     >
-      {variables.map(({name, value}, index) => (
+      {variables.map(({name, value, type, options}, index) => (
         <Field<string> key={`${value}-${index}`} name={`variables[${index}]`}>
-          {({input}) => (
-            <TextField
-              {...input}
-              size="small"
-              autoFocus={!isNew && index === 0}
-              label={name}
-              type="text"
-              fullWidth
-              variant="outlined"
-              slotProps={{inputLabel: {shrink: true}}}
-            />
-          )}
+          {({input}) => {
+            const isSelect = type === 'select';
+            return (
+              <TextField
+                {...input}
+                size="small"
+                autoFocus={!isNew && index === 0}
+                label={name}
+                type={isSelect ? undefined : 'text'}
+                select={isSelect}
+                fullWidth
+                variant="outlined"
+                disabled={isSelect && !options?.length}
+                helperText={isSelect && !options?.length ? 'No options configured' : undefined}
+                slotProps={{inputLabel: {shrink: true}}}
+              >
+                {isSelect
+                  ? options?.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    ))
+                  : undefined}
+              </TextField>
+            );
+          }}
         </Field>
       ))}
     </Box>
