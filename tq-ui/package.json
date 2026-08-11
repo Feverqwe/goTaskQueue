@@ -10,7 +10,7 @@
     "build": "rspack build --mode production",
     "dev": "rspack build --mode development --watch",
     "release": "npm run clean:dist && npm run build && npm run clean:www && npm run copy:dist",
-    "storybook": "storybook dev -p 6006 --no-open",
+    "storybook": "storybook dev -p 6006 --no-open --no-version-updates",
     "build-storybook": "storybook build",
     "tsc": "tsc --noEmit",
     "lint": "npx eslint ./src ./.storybook && npm run prettier",
