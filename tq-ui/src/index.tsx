@@ -7,22 +7,25 @@ import TaskList from './containers/TaskList/TaskList';
 import TaskPage from './containers/TaskPage/TaskPage';
 import TemplateProvider from './components/TemplateProvider/TemplateProvider';
 import GroupStateProvider from './components/GroupStorageProvider/GroupStateProvider';
+import QueryProvider from './components/QueryProvider';
 
 const root = createRoot(document.getElementById('root')!);
 
 root.render(
   <Page>
-    <RootStoreProvider>
-      <GroupStateProvider>
-        <TemplateProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route index element={<TaskList />} />
-              <Route path="task" element={<TaskPage />} />
-            </Routes>
-          </BrowserRouter>
-        </TemplateProvider>
-      </GroupStateProvider>
-    </RootStoreProvider>
+    <QueryProvider>
+      <RootStoreProvider>
+        <GroupStateProvider>
+          <TemplateProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route index element={<TaskList />} />
+                <Route path="task" element={<TaskPage />} />
+              </Routes>
+            </BrowserRouter>
+          </TemplateProvider>
+        </GroupStateProvider>
+      </RootStoreProvider>
+    </QueryProvider>
   </Page>,
 );

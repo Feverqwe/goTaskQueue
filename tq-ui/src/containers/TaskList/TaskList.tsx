@@ -1,56 +1,28 @@
-import React, {FC, useCallback, useContext, useEffect, useMemo, useRef} from 'react';
+import React, {FC, useCallback, useContext, useMemo} from 'react';
 import {Box, CircularProgress, Container} from '@mui/material';
-import {observer} from 'mobx-react-lite';
 import TemplatesBar from './components/TemplatesBar/TemplatesBar';
 import DisplayError from '../../components/DisplayError';
-import {useVisibility} from '../../hooks/useVisibility';
 import TaskListView from './components/TaskListView';
 import {RootStoreCtx} from '../../components/RootStore/RootStoreCtx';
 import SilentStatus from '../../components/SilentStatus/SilentStatus';
-import useTaskListStore from '../../hooks/useTaskListStore';
+import useTaskListQuery from '../../hooks/useTaskListQuery';
 
 const TaskList: FC = () => {
-  const isVisible = useVisibility();
-  const refInit = useRef(true);
   const {name} = useContext(RootStoreCtx);
-
-  const taskListStore = useTaskListStore();
-  const {isPreloaded} = taskListStore;
-
-  const {loading, silent, error, taskList, fetchTaskList, setTaskList} = taskListStore;
-
-  const refTaskListStore = useRef(taskListStore);
-  refTaskListStore.current = taskListStore;
+  const {data: taskList, error, isFetching, isPending, refetch} = useTaskListQuery();
+  const hasTaskList = taskList !== undefined;
 
   useMemo(() => {
     document.title = name;
   }, [name]);
 
   const handleUpdate = useCallback(() => {
-    fetchTaskList(true);
-  }, [fetchTaskList]);
-
-  useEffect(() => {
-    if (isPreloaded) return;
-    fetchTaskList();
-    return () => refTaskListStore.current.abortController?.abort();
-  }, [fetchTaskList, isPreloaded, setTaskList]);
-
-  useEffect(() => {
-    if (!isVisible) return;
-    const run = () => fetchTaskList(true);
-    const intervalId = setInterval(run, 10 * 1000);
-    const isInit = refInit.current;
-    refInit.current = false;
-    if (!isInit) {
-      run();
-    }
-    return () => clearInterval(intervalId);
-  }, [fetchTaskList, isVisible]);
+    refetch();
+  }, [refetch]);
 
   const handleRetry = useCallback(() => {
-    fetchTaskList();
-  }, [fetchTaskList]);
+    refetch();
+  }, [refetch]);
 
   return (
     <Container maxWidth={false} disableGutters={true}>
@@ -62,7 +34,7 @@ const TaskList: FC = () => {
         <TemplatesBar onUpdate={handleUpdate} />
       </Box>
       <>
-        {!silent && loading && (
+        {isPending && (
           <Box
             sx={{
               display: 'flex',
@@ -72,7 +44,7 @@ const TaskList: FC = () => {
             <CircularProgress />
           </Box>
         )}
-        {!silent && error && (
+        {!hasTaskList && error && (
           <Box
             sx={{
               display: 'flex',
@@ -82,14 +54,14 @@ const TaskList: FC = () => {
             <DisplayError error={error} onRetry={handleRetry} />
           </Box>
         )}
-        {(silent || (!error && !loading)) && taskList && (
-          <TaskListView taskList={taskList} onUpdate={handleUpdate} />
-        )}
+        {taskList && <TaskListView taskList={taskList} onUpdate={handleUpdate} />}
       </>
-      {silent && loading && <SilentStatus status="loading" />}
-      {silent && error && <SilentStatus status="error" onRetry={handleUpdate} />}
+      {hasTaskList && isFetching && <SilentStatus status="loading" />}
+      {hasTaskList && error && !isFetching && (
+        <SilentStatus status="error" onRetry={handleUpdate} />
+      )}
     </Container>
   );
 };
 
-export default observer(TaskList);
+export default TaskList;

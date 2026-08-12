@@ -93,9 +93,9 @@ The main screens are:
 - `components/RootStore/`: server-provided initial application state.
 - `components/TemplateProvider/` and `GroupStorageProvider/`: shared UI state.
 
-React components use MUI, state uses MobX where needed, and terminal rendering
-uses xterm. Rspack transpiles TypeScript and emits the browser bundle into
-`tq-ui/dist`; `tsc` runs separately for type checking.
+React components use MUI, server state and request caching use TanStack React
+Query, and terminal rendering uses xterm. Rspack transpiles TypeScript and emits
+the browser bundle into `tq-ui/dist`; `tsc` runs separately for type checking.
 
 ## Cross-platform code
 

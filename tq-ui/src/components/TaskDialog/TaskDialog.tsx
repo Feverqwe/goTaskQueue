@@ -1,6 +1,5 @@
 import React, {FC, useCallback} from 'react';
 import {Dialog, useMediaQuery, useTheme} from '@mui/material';
-import {observer} from 'mobx-react-lite';
 import TaskDialogView from './TaskDialogView';
 import {Task} from '../types';
 
@@ -36,4 +35,4 @@ const TaskDialog: FC<TaskDialogProps> = (props) => {
   );
 };
 
-export default observer(TaskDialog);
+export default TaskDialog;

@@ -1,13 +1,12 @@
 import {Box, CircularProgress, Container} from '@mui/material';
 import React, {FC, useCallback, useContext, useEffect, useMemo, useRef} from 'react';
-import {observer} from 'mobx-react-lite';
 import {useLocation} from 'react-router-dom';
 import {TaskState} from '../../components/types';
 import {NotificationCtx} from '../../components/Notifications/NotificationCtx';
 import DisplayError from '../../components/DisplayError';
 import TaskView from './components/TaskView';
 import NotificationProvider from '../../components/Notifications/NotificationProvider';
-import useTaskStore from '../../hooks/useTaskStore';
+import useTaskQuery from '../../hooks/useTaskQuery';
 import SilentStatus from '../../components/SilentStatus/SilentStatus';
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
@@ -17,17 +16,14 @@ const TaskPage: FC = () => {
   const id = useMemo(() => new URLSearchParams(location.search).get('id'), [location.search]);
   const notification = useContext(NotificationCtx);
 
-  const taskStore = useTaskStore();
-  const {task, loading, error, fetchTask, setTask, isPreloaded} = taskStore;
-
-  const refTaskStore = useRef(taskStore);
-  refTaskStore.current = taskStore;
+  const {data: task, error, isFetching, isPending, refetch} = useTaskQuery(id);
+  const taskRef = useRef(task);
+  taskRef.current = task;
 
   const handleUpdate = useCallback(async () => {
-    const {task} = refTaskStore.current;
-    if (!task) return;
-    await fetchTask(task.id);
-  }, [fetchTask]);
+    if (!taskRef.current) return;
+    await refetch();
+  }, [refetch]);
 
   useEffect(() => {
     document.body.classList.add('task-page');
@@ -37,16 +33,10 @@ const TaskPage: FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!id || isPreloaded) return;
-    fetchTask(id);
-    return () => refTaskStore.current.abortController?.abort();
-  }, [id, fetchTask, isPreloaded, setTask]);
-
-  useEffect(() => {
     const taskState = task?.state;
     if (!taskState || completeStates.includes(taskState)) return () => {};
     return () => {
-      const currentTask = refTaskStore.current.task;
+      const currentTask = taskRef.current;
       if (currentTask && completeStates.includes(currentTask.state)) {
         notification(currentTask);
       }
@@ -55,9 +45,9 @@ const TaskPage: FC = () => {
 
   const handleRetry = useCallback(() => {
     if (id) {
-      fetchTask(id);
+      refetch();
     }
-  }, [id, fetchTask]);
+  }, [id, refetch]);
 
   return (
     <NotificationProvider>
@@ -66,7 +56,7 @@ const TaskPage: FC = () => {
         disableGutters={true}
         sx={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
-        {loading && !task ? (
+        {isPending ? (
           <Box
             sx={{
               p: 1,
@@ -77,8 +67,8 @@ const TaskPage: FC = () => {
             <CircularProgress />
           </Box>
         ) : null}
-        {loading && task ? <SilentStatus status="loading" /> : null}
-        {error && (
+        {isFetching && task ? <SilentStatus status="loading" /> : null}
+        {error && !isFetching && (
           <Box
             sx={{
               p: 1,
@@ -95,4 +85,4 @@ const TaskPage: FC = () => {
   );
 };
 
-export default observer(TaskPage);
+export default TaskPage;
