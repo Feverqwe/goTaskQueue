@@ -14,7 +14,7 @@ const VariablesTab: FC<VariablesTabProps> = ({hidden, isNew, variables}) => (
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))'},
+        gridTemplateColumns: 'minmax(0, 1fr)',
         gap: 1.5,
       }}
     >

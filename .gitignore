@@ -8,5 +8,6 @@ open.lock
 goTaskQueue
 /ui/dist
 /tq-ui/storybook-static
+/tq-ui/debug-storybook.log
 /assets/www
 scripts/appify

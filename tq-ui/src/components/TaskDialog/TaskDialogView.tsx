@@ -260,7 +260,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
                 value={draftLabel}
                 onChange={(event) => setDraftLabel(event.target.value)}
                 inputProps={{'aria-label': 'Label'}}
-                sx={{height: 30, fontSize: '1rem', fontWeight: 600}}
+                sx={{height: 30, fontSize: '1rem'}}
               />
               <IconActionButton size="small" aria-label="Save label" onSubmit={handleSetLabel}>
                 <SaveIcon fontSize="inherit" />
@@ -278,12 +278,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
             </Box>
           ) : (
             <Box sx={{display: 'flex', alignItems: 'center', minWidth: 0, flexGrow: 1}}>
-              <Typography
-                variant="subtitle1"
-                noWrap
-                title={getTaskName(task)}
-                sx={{fontWeight: 600}}
-              >
+              <Typography variant="subtitle1" noWrap title={getTaskName(task)}>
                 {getTaskName(task)}
               </Typography>
               <Tooltip title="Edit label">
