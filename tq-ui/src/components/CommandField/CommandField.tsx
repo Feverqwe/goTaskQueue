@@ -2,6 +2,15 @@ import React, {FC, useEffect, useId, useMemo, useRef} from 'react';
 import {editor} from 'monaco-editor';
 import {Box, FormHelperText} from '@mui/material';
 
+globalThis.MonacoEnvironment = {
+  ...globalThis.MonacoEnvironment,
+  getWorker: (_workerId, label) =>
+    new Worker(new URL('./editor.worker.ts', import.meta.url), {
+      name: label,
+      type: 'module',
+    }),
+};
+
 const CTR_STYLE = {
   width: '100%',
 };
