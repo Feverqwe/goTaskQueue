@@ -1,7 +1,6 @@
 import {Alert, Button, Snackbar} from '@mui/material';
 import React, {FC} from 'react';
-
-export type TaskConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'closed';
+import type {TaskConnectionState} from './TaskLogSocket';
 
 interface TaskConnectionAlertProps {
   state: TaskConnectionState;
