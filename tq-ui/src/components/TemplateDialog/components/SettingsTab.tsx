@@ -10,7 +10,7 @@ interface SettingsTabProps {
 
 const SettingsTab: FC<SettingsTabProps> = ({hasTemplatePlace, hidden, isPtySupported}) => (
   <Box component="section" role="tabpanel" hidden={hidden} aria-label="Task settings">
-    <Stack spacing={2}>
+    <Stack spacing={2.5}>
       <Box component="section" aria-labelledby="template-details-title">
         <Typography id="template-details-title" variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
           Task details
@@ -60,6 +60,7 @@ const SettingsTab: FC<SettingsTabProps> = ({hasTemplatePlace, hidden, isPtySuppo
                   inputLabel: {shrink: true},
                   htmlInput: {min: 0},
                 }}
+                sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
               />
             )}
           </Field>

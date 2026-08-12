@@ -17,7 +17,7 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
   const options = parseOptions(variable.optionsText);
 
   return (
-    <Paper variant="outlined" sx={{p: 1.5}}>
+    <Paper variant="outlined" sx={{p: 1.5, bgcolor: 'background.paper'}}>
       <Box
         sx={{
           display: 'flex',
@@ -26,7 +26,13 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
           mb: 1.5,
         }}
       >
-        <Typography variant="subtitle2">Variable {index + 1}</Typography>
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          sx={{fontFamily: 'monospace', fontSize: '0.6875rem', letterSpacing: '0.08em'}}
+        >
+          VAR {String(index + 1).padStart(2, '0')}
+        </Typography>
         <IconButton size="small" onClick={onRemove} aria-label={`Delete variable ${index + 1}`}>
           <DeleteOutlineIcon fontSize="small" />
         </IconButton>
@@ -59,6 +65,7 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
                     : 'Lowercase identifier'
               }
               slotProps={{inputLabel: {shrink: true}}}
+              sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
             />
           )}
         </Field>
@@ -109,7 +116,10 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
                   error={meta.touched && Boolean(meta.error)}
                   helperText={meta.touched && meta.error ? meta.error : 'One option per line'}
                   slotProps={{inputLabel: {shrink: true}}}
-                  sx={{gridColumn: {sm: 'span 2'}}}
+                  sx={{
+                    gridColumn: {sm: 'span 2'},
+                    '& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'},
+                  }}
                 />
               )}
             </Field>
@@ -123,10 +133,15 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
                   value={options.includes(input.value) ? input.value : ''}
                   helperText="The first option is used if unset"
                   slotProps={{inputLabel: {shrink: true}}}
+                  sx={{
+                    '& .MuiSelect-select': {fontFamily: 'monospace', fontSize: '0.8125rem'},
+                  }}
                 >
-                  <MenuItem value="">First option</MenuItem>
+                  <MenuItem value="" sx={{fontFamily: 'monospace'}}>
+                    First option
+                  </MenuItem>
                   {options.map((option) => (
-                    <MenuItem key={option} value={option}>
+                    <MenuItem key={option} value={option} sx={{fontFamily: 'monospace'}}>
                       {option}
                     </MenuItem>
                   ))}
@@ -142,7 +157,10 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
                 size="small"
                 label="Default value"
                 slotProps={{inputLabel: {shrink: true}}}
-                sx={{gridColumn: {sm: 'span 2'}}}
+                sx={{
+                  gridColumn: {sm: 'span 2'},
+                  '& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'},
+                }}
               />
             )}
           </Field>

@@ -43,10 +43,16 @@ const VariablesTab: FC<VariablesTabProps> = ({hidden, isNew, variables}) => (
                 disabled={isSelect && !options?.length}
                 helperText={isSelect && !options?.length ? 'No options configured' : undefined}
                 slotProps={{inputLabel: {shrink: true}}}
+                sx={{
+                  '& .MuiInputBase-input, & .MuiSelect-select': {
+                    fontFamily: 'monospace',
+                    fontSize: '0.8125rem',
+                  },
+                }}
               >
                 {isSelect
                   ? options?.map((option) => (
-                      <MenuItem key={option} value={option}>
+                      <MenuItem key={option} value={option} sx={{fontFamily: 'monospace'}}>
                         {option}
                       </MenuItem>
                     ))

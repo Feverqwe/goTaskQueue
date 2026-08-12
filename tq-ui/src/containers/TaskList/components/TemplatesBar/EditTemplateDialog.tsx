@@ -129,7 +129,13 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                     <Typography variant="subtitle1" sx={{fontWeight: 600}}>
                       {isNew ? 'Add template' : 'Edit template'}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap component="div">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      component="div"
+                      sx={{fontFamily: 'monospace', fontSize: '0.6875rem'}}
+                    >
                       {isNew ? `New template in ${folder.place || 'root'}` : template.place}
                     </Typography>
                   </Box>
@@ -171,7 +177,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                     <Tab value="settings" label="Settings" />
                   </Tabs>
                 </Box>
-                <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 320}}}>
+                <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 288}}}>
                   <GeneralTab hidden={activeTab !== 'general'} isNew={isNew} />
                   <VariablesTab
                     hidden={activeTab !== 'variables'}

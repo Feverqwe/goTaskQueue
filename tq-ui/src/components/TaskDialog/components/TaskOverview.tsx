@@ -72,9 +72,9 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
   }, [duration, task.createdAt, task.expiresAt, task.finishedAt, task.startedAt]);
 
   return (
-    <Box sx={{display: 'flex', flexDirection: 'column', gap: 1.5}}>
-      <Box>
-        <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
+    <Box sx={{display: 'flex', flexDirection: 'column', gap: 2.5}}>
+      <Box component="section" aria-labelledby="task-timeline-title">
+        <Typography id="task-timeline-title" variant="subtitle2" sx={{mb: 1.25, fontWeight: 600}}>
           Timeline
         </Typography>
         <Box
@@ -82,7 +82,7 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
-            columnGap: {xs: 1.25, sm: 0.5},
+            columnGap: {xs: 1.25, sm: 0.75},
             rowGap: 0.5,
           }}
         >
@@ -90,7 +90,7 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
             <React.Fragment key={item.label}>
               {index > 0 && (
                 <ChevronRightIcon
-                  sx={{display: {xs: 'none', sm: 'block'}, color: 'text.disabled', fontSize: 16}}
+                  sx={{display: {xs: 'none', sm: 'block'}, color: 'text.disabled', fontSize: 14}}
                 />
               )}
               <Tooltip
@@ -110,10 +110,22 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    sx={{fontSize: '0.6875rem', lineHeight: 1.35}}
+                  >
                     {item.label}
                   </Typography>
-                  <Typography variant="body2" sx={{fontWeight: 500}}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontFamily: 'monospace',
+                      fontSize: '0.8125rem',
+                      fontVariantNumeric: 'tabular-nums',
+                      lineHeight: 1.35,
+                    }}
+                  >
                     {item.type === 'date' ? formatCompactDate(item.value) : item.value}
                   </Typography>
                 </Box>
@@ -123,8 +135,8 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
         </Box>
       </Box>
 
-      <Box>
-        <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
+      <Box component="section" aria-labelledby="task-execution-title">
+        <Typography id="task-execution-title" variant="subtitle2" sx={{mb: 1.25, fontWeight: 600}}>
           Execution
         </Typography>
         <Box
@@ -132,7 +144,7 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
             display: 'grid',
             gridTemplateColumns: {xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))'},
             columnGap: {xs: 2, sm: 3},
-            rowGap: 1.5,
+            rowGap: 1.75,
           }}
         >
           <KeyValue name="Group" value={task.group || '−'} />

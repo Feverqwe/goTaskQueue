@@ -1,6 +1,6 @@
-import React, {FC, ReactNode, useEffect, useId, useMemo, useRef} from 'react';
+import React, {FC, useEffect, useId, useMemo, useRef} from 'react';
 import {editor} from 'monaco-editor';
-import {Box, FormHelperText, InputLabel} from '@mui/material';
+import {Box, FormHelperText} from '@mui/material';
 
 const CTR_STYLE = {
   width: '100%',
@@ -12,7 +12,6 @@ export interface CommandFieldRef {
 
 export interface CommandFieldProps {
   defaultValue?: string;
-  labelAdornment?: ReactNode;
   validationError?: string;
   ref?: React.RefObject<CommandFieldRef>;
   readOnly?: boolean;
@@ -21,7 +20,6 @@ export interface CommandFieldProps {
 
 const CommandField: FC<CommandFieldProps> = ({
   defaultValue,
-  labelAdornment,
   validationError,
   ref,
   readOnly,
@@ -90,11 +88,7 @@ const CommandField: FC<CommandFieldProps> = ({
   }, [readOnly, refDefaultValue]);
 
   return (
-    <Box sx={{my: 1}}>
-      <Box sx={{display: 'flex', alignItems: 'center', minHeight: 28}}>
-        <InputLabel error={Boolean(validationError)}>Command:</InputLabel>
-        {labelAdornment}
-      </Box>
+    <Box>
       <div
         ref={refCtr}
         style={CTR_STYLE}

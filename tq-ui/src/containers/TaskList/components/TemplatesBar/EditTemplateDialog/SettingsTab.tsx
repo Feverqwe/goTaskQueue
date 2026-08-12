@@ -9,7 +9,7 @@ interface SettingsTabProps {
 
 const SettingsTab: FC<SettingsTabProps> = ({hidden, isPtySupported}) => (
   <Box component="section" role="tabpanel" hidden={hidden} aria-label="Template execution settings">
-    <Stack spacing={2}>
+    <Stack spacing={2.5}>
       <Box>
         <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
           Lifecycle
@@ -22,6 +22,7 @@ const SettingsTab: FC<SettingsTabProps> = ({hidden, isPtySupported}) => (
               label="TTL after finish (seconds)"
               type="number"
               slotProps={{inputLabel: {shrink: true}, htmlInput: {min: 0}}}
+              sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
             />
           )}
         </Field>

@@ -29,11 +29,11 @@ const VariablesTab: FC<VariablesTabProps> = ({hidden, onAdd, onRemove, variables
         </Typography>
         <Typography variant="caption" color="text.disabled">
           Key <code>url</code>: command{' '}
-          <Box component="code" sx={{whiteSpace: 'nowrap'}}>
+          <Box component="code" sx={{whiteSpace: 'nowrap', fontFamily: 'monospace'}}>
             TASK_VAR_URL
           </Box>
           {' · '}label/group{' '}
-          <Box component="code" sx={{whiteSpace: 'nowrap'}}>
+          <Box component="code" sx={{whiteSpace: 'nowrap', fontFamily: 'monospace'}}>
             {'{{ vars.url }}'}
           </Box>
         </Typography>

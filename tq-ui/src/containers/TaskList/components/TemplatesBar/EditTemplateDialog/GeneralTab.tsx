@@ -10,7 +10,7 @@ interface GeneralTabProps {
 
 const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
   <Box component="section" role="tabpanel" hidden={hidden} aria-label="General template settings">
-    <Stack spacing={2}>
+    <Stack spacing={2.5}>
       <Box>
         <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
           Template identity
@@ -45,6 +45,7 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
                 label="Id"
                 fullWidth
                 slotProps={{inputLabel: {shrink: true}}}
+                sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
               />
             )}
           </Field>
@@ -60,7 +61,10 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
                   error={meta.touched && Boolean(meta.error)}
                   helperText={meta.touched ? meta.error : undefined}
                   slotProps={{inputLabel: {shrink: true}}}
-                  sx={{gridColumn: {sm: '1 / -1'}}}
+                  sx={{
+                    gridColumn: {sm: '1 / -1'},
+                    '& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'},
+                  }}
                 />
               )}
             </Field>

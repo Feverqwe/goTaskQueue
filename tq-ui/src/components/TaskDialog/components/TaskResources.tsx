@@ -186,7 +186,10 @@ const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
                       secondary={link.url}
                       slotProps={{
                         primary: {noWrap: true},
-                        secondary: {noWrap: true},
+                        secondary: {
+                          noWrap: true,
+                          sx: {fontFamily: 'monospace', fontSize: '0.75rem'},
+                        },
                       }}
                       sx={{pr: 12}}
                     />
@@ -270,7 +273,10 @@ const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
                       secondary={asset.path}
                       slotProps={{
                         primary: {noWrap: true},
-                        secondary: {noWrap: true},
+                        secondary: {
+                          noWrap: true,
+                          sx: {fontFamily: 'monospace', fontSize: '0.75rem'},
+                        },
                       }}
                       sx={{pr: 8}}
                     />

@@ -31,7 +31,7 @@ const LogRow: FC<LogRowProps> = ({id, name, path, disabled}) => {
     >
       <Box sx={{flexGrow: 1}}>
         <Typography variant="subtitle2">{name}</Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" color="text.secondary" sx={{fontFamily: 'monospace'}}>
           {name.toLowerCase()}.log
         </Typography>
       </Box>

@@ -37,6 +37,9 @@ const KeyValue: FC<KeyValueProps> = ({name, value, type, sx}) => {
         sx={{
           mt: 0.5,
           color: 'text.primary',
+          fontFamily: 'monospace',
+          fontSize: '0.8125rem',
+          fontVariantNumeric: 'tabular-nums',
           lineHeight: 1.35,
           overflow: 'hidden',
           textOverflow: 'ellipsis',

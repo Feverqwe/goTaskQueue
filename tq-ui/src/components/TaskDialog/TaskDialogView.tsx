@@ -278,7 +278,12 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
             </Box>
           ) : (
             <Box sx={{display: 'flex', alignItems: 'center', minWidth: 0, flexGrow: 1}}>
-              <Typography variant="subtitle1" noWrap title={getTaskName(task)}>
+              <Typography
+                variant="subtitle1"
+                noWrap
+                title={getTaskName(task)}
+                sx={{fontWeight: 600}}
+              >
                 {getTaskName(task)}
               </Typography>
               <Tooltip title="Edit label">
@@ -336,7 +341,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
             <Tab label="Output" />
           </Tabs>
         </Box>
-        <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 320}}}>
+        <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 256}}}>
           {activeTab === 0 && <TaskOverview task={task} />}
           {activeTab === 1 && <TaskCommand task={task} />}
           {activeTab === 2 && <TaskResources task={task} onUpdate={onUpdate} />}
