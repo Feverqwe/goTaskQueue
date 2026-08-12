@@ -1,94 +1,45 @@
-import React, {FC, ReactNode, useCallback, useState} from 'react';
-import {Alert, AlertColor, Snackbar} from '@mui/material';
-import {NotificationCtx} from './NotificationCtx';
-import {Task, TaskState} from '../types';
+import React, {FC, ReactNode, useCallback, useRef, useState} from 'react';
+import {NotificationCtx, ToastInput, ToastSeverity} from './NotificationCtx';
+import NotificationStack, {ToastItem} from './NotificationStack';
 
 interface NotificationProviderProps {
   children: ReactNode;
 }
 
-interface StackItem {
-  color: AlertColor;
-  content: ReactNode;
-  onClose: (event?: React.SyntheticEvent | Event, reason?: string) => void;
-}
+const maxVisibleNotifications = 4;
+
+const defaultDurations: Record<ToastSeverity, number> = {
+  success: 6000,
+  warning: 7000,
+  error: 10 * 1000,
+  info: 6000,
+};
 
 const NotificationProvider: FC<NotificationProviderProps> = ({children}) => {
-  const [stack, setStack] = useState<StackItem[]>([]);
+  const [notifications, setNotifications] = useState<ToastItem[]>([]);
+  const nextIdRef = useRef(0);
 
-  const emit = useCallback(({state, error, label, command}: Task) => {
-    let color: AlertColor = 'info';
-    const name = label || command;
-    let message = '';
-    switch (state) {
-      case TaskState.Finished: {
-        color = 'success';
-        message = 'Success';
-        break;
-      }
-      case TaskState.Canceled: {
-        color = 'warning';
-        message = 'Canceled';
-        break;
-      }
-      case TaskState.Error: {
-        color = 'error';
-        message = `Error: ${error}`;
-        break;
-      }
-    }
-    const content = (
-      <>
-        {name}: {message}
-      </>
-    );
-
-    const onClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
-      if (reason === 'clickaway') {
-        return;
-      }
-
-      setStack((prevValue) => {
-        const newValue = prevValue.slice(0);
-        const pos = newValue.indexOf(item);
-        if (pos !== -1) {
-          newValue.splice(pos, 1);
-        }
-        return newValue;
-      });
+  const showToast = useCallback((toast: ToastInput) => {
+    const severity = toast.severity ?? 'info';
+    const notification: ToastItem = {
+      ...toast,
+      id: `toast-${nextIdRef.current++}`,
+      severity,
+      autoHideDuration:
+        toast.autoHideDuration === undefined ? defaultDurations[severity] : toast.autoHideDuration,
     };
 
-    const item: StackItem = {
-      color,
-      content,
-      onClose,
-    };
+    setNotifications((current) => [...current, notification].slice(-maxVisibleNotifications));
+  }, []);
 
-    setTimeout(onClose, 10 * 1000);
-
-    setStack((prevValue) => {
-      return [...prevValue, item];
-    });
+  const handleClose = useCallback((id: string) => {
+    setNotifications((current) => current.filter((notification) => notification.id !== id));
   }, []);
 
   return (
     <>
-      <NotificationCtx.Provider value={emit}>{children}</NotificationCtx.Provider>
-      {stack.map(({color, content, onClose}, index) => {
-        return (
-          <Snackbar
-            key={String(index)}
-            anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
-            open={true}
-            autoHideDuration={6000}
-            onClose={onClose}
-          >
-            <Alert onClose={onClose} severity={color} sx={{width: '100%'}}>
-              {content}
-            </Alert>
-          </Snackbar>
-        );
-      })}
+      <NotificationCtx.Provider value={showToast}>{children}</NotificationCtx.Provider>
+      <NotificationStack notifications={notifications} onClose={handleClose} />
     </>
   );
 };

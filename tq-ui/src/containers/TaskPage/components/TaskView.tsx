@@ -6,15 +6,16 @@ import TaskLog from './TaskLog';
 interface TaskViewProps {
   task: Task;
   onUpdate: () => Promise<Task | undefined>;
+  onComplete: (task: Task) => void;
   status?: ReactNode;
 }
 
-const TaskView: FC<TaskViewProps> = ({task, onUpdate, status}) => {
+const TaskView: FC<TaskViewProps> = ({task, onUpdate, onComplete, status}) => {
   return (
     <>
       <TaskHeader task={task} onUpdate={onUpdate} />
       {status}
-      <TaskLog task={task} onUpdate={onUpdate} />
+      <TaskLog task={task} onUpdate={onUpdate} onComplete={onComplete} />
     </>
   );
 };

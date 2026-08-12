@@ -15,12 +15,13 @@ import {Command, ServerCommand} from './constants';
 interface TaskLogProps {
   task: Task;
   onUpdate: () => Promise<Task | undefined>;
+  onComplete: (task: Task) => void;
 }
 
 const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
 const shouldReconnect = (state: TaskState) => !completeStates.includes(state);
 
-const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
+const TaskLog: FC<TaskLogProps> = ({task, onUpdate, onComplete}) => {
   const {id, state} = task;
   const [connectionState, setConnectionState] = useState<TaskConnectionState>('connecting');
   const refWrapper = useRef<HTMLDivElement>(null);
@@ -30,6 +31,8 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
   refTask.current = task;
   const refOnUpdate = useRef(onUpdate);
   refOnUpdate.current = onUpdate;
+  const refOnComplete = useRef(onComplete);
+  refOnComplete.current = onComplete;
 
   const muiTheme = useTheme();
   const isDesktop = useMediaQuery(muiTheme.breakpoints.up('sm'));
@@ -72,6 +75,9 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
     let isHistory = false;
     let isOutputPaused = false;
     let outputGeneration = 0;
+    let notifiedCompletion = completeStates.includes(refTask.current.state)
+      ? `${refTask.current.state}:${refTask.current.finishedAt}`
+      : undefined;
 
     const history: Uint8Array[] = [];
     const queue: Uint8Array[] = [];
@@ -242,6 +248,14 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       }, delay);
     };
 
+    const notifyIfComplete = (latestTask: Task) => {
+      if (!completeStates.includes(latestTask.state)) return;
+      const completion = `${latestTask.state}:${latestTask.finishedAt}`;
+      if (completion === notifiedCompletion) return;
+      notifiedCompletion = completion;
+      refOnComplete.current(latestTask);
+    };
+
     const handleClose = async (
       socket: WebSocket,
       didOpen: boolean,
@@ -253,13 +267,19 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
 
       if (receivedFinished) {
         updateConnectionState('closed');
-        refOnUpdate.current().catch(() => {});
+        try {
+          const latestTask = await refOnUpdate.current();
+          if (latestTask) notifyIfComplete(latestTask);
+        } catch {
+          // The page displays the refresh error when the final task state cannot be loaded.
+        }
         return;
       }
 
       let latestTask = refTask.current;
       try {
         latestTask = (await refOnUpdate.current()) ?? latestTask;
+        notifyIfComplete(latestTask);
       } catch {
         // The page displays the refresh error while the log keeps retrying independently.
       }

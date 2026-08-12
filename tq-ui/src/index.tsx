@@ -8,6 +8,7 @@ import TaskPage from './containers/TaskPage/TaskPage';
 import TemplateProvider from './components/TemplateProvider/TemplateProvider';
 import GroupStateProvider from './components/GroupStorageProvider/GroupStateProvider';
 import QueryProvider from './components/QueryProvider';
+import NotificationProvider from './components/Notifications/NotificationProvider';
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -15,16 +16,18 @@ root.render(
   <Page>
     <QueryProvider>
       <RootStoreProvider>
-        <GroupStateProvider>
-          <TemplateProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route index element={<TaskList />} />
-                <Route path="task" element={<TaskPage />} />
-              </Routes>
-            </BrowserRouter>
-          </TemplateProvider>
-        </GroupStateProvider>
+        <NotificationProvider>
+          <GroupStateProvider>
+            <TemplateProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route index element={<TaskList />} />
+                  <Route path="task" element={<TaskPage />} />
+                </Routes>
+              </BrowserRouter>
+            </TemplateProvider>
+          </GroupStateProvider>
+        </NotificationProvider>
       </RootStoreProvider>
     </QueryProvider>
   </Page>,

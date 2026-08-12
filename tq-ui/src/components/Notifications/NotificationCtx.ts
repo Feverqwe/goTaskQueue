@@ -1,4 +1,13 @@
 import {createContext} from 'react';
-import {Task} from '../types';
 
-export const NotificationCtx = createContext<(task: Task) => void>(() => {});
+export type ToastSeverity = 'success' | 'warning' | 'error' | 'info';
+
+export interface ToastInput {
+  severity?: ToastSeverity;
+  label?: string;
+  title: string;
+  message?: string;
+  autoHideDuration?: number | null;
+}
+
+export const NotificationCtx = createContext<(toast: ToastInput) => void>(() => {});
