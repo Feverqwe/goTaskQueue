@@ -6,7 +6,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   IconButton,
   Tab,
   Tabs,
@@ -184,7 +183,10 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
               onSubmit={(event: SyntheticEvent) => submit(event, {isRun: true})}
               sx={{display: 'contents'}}
             >
-              <DialogTitle id="template-dialog-title" sx={{px: {xs: 1.5, sm: 2}, py: 1}}>
+              <DialogTitle
+                id="template-dialog-title"
+                sx={{px: {xs: 1.5, sm: 2}, bgcolor: 'background.paper'}}
+              >
                 <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minHeight: 30}}>
                   <Box sx={{minWidth: 0, flexGrow: 1}}>
                     <Typography variant="subtitle1" noWrap title={name} sx={{fontWeight: 600}}>
@@ -202,31 +204,31 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 </Box>
               </DialogTitle>
 
-              <DialogContent dividers sx={{p: 0}}>
-                <Tabs
-                  value={activeTab}
-                  onChange={(_, value: TemplateDialogTab) => setActiveTab(value)}
-                  variant={isMobile ? 'fullWidth' : 'standard'}
-                  aria-label="Task configuration"
-                  sx={{
-                    px: {xs: 0.5, sm: 2},
-                    minHeight: 40,
-                    '& .MuiTab-root': {
+              <DialogContent sx={{p: 0}}>
+                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                  <Tabs
+                    value={activeTab}
+                    onChange={(_, value: TemplateDialogTab) => setActiveTab(value)}
+                    variant={isMobile ? 'fullWidth' : 'standard'}
+                    aria-label="Task configuration"
+                    sx={{
+                      px: {xs: 0.5, sm: 2},
                       minHeight: 40,
-                      px: {xs: 0.75, sm: 2},
-                      py: 0.5,
-                      textTransform: 'none',
-                    },
-                  }}
-                >
-                  {templateVariables.length > 0 && (
-                    <Tab value="variables" label={`Variables (${templateVariables.length})`} />
-                  )}
-                  <Tab value="command" label="Command" />
-                  <Tab value="settings" label="Settings" />
-                </Tabs>
-                <Divider />
-
+                      '& .MuiTab-root': {
+                        minHeight: 40,
+                        px: {xs: 0.75, sm: 2},
+                        py: 0.5,
+                        textTransform: 'none',
+                      },
+                    }}
+                  >
+                    {templateVariables.length > 0 && (
+                      <Tab value="variables" label={`Variables (${templateVariables.length})`} />
+                    )}
+                    <Tab value="command" label="Command" />
+                    <Tab value="settings" label="Settings" />
+                  </Tabs>
+                </Box>
                 <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 160}}}>
                   {templateVariables.length > 0 && (
                     <VariablesTab

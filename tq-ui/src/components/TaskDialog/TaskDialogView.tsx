@@ -236,7 +236,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
 
   return (
     <>
-      <DialogTitle sx={{px: {xs: 1.5, sm: 2}, py: 1}}>
+      <DialogTitle sx={{px: {xs: 1.5, sm: 2}, bgcolor: 'background.paper'}}>
         <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, minHeight: 30}}>
           {!isEditTitle && (
             <Chip
@@ -303,38 +303,39 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         </Box>
       </DialogTitle>
 
-      <DialogContent dividers sx={{p: 0}}>
+      <DialogContent sx={{p: 0}}>
         {(task.error || actionError) && (
           <Alert severity="error" onClose={actionError ? () => setActionError(null) : undefined}>
             {actionError || task.error}
           </Alert>
         )}
-        <Tabs
-          value={activeTab}
-          onChange={(_, value: number) => setActiveTab(value)}
-          variant={isMobile ? 'fullWidth' : 'scrollable'}
-          scrollButtons={isMobile ? false : 'auto'}
-          aria-label="Task details"
-          sx={{
-            px: {xs: 0.5, sm: 2},
-            minHeight: 36,
-            '& .MuiTab-root': {
-              minWidth: {xs: 0, sm: 90},
+        <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+          <Tabs
+            value={activeTab}
+            onChange={(_, value: number) => setActiveTab(value)}
+            variant={isMobile ? 'fullWidth' : 'scrollable'}
+            scrollButtons={isMobile ? false : 'auto'}
+            aria-label="Task details"
+            sx={{
+              px: {xs: 0.5, sm: 2},
               minHeight: 36,
-              px: {xs: 0.5, sm: 1.25},
-              py: 0.5,
-              fontSize: {xs: '0.72rem', sm: '0.8125rem'},
-              lineHeight: 1.2,
-              textTransform: 'none',
-            },
-          }}
-        >
-          <Tab label="Overview" />
-          <Tab label="Command" />
-          <Tab label={`Resources (${resourceCount})`} />
-          <Tab label="Output" />
-        </Tabs>
-        <Divider />
+              '& .MuiTab-root': {
+                minWidth: {xs: 0, sm: 90},
+                minHeight: 36,
+                px: {xs: 0.5, sm: 1.25},
+                py: 0.5,
+                fontSize: {xs: '0.72rem', sm: '0.8125rem'},
+                lineHeight: 1.2,
+                textTransform: 'none',
+              },
+            }}
+          >
+            <Tab label="Overview" />
+            <Tab label="Command" />
+            <Tab label={`Resources (${resourceCount})`} />
+            <Tab label="Output" />
+          </Tabs>
+        </Box>
         <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 320}}}>
           {activeTab === 0 && <TaskOverview task={task} />}
           {activeTab === 1 && <TaskCommand task={task} />}

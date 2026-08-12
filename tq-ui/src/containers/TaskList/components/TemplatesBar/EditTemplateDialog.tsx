@@ -7,7 +7,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   IconButton,
   Tab,
   Tabs,
@@ -121,7 +120,10 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
 
           return (
             <Box component="form" onSubmit={submit} sx={{display: 'contents'}}>
-              <DialogTitle id="template-editor-title" sx={{px: {xs: 1.5, sm: 2}, py: 1}}>
+              <DialogTitle
+                id="template-editor-title"
+                sx={{px: {xs: 1.5, sm: 2}, bgcolor: 'background.paper'}}
+              >
                 <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minHeight: 30}}>
                   <Box sx={{minWidth: 0, flexGrow: 1}}>
                     <Typography variant="subtitle1" sx={{fontWeight: 600}}>
@@ -137,38 +139,38 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                 </Box>
               </DialogTitle>
 
-              <DialogContent dividers sx={{p: 0}}>
-                <Tabs
-                  value={activeTab}
-                  onChange={(_, value: EditorTab) => setActiveTab(value)}
-                  variant={isMobile ? 'scrollable' : 'standard'}
-                  scrollButtons={isMobile ? 'auto' : false}
-                  aria-label="Template editor sections"
-                  sx={{
-                    px: {xs: 0.5, sm: 2},
-                    minHeight: 40,
-                    '& .MuiTab-root': {
+              <DialogContent sx={{p: 0}}>
+                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                  <Tabs
+                    value={activeTab}
+                    onChange={(_, value: EditorTab) => setActiveTab(value)}
+                    variant={isMobile ? 'scrollable' : 'standard'}
+                    scrollButtons={isMobile ? 'auto' : false}
+                    aria-label="Template editor sections"
+                    sx={{
+                      px: {xs: 0.5, sm: 2},
                       minHeight: 40,
-                      px: {xs: 1.25, sm: 2},
-                      py: 0.5,
-                      textTransform: 'none',
-                    },
-                  }}
-                >
-                  <Tab value="general" label="General" />
-                  <Tab value="variables" label={`Variables (${values.variables.length})`} />
-                  <Tab
-                    value="command"
-                    label={
-                      <Badge color="error" variant="dot" invisible={!errors?.command}>
-                        Command
-                      </Badge>
-                    }
-                  />
-                  <Tab value="settings" label="Settings" />
-                </Tabs>
-                <Divider />
-
+                      '& .MuiTab-root': {
+                        minHeight: 40,
+                        px: {xs: 1.25, sm: 2},
+                        py: 0.5,
+                        textTransform: 'none',
+                      },
+                    }}
+                  >
+                    <Tab value="general" label="General" />
+                    <Tab value="variables" label={`Variables (${values.variables.length})`} />
+                    <Tab
+                      value="command"
+                      label={
+                        <Badge color="error" variant="dot" invisible={!errors?.command}>
+                          Command
+                        </Badge>
+                      }
+                    />
+                    <Tab value="settings" label="Settings" />
+                  </Tabs>
+                </Box>
                 <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 320}}}>
                   <GeneralTab hidden={activeTab !== 'general'} isNew={isNew} />
                   <VariablesTab
