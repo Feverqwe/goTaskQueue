@@ -253,7 +253,6 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: alpha(colors.canvas, 0.78),
-          backdropFilter: 'blur(5px)',
         },
       },
     },
