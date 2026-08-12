@@ -238,6 +238,12 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
+          '& .MuiButton-outlined': {
+            backgroundColor: 'transparent',
+            '&:hover': {
+              backgroundColor: 'action.hover',
+            },
+          },
         }}
       >
         <ButtonGroup sx={{m: 1, mt: 0}} variant="outlined">
