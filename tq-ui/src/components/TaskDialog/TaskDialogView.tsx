@@ -238,14 +238,34 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
   return (
     <>
       <DialogTitle sx={{px: {xs: 1.5, sm: 2}, py: 1, bgcolor: 'background.paper'}}>
-        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, minHeight: 34}}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            columnGap: {xs: 1, sm: 1.25},
+            minHeight: 34,
+          }}
+        >
           {!isEditTitle && (
             <Chip
               variant="outlined"
               size="small"
               icon={<TaskStatusIcon task={task} />}
               label={stateLabel[task.state]}
-              sx={{height: 24}}
+              sx={{
+                height: 24,
+                flexShrink: 0,
+                '& .MuiChip-icon': {
+                  width: 16,
+                  height: 16,
+                  ml: 0.75,
+                  mr: 0.5,
+                },
+                '& .MuiChip-label': {
+                  pl: 0.25,
+                  pr: 0.75,
+                },
+              }}
             />
           )}
           {isEditTitle ? (
