@@ -16,6 +16,7 @@ const useTaskListQuery = () => {
     initialData: initialTasks ?? undefined,
     initialDataUpdatedAt: initialTasks === null ? undefined : Date.now(),
     refetchInterval: 10 * 1000,
+    refetchOnMount: 'always',
     select: groupNewestFirst,
     staleTime: 10 * 1000,
   });
