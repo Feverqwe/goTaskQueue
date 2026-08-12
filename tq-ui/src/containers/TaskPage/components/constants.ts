@@ -4,7 +4,9 @@ export enum Command {
   Resize = 'r',
 }
 
-export enum InputCommand {
+export enum ServerCommand {
   History = 'h',
   Actual = 'a',
+  Finished = 'f',
+  Error = 'e',
 }

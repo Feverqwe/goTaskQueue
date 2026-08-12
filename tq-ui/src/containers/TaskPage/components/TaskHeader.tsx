@@ -26,7 +26,7 @@ import TaskDialog from '../../../components/TaskDialog/TaskDialog';
 
 interface TaskHeaderProps {
   task: Task;
-  onUpdate: () => void;
+  onUpdate: () => Promise<Task | undefined>;
 }
 
 const TaskHeader: FC<TaskHeaderProps> = ({task, onUpdate}) => {
@@ -37,13 +37,13 @@ const TaskHeader: FC<TaskHeaderProps> = ({task, onUpdate}) => {
   const [showConfirm, setShowConfirm] = useState<{type: string} | undefined>();
   const [showTaskDialog, setShowTaskDialog] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     document.title = `Task ${label || command} — ${name}`;
   }, [name, label, command]);
 
   const handleStart = useCallback(async () => {
     await api.taskRun({id});
-    onUpdate();
+    await onUpdate();
   }, [id, onUpdate]);
 
   const handleStop = useCallback(() => {
@@ -53,7 +53,7 @@ const TaskHeader: FC<TaskHeaderProps> = ({task, onUpdate}) => {
   const handleStopConfirmSubmit = useCallback(
     async (signal: number) => {
       await api.taskSignal({id, signal});
-      onUpdate();
+      await onUpdate();
     },
     [id, onUpdate],
   );

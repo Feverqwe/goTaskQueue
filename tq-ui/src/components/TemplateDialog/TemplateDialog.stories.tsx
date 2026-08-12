@@ -89,6 +89,7 @@ export const PtyUnsupported: Story = {
           templateOrder: [],
           memStorage: {},
           isPtySupported: false,
+          tasks: null,
         }}
       >
         <Story />

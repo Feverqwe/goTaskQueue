@@ -49,7 +49,7 @@ export interface RootStore {
   templateOrder: string[];
   memStorage: Record<string, unknown>;
   isPtySupported: boolean;
-  tasks?: Task[];
+  tasks: Task[] | null;
   task?: Task;
 }
 

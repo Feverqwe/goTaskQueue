@@ -26,7 +26,7 @@ type Queue struct {
 func (s *Queue) GetAll(config *cfg.Config) []*Task {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return append([]*Task(nil), s.Tasks...)
+	return append([]*Task{}, s.Tasks...)
 }
 
 func (s *Queue) Get(id string) (*Task, error) {

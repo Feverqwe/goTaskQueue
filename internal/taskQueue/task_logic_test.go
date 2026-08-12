@@ -42,6 +42,21 @@ func newTestTask(queue *Queue) *Task {
 	return task
 }
 
+func TestQueueGetAllReturnsEmptyArray(t *testing.T) {
+	tasks := NewQueue().GetAll(&cfg.Config{})
+	if tasks == nil {
+		t.Fatal("GetAll() returned nil, want an empty slice")
+	}
+
+	data, err := json.Marshal(tasks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "[]" {
+		t.Fatalf("GetAll() JSON = %s, want []", data)
+	}
+}
+
 func TestTaskLinkOperationsReplaceAndDelete(t *testing.T) {
 	task := newTestTask(NewQueue())
 	task.Links = []TaskLink{

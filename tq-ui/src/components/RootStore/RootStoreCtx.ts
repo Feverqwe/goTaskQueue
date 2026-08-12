@@ -7,4 +7,5 @@ export const RootStoreCtx = createContext<RootStore>({
   templates: [],
   memStorage: {},
   isPtySupported: true,
+  tasks: null,
 });

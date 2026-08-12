@@ -59,11 +59,12 @@ a compact snapshot of the current normal/alternate screen for browser attach.
 through to a 403 response.
 
 `/ws?id=<task-id>` streams combined terminal output. Server frames begin with
-`h` for history (a serialized screen snapshot for PTY tasks) or `a` for current
-data. Client messages begin with `i` for terminal input or `r` for a JSON-encoded
-PTY resize request. Active PTY connections wait briefly for the initial resize
-before creating their snapshot. Keep this protocol compatible when modifying
-either side.
+`h` for history (a serialized screen snapshot for PTY tasks), `a` for current
+data, `f` after the final output has been sent, or `e` for a protocol error whose
+remaining payload is the error message. Client messages begin with `i` for
+terminal input or `r` for a JSON-encoded PTY resize request. Active PTY
+connections wait briefly for the initial resize before creating their snapshot.
+Keep this protocol compatible when modifying either side.
 
 ### Templates and embedded assets
 

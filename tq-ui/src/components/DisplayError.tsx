@@ -6,7 +6,7 @@ import {useNavigate} from 'react-router-dom';
 
 interface DisplayErrorProps {
   error: unknown;
-  onRetry: () => void;
+  onRetry?: () => void;
   back?: boolean;
 }
 
@@ -45,7 +45,7 @@ const DisplayError: FC<DisplayErrorProps> = ({error, onRetry, back}) => {
       )}
       <ErrorOutlinedIcon color="error" />
       <Typography>{message}</Typography>
-      <Button onClick={onRetry}>Retry</Button>
+      {onRetry && <Button onClick={onRetry}>Retry</Button>}
     </Stack>
   );
 };

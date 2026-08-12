@@ -135,14 +135,23 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 	const CHUNK_SIZE = 16 * 1024
 	const HISTORY_DATA = "h"
 	const ACTUAL_DATA = "a"
+	const FINISHED_DATA = "f"
+	const ERROR_DATA = "e"
 
 	ws := func(ws *websocket.Conn) {
 		defer ws.Close()
+		sendFrame := func(dataType string, data []byte) error {
+			payload := make([]byte, len(data)+1)
+			payload[0] = dataType[0]
+			copy(payload[1:], data)
+			return websocket.Message.Send(ws, payload)
+		}
 
 		id := ws.Request().URL.Query().Get("id")
 
 		task, err := queue.Get(id)
 		if err != nil {
+			_ = sendFrame(ERROR_DATA, []byte(err.Error()))
 			return
 		}
 		historyReady := make(chan struct{}, 1)
@@ -197,7 +206,6 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 		}
 
 		pushPart := func(part []byte, dataType string) error {
-			d := []byte(dataType)
 			for {
 				chunkSize := len(part)
 				if chunkSize == 0 {
@@ -208,8 +216,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				}
 				chunk := part[:chunkSize]
 				part = part[chunkSize:]
-				payload := append(d[0:1], chunk...)
-				if err := websocket.Message.Send(ws, payload); err != nil {
+				if err := sendFrame(dataType, chunk); err != nil {
 					return err
 				}
 			}
@@ -227,6 +234,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 					newOffset, fragment, err := task.ReadCombined(offset)
 					if err != nil {
 						log.Println("read combined error", err)
+						_ = sendFrame(ERROR_DATA, []byte(err.Error()))
 						return
 					}
 					if newOffset == offset {
@@ -243,6 +251,10 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 			}
 			dataType = ACTUAL_DATA
 			if finished {
+				if err := sendFrame(FINISHED_DATA, nil); err != nil &&
+					!errors.Is(err, io.EOF) && !errors.Is(err, syscall.EPIPE) {
+					log.Println("ws send finished error", err)
+				}
 				return
 			}
 			select {

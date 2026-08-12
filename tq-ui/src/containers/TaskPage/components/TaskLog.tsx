@@ -1,31 +1,35 @@
 import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Alert, Box, Button, Snackbar, useMediaQuery, useTheme} from '@mui/material';
+import {Box, useMediaQuery, useTheme} from '@mui/material';
 import {FitAddon} from '@xterm/addon-fit';
 import {WebLinksAddon} from '@xterm/addon-web-links';
 import {Terminal} from '@xterm/xterm';
 import throttle from 'lodash.throttle';
 import {theme} from './theme';
 import {PtyScreenSize, Task, TaskState} from '../../../components/types';
-import {waitGroup} from '../utils';
+import TaskConnectionAlert, {TaskConnectionState} from './TaskConnectionAlert';
 
 import '@xterm/xterm/css/xterm.css';
 import './XTerm.css';
-import {Command, InputCommand} from './constants';
+import {Command, ServerCommand} from './constants';
 
 interface TaskLogProps {
   task: Task;
-  onUpdate: () => void;
+  onUpdate: () => Promise<Task | undefined>;
 }
+
+const completeStates = [TaskState.Finished, TaskState.Error, TaskState.Canceled];
+const shouldReconnect = (state: TaskState) => !completeStates.includes(state);
 
 const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
   const {id, state} = task;
-  const [isOpen, setOpen] = useState(false);
-  const [isConnecting, setConnecting] = useState(false);
+  const [connectionState, setConnectionState] = useState<TaskConnectionState>('connecting');
   const refWrapper = useRef<HTMLDivElement>(null);
   const refCtr = useRef<HTMLDivElement>(null);
 
   const refTask = useRef<Task>(task);
   refTask.current = task;
+  const refOnUpdate = useRef(onUpdate);
+  refOnUpdate.current = onUpdate;
 
   const muiTheme = useTheme();
   const isDesktop = useMediaQuery(muiTheme.breakpoints.up('sm'));
@@ -58,52 +62,116 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
 
     const resizeObserver = new ResizeObserver(throttle(() => fitAddon.fit(), 100));
 
-    let ws: WebSocket;
-    let isOpen = false;
+    let ws: WebSocket | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let connectionTimer: ReturnType<typeof setTimeout> | undefined;
+    let pingTimer: ReturnType<typeof setInterval> | undefined;
+    let retryCount = 0;
+    let disposed = false;
+    let currentConnectionState: TaskConnectionState = 'connecting';
     let isHistory = false;
+    let isOutputPaused = false;
+    let outputGeneration = 0;
 
     const history: Uint8Array[] = [];
     const queue: Uint8Array[] = [];
+    const deferredHistory: Uint8Array[] = [];
+    const deferredQueue: Uint8Array[] = [];
+    const drainResolvers: Array<() => void> = [];
     let running = false;
-    const nextData = () => {
-      if (running) return;
-      running = true;
 
-      if (history.length) {
-        isHistory = true;
-        const wg = waitGroup();
-        while (history.length) {
-          wg.add(1);
-          const data = history.shift()!;
-          terminal.write(data, wg.done);
-        }
-        wg.wait().then(() => {
-          isHistory = false;
-          running = false;
-          nextData();
-        });
+    const updateConnectionState = (nextState: TaskConnectionState) => {
+      currentConnectionState = nextState;
+      setConnectionState(nextState);
+    };
+
+    const clearReconnectTimer = () => {
+      if (reconnectTimer !== undefined) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = undefined;
+      }
+    };
+
+    const clearPingTimer = () => {
+      if (pingTimer !== undefined) {
+        clearInterval(pingTimer);
+        pingTimer = undefined;
+      }
+    };
+
+    const clearConnectionTimer = () => {
+      if (connectionTimer !== undefined) {
+        clearTimeout(connectionTimer);
+        connectionTimer = undefined;
+      }
+    };
+
+    const resolveDrain = () => {
+      if (running || history.length || queue.length) return;
+      while (drainResolvers.length) drainResolvers.shift()!();
+    };
+
+    const nextData = () => {
+      if (running || disposed) return;
+      const data = history.shift();
+      isHistory = data !== undefined;
+      const nextChunk = data ?? queue.shift();
+      if (!nextChunk) {
+        isHistory = false;
+        resolveDrain();
         return;
       }
 
-      while (queue.length) {
-        const data = queue.shift()!;
-        terminal.write(data);
-      }
-
-      running = false;
+      running = true;
+      terminal.write(nextChunk, () => {
+        running = false;
+        isHistory = false;
+        nextData();
+      });
     };
 
-    const writeData = (dataType: InputCommand, data: Uint8Array) => {
-      if (dataType === InputCommand.History) {
-        history.push(data);
-      } else if (dataType === InputCommand.Actual) {
-        queue.push(data);
+    const writeData = (dataType: ServerCommand, data: Uint8Array) => {
+      const historyTarget = isOutputPaused ? deferredHistory : history;
+      const queueTarget = isOutputPaused ? deferredQueue : queue;
+      if (dataType === ServerCommand.History) {
+        historyTarget.push(data);
+      } else if (dataType === ServerCommand.Actual) {
+        queueTarget.push(data);
       }
-      nextData();
+      if (!isOutputPaused) nextData();
+    };
+
+    const waitForDrain = () => {
+      if (!running && history.length === 0 && queue.length === 0) return Promise.resolve();
+      return new Promise<void>((resolve) => drainResolvers.push(resolve));
+    };
+
+    const cancelPendingReplay = () => {
+      outputGeneration += 1;
+      isOutputPaused = false;
+      deferredHistory.length = 0;
+      deferredQueue.length = 0;
+    };
+
+    const prepareReconnectOutput = () => {
+      const generation = ++outputGeneration;
+      isOutputPaused = true;
+      deferredHistory.length = 0;
+      deferredQueue.length = 0;
+      waitForDrain().then(() => {
+        if (disposed || generation !== outputGeneration) return;
+        terminal.reset();
+        history.push(...deferredHistory);
+        queue.push(...deferredQueue);
+        deferredHistory.length = 0;
+        deferredQueue.length = 0;
+        isOutputPaused = false;
+        nextData();
+      });
     };
 
     const sendCommand = (type: Command, data: string | PtyScreenSize = '') => {
-      if (!isOpen) return;
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
       let payload = '';
       switch (type) {
         case Command.Ping: {
@@ -119,11 +187,15 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
           break;
         }
       }
-      ws.send(payload);
+      try {
+        ws.send(payload);
+      } catch {
+        ws.close();
+      }
     };
 
     terminal.onData((data) => {
-      if (isHistory) return;
+      if (isHistory || isOutputPaused) return;
       if (!refTask.current.isPty) {
         data = data.replace(/\r\n|\r/g, '\n');
       }
@@ -134,11 +206,9 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       const wrapper = refCtr.current;
       if (!wrapper) return;
       if (!refTask.current.isPty || refTask.current.state !== TaskState.Started) return;
-      const x = wrapper.clientWidth;
-      const y = wrapper.clientHeight;
       const screenSize: PtyScreenSize = {
-        x,
-        y,
+        x: wrapper.clientWidth,
+        y: wrapper.clientHeight,
         cols,
         rows,
       };
@@ -149,33 +219,156 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       handleResize(cols, rows);
     });
 
-    return {
-      wsConnect: () => {
-        setConnecting(true);
-        ws = new WebSocket(
-          `${location.protocol === 'http:' ? 'ws' : 'wss'}://${location.host}/ws?id=${id}`,
+    const detachSocket = () => {
+      if (!ws) return;
+      const previousSocket = ws;
+      ws = undefined;
+      clearConnectionTimer();
+      previousSocket.onopen = null;
+      previousSocket.onclose = null;
+      previousSocket.onerror = null;
+      previousSocket.onmessage = null;
+      previousSocket.close();
+    };
+
+    const scheduleReconnect = () => {
+      if (disposed || reconnectTimer !== undefined) return;
+      retryCount += 1;
+      updateConnectionState(shouldReconnect(refTask.current.state) ? 'reconnecting' : 'connecting');
+      const delay = Math.min(1000 * 2 ** (retryCount - 1), 10 * 1000);
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = undefined;
+        connect(true);
+      }, delay);
+    };
+
+    const handleClose = async (
+      socket: WebSocket,
+      didOpen: boolean,
+      receivedFinished: boolean,
+      receivedProtocolError: boolean,
+      wasClean: boolean,
+    ) => {
+      clearPingTimer();
+
+      if (receivedFinished) {
+        updateConnectionState('closed');
+        refOnUpdate.current().catch(() => {});
+        return;
+      }
+
+      let latestTask = refTask.current;
+      try {
+        latestTask = (await refOnUpdate.current()) ?? latestTask;
+      } catch {
+        // The page displays the refresh error while the log keeps retrying independently.
+      }
+
+      if (disposed || socket !== ws) return;
+      if (receivedProtocolError || shouldReconnect(latestTask.state) || !didOpen || !wasClean) {
+        scheduleReconnect();
+      } else {
+        updateConnectionState('closed');
+      }
+    };
+
+    function connect(isReconnect = false) {
+      if (disposed) return;
+      clearReconnectTimer();
+      clearPingTimer();
+      detachSocket();
+      if (isReconnect) {
+        cancelPendingReplay();
+        updateConnectionState(
+          shouldReconnect(refTask.current.state) ? 'reconnecting' : 'connecting',
         );
-        ws.onopen = () => {
-          setOpen((isOpen = true));
-          setConnecting(false);
-          handleResize(terminal.cols, terminal.rows);
-        };
-        ws.onclose = () => {
-          setOpen((isOpen = false));
-          setConnecting(false);
-        };
-        ws.onmessage = async (e: MessageEvent<Blob>) => {
-          const buffer = await e.data.arrayBuffer();
-          const u8a = new Uint8Array(buffer);
-          const data = u8a.slice(1);
-          const dataType = String.fromCharCode(u8a[0]);
-          writeData(dataType as InputCommand, data);
-        };
+      } else {
+        updateConnectionState('connecting');
+      }
+
+      let socket: WebSocket;
+      try {
+        socket = new WebSocket(
+          `${location.protocol === 'http:' ? 'ws' : 'wss'}://${location.host}/ws?id=${encodeURIComponent(id)}`,
+        );
+      } catch {
+        scheduleReconnect();
+        return;
+      }
+
+      ws = socket;
+      socket.binaryType = 'arraybuffer';
+      let didOpen = false;
+      let receivedFinished = false;
+      let receivedProtocolError = false;
+
+      socket.onopen = () => {
+        if (disposed || socket !== ws) return;
+        clearConnectionTimer();
+        didOpen = true;
+        retryCount = 0;
+        if (isReconnect) {
+          prepareReconnectOutput();
+          refOnUpdate.current().catch(() => {});
+        }
+        updateConnectionState('connected');
+        handleResize(terminal.cols, terminal.rows);
+        pingTimer = setInterval(() => sendCommand(Command.Ping), 30 * 1000);
+      };
+      socket.onclose = (event) => {
+        if (disposed || socket !== ws) return;
+        clearConnectionTimer();
+        handleClose(socket, didOpen, receivedFinished, receivedProtocolError, event.wasClean).catch(
+          () => {},
+        );
+      };
+      socket.onerror = () => {
+        if (socket === ws) socket.close();
+      };
+      socket.onmessage = (event: MessageEvent<ArrayBuffer>) => {
+        if (disposed || socket !== ws) return;
+        const bytes = new Uint8Array(event.data);
+        if (bytes.length === 0) return;
+        const dataType = String.fromCharCode(bytes[0]) as ServerCommand;
+        if (dataType === ServerCommand.Finished) {
+          receivedFinished = true;
+          return;
+        }
+        if (dataType === ServerCommand.Error) {
+          receivedProtocolError = true;
+          return;
+        }
+        writeData(dataType, bytes.slice(1));
+      };
+      connectionTimer = setTimeout(() => {
+        if (socket === ws && socket.readyState === WebSocket.CONNECTING) socket.close();
+      }, 10 * 1000);
+    }
+
+    return {
+      connect,
+      reconnect: () => {
+        retryCount = Math.max(retryCount, 1);
+        connect(true);
       },
-      wsClose: () => {
-        ws.close();
+      syncTaskState: (taskState: TaskState) => {
+        if (shouldReconnect(taskState)) {
+          if (currentConnectionState === 'closed') scheduleReconnect();
+        } else if (currentConnectionState === 'reconnecting') {
+          // A finished task has a finite log. Retrying its history load is not a lost live stream.
+          updateConnectionState('connecting');
+        }
       },
-      wsSend: sendCommand,
+      dispose: () => {
+        disposed = true;
+        cancelPendingReplay();
+        clearReconnectTimer();
+        clearConnectionTimer();
+        clearPingTimer();
+        detachSocket();
+        terminal.dispose();
+        resizeObserver.disconnect();
+      },
       terminal,
       resizeObserver,
     };
@@ -189,35 +382,17 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
 
     resizeObserver.observe(ctr);
     terminal.open(wrapper);
-    scope.wsConnect();
+    scope.connect();
 
-    return () => {
-      scope.wsClose();
-      terminal.dispose();
-      resizeObserver.disconnect();
-    };
+    return scope.dispose;
   }, [scope]);
 
   useEffect(() => {
-    // when ws closed do update task
-    if (!isOpen) return;
-    return () => {
-      onUpdate();
-    };
-  }, [onUpdate, isOpen]);
+    scope.syncTaskState(state);
+  }, [scope, state]);
 
   useEffect(() => {
-    // when ws closed do stop interval
-    if (!isOpen) return;
-    const intervalId = setInterval(() => {
-      scope.wsSend(Command.Ping);
-    }, 30 * 1000);
-    return () => clearInterval(intervalId);
-  }, [scope, isOpen]);
-
-  useEffect(() => {
-    if (!isDesktopInit) return;
-    if (state !== TaskState.Started) return;
+    if (!isDesktopInit || state !== TaskState.Started) return;
     scope.terminal.focus();
   }, [isDesktopInit, scope.terminal, state]);
 
@@ -226,8 +401,7 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
   }, [scope, state]);
 
   const handleReconnect = useCallback(() => {
-    scope.terminal.reset();
-    scope.wsConnect();
+    scope.reconnect();
   }, [scope]);
 
   return (
@@ -241,21 +415,7 @@ const TaskLog: FC<TaskLogProps> = ({task, onUpdate}) => {
       }}
     >
       <div style={{height: '100%', width: '100%'}} ref={refWrapper} />
-      {!isOpen && !isConnecting && state === TaskState.Started && (
-        <Snackbar anchorOrigin={{vertical: 'bottom', horizontal: 'right'}} open={true}>
-          <Alert
-            severity="error"
-            sx={{width: '100%'}}
-            action={
-              <Button size="small" onClick={handleReconnect}>
-                Reconnect
-              </Button>
-            }
-          >
-            Connection lost
-          </Alert>
-        </Snackbar>
-      )}
+      <TaskConnectionAlert state={connectionState} onReconnect={handleReconnect} />
     </Box>
   );
 };

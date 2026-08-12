@@ -86,7 +86,7 @@ func TestWebsocketHandlerDrainsFinalOutputBeforeClosing(t *testing.T) {
 	}
 	defer client.Close()
 
-	for _, want := range []string{"hfirst", "atail"} {
+	for _, want := range []string{"hfirst", "atail", "f"} {
 		var message []byte
 		if err := websocket.Message.Receive(client, &message); err != nil {
 			t.Fatalf("receive %q: %v", want, err)
@@ -94,5 +94,59 @@ func TestWebsocketHandlerDrainsFinalOutputBeforeClosing(t *testing.T) {
 		if string(message) != want {
 			t.Fatalf("message = %q, want %q", message, want)
 		}
+	}
+}
+
+func TestWebsocketHandlerReportsUnknownTask(t *testing.T) {
+	queue := taskQueue.NewQueue()
+	router := internal.NewRouter()
+	handleWebsocket(router, queue)
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws?id=missing"
+	client, err := websocket.Dial(wsURL, "", server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	var message []byte
+	if err := websocket.Message.Receive(client, &message); err != nil {
+		t.Fatal(err)
+	}
+	if want := "eTask not found"; string(message) != want {
+		t.Fatalf("message = %q, want %q", message, want)
+	}
+}
+
+func TestWebsocketHandlerReportsLogReadError(t *testing.T) {
+	queue := taskQueue.NewQueue()
+	task := queue.Add(&cfg.Config{}, taskQueue.TaskBase{})
+	task.Combined = &shared.DataStore{
+		Len: func() int64 { return 1 },
+		ReadAt: func(int64) ([]byte, error) {
+			return nil, fmt.Errorf("read failed")
+		},
+	}
+
+	router := internal.NewRouter()
+	handleWebsocket(router, queue)
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws?id=" + task.Id
+	client, err := websocket.Dial(wsURL, "", server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	var message []byte
+	if err := websocket.Message.Receive(client, &message); err != nil {
+		t.Fatal(err)
+	}
+	if want := "eread failed"; string(message) != want {
+		t.Fatalf("message = %q, want %q", message, want)
 	}
 }

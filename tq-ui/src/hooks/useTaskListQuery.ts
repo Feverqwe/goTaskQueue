@@ -13,8 +13,8 @@ const useTaskListQuery = () => {
   return useQuery({
     queryKey: ['tasks'],
     queryFn: ({signal}) => api.tasks(undefined, {signal}),
-    initialData: initialTasks,
-    initialDataUpdatedAt: initialTasks ? Date.now() : undefined,
+    initialData: initialTasks ?? undefined,
+    initialDataUpdatedAt: initialTasks === null ? undefined : Date.now(),
     refetchInterval: 10 * 1000,
     select: groupNewestFirst,
     staleTime: 10 * 1000,
