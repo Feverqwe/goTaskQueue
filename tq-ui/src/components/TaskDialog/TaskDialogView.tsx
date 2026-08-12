@@ -238,7 +238,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
   return (
     <>
       <DialogTitle sx={{px: {xs: 1.5, sm: 2}, py: 1, bgcolor: 'background.paper'}}>
-        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, minHeight: 30}}>
+        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, minHeight: 34}}>
           {!isEditTitle && (
             <Chip
               variant="outlined"
@@ -314,7 +314,14 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={{p: 0}}>
+      <DialogContent
+        sx={{
+          display: isMobile ? 'flex' : 'block',
+          minHeight: 0,
+          flexDirection: 'column',
+          p: 0,
+        }}
+      >
         {(task.error || actionError) && (
           <Alert severity="error" onClose={actionError ? () => setActionError(null) : undefined}>
             {actionError || task.error}
@@ -335,9 +342,8 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
                 minHeight: DIALOG_TAB_MIN_HEIGHT,
                 px: {xs: 0.5, sm: 1.25},
                 py: 0.5,
-                fontSize: {xs: '0.72rem', sm: '0.8125rem'},
-                lineHeight: 1.2,
                 textTransform: 'none',
+                whiteSpace: 'nowrap',
               },
             }}
           >
@@ -350,6 +356,9 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         <Box
           sx={{
             minHeight: DIALOG_TAB_PANEL_MIN_HEIGHT,
+            display: activeTab === 1 ? 'flex' : 'block',
+            flex: isMobile ? 1 : undefined,
+            flexDirection: 'column',
             p: activeTab === 1 ? 0 : {xs: 1.5, sm: 2},
           }}
         >

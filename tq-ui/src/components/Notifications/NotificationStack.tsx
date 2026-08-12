@@ -1,5 +1,5 @@
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import {Alert, Box, IconButton, Snackbar, Stack, Typography, alpha} from '@mui/material';
+import {Alert, Box, IconButton, Snackbar, Stack, Typography, alpha, useTheme} from '@mui/material';
 import React, {FC} from 'react';
 import {ToastSeverity} from './NotificationCtx';
 
@@ -17,14 +17,9 @@ interface NotificationStackProps {
   onClose: (id: string) => void;
 }
 
-const statusColors: Record<ToastSeverity, string> = {
-  success: '#63C48D',
-  warning: '#E0AA55',
-  error: '#F07178',
-  info: '#69A7E3',
-};
-
 const NotificationStack: FC<NotificationStackProps> = ({notifications, onClose}) => {
+  const theme = useTheme();
+
   if (notifications.length === 0) return null;
 
   return (
@@ -43,7 +38,7 @@ const NotificationStack: FC<NotificationStackProps> = ({notifications, onClose})
       })}
     >
       {notifications.map((notification) => {
-        const color = statusColors[notification.severity];
+        const color = theme.palette[notification.severity].main;
 
         return (
           <Snackbar
@@ -82,10 +77,9 @@ const NotificationStack: FC<NotificationStackProps> = ({notifications, onClose})
                 border: `1px solid ${alpha(color, 0.34)}`,
                 borderLeft: `3px solid ${color}`,
                 borderRadius: 1.5,
-                backgroundColor: 'rgba(37, 39, 43, 0.97)',
-                backgroundImage: `linear-gradient(110deg, ${alpha(color, 0.1)}, transparent 42%)`,
-                boxShadow: '0 12px 32px rgba(0, 0, 0, 0.34)',
-                color: '#DFE1E5',
+                backgroundColor: alpha(theme.palette.background.paper, 0.97),
+                boxShadow: `0 12px 32px ${alpha(theme.palette.common.black, 0.34)}`,
+                color: 'text.primary',
                 backdropFilter: 'blur(10px)',
                 '& .MuiAlert-icon': {
                   color,
@@ -140,7 +134,7 @@ const NotificationStack: FC<NotificationStackProps> = ({notifications, onClose})
                   sx={{
                     mt: 0.75,
                     pt: 0.75,
-                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderTop: `1px solid ${theme.palette.divider}`,
                   }}
                 >
                   <Typography

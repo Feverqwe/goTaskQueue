@@ -11,6 +11,39 @@ globalThis.MonacoEnvironment = {
     }),
 };
 
+const editorTheme = 'gotaskqueue-graphite-relay';
+const EDITOR_PADDING_TOP = 8;
+
+editor.defineTheme(editorTheme, {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [
+    {token: 'comment', foreground: '8E96A0', fontStyle: 'italic'},
+    {token: 'keyword', foreground: 'D5DAE0'},
+    {token: 'string', foreground: '75C997'},
+    {token: 'number', foreground: 'D6B46C'},
+  ],
+  colors: {
+    'editor.background': '#181B20',
+    'editor.foreground': '#F2F4F7',
+    'editorCursor.foreground': '#D5DAE0',
+    'editor.selectionBackground': '#49515CAA',
+    'editor.inactiveSelectionBackground': '#30353DBB',
+    'editor.lineHighlightBackground': '#20242A',
+    'editor.lineHighlightBorder': '#00000000',
+    'editorLineNumber.foreground': '#7A838E',
+    'editorLineNumber.activeForeground': '#D5DAE0',
+    'editorIndentGuide.background1': '#30353D',
+    'editorIndentGuide.activeBackground1': '#49515C',
+    'editorWidget.background': '#30353D',
+    'editorWidget.border': '#49515C',
+    'editorSuggestWidget.background': '#30353D',
+    'editorSuggestWidget.border': '#49515C',
+    'input.background': '#252930',
+    focusBorder: '#69717C',
+  },
+});
+
 const CTR_STYLE = {
   width: '100%',
 };
@@ -62,19 +95,24 @@ const CommandField: FC<CommandFieldProps> = ({
       value: refDefaultValue.current,
       language: 'shell',
       automaticLayout: true,
-      theme: 'vs-dark',
+      theme: editorTheme,
       minimap: {
         enabled: false,
       },
       wordWrap: 'on',
       fontSize: 14,
+      padding: {
+        top: EDITOR_PADDING_TOP,
+      },
       readOnly,
     });
 
     function setCtrHeight(ctrNode: HTMLDivElement) {
       const lineHeight = instance.getOptions().get(editor.EditorOption.lineHeight);
       const lineCount = instance.getModel()?.getLineCount() ?? 0;
-      ctrNode.style.height = `${Math.min(Math.max(lineCount, 16), 16) * lineHeight}px`;
+      ctrNode.style.height = `${
+        Math.min(Math.max(lineCount, 16), 16) * lineHeight + EDITOR_PADDING_TOP
+      }px`;
     }
 
     instance.onDidContentSizeChange(({contentHeightChanged}) => {

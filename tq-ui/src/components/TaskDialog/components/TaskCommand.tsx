@@ -8,7 +8,15 @@ interface TaskCommandProps {
 }
 
 const TaskCommand: FC<TaskCommandProps> = ({task}) => (
-  <Box sx={{position: 'relative'}}>
+  <Box
+    sx={{
+      position: 'relative',
+      display: 'flex',
+      minHeight: 'inherit',
+      flex: 1,
+      flexDirection: 'column',
+    }}
+  >
     <Box sx={{position: 'absolute', top: 6, right: 6, zIndex: 1}}>
       <CopyButton value={task.command} label="Copy command" />
     </Box>
@@ -18,9 +26,13 @@ const TaskCommand: FC<TaskCommandProps> = ({task}) => (
       sx={{
         p: 2,
         pr: 6,
-        maxHeight: {xs: 'calc(100vh - 280px)', sm: 420},
+        minHeight: 'inherit',
+        maxHeight: {sm: 420},
+        flex: 1,
         overflow: 'auto',
+        border: 0,
         bgcolor: 'background.default',
+        boxShadow: 'none',
       }}
     >
       <Typography

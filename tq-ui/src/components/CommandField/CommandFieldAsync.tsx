@@ -14,7 +14,7 @@ export const CommandFieldLoading: FC = () => (
       alignItems: 'center',
       justifyContent: 'center',
       gap: 1.5,
-      bgcolor: '#1e1e1e',
+      bgcolor: 'background.default',
     }}
   >
     <CircularProgress size={24} />

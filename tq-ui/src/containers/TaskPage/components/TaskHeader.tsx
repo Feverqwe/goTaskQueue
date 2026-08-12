@@ -184,7 +184,7 @@ const TaskHeader: FC<TaskHeaderProps> = ({task, onUpdate}) => {
                     <Typography
                       variant="subtitle2"
                       sx={{
-                        color: '#ff8a80',
+                        color: 'error.main',
                       }}
                     >
                       {error}
