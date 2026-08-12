@@ -23,6 +23,7 @@ import {Task} from '../../types';
 import {api} from '../../../tools/api';
 import ActionButton from '../../ActionButton/ActionButton';
 import IconActionButton from '../../IconActionButton/IconActionButton';
+import SectionHeading from '../../SectionHeading/SectionHeading';
 import LinkIcon from '../../../containers/TaskPage/components/LinkIcon';
 import CopyButton from './CopyButton';
 
@@ -35,6 +36,11 @@ function getAssetName(path: string) {
   const parts = path.split(/[\\/]/).filter(Boolean);
   return parts[parts.length - 1] || path;
 }
+
+const RESOURCE_SECONDARY_TEXT_PROPS = {
+  noWrap: true,
+  sx: {fontFamily: 'monospace', fontSize: '0.75rem'},
+} as const;
 
 const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
   const [showAddLink, setShowAddLink] = useState(false);
@@ -91,9 +97,7 @@ const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
     <Box sx={{display: 'flex', flexDirection: 'column', gap: 3}}>
       <Box>
         <Box sx={{display: 'flex', alignItems: 'center', mb: 1}}>
-          <Typography variant="subtitle2" sx={{flexGrow: 1, fontWeight: 600}}>
-            Links ({task.links.length})
-          </Typography>
+          <SectionHeading sx={{flexGrow: 1}}>Links ({task.links.length})</SectionHeading>
           <Button
             size="small"
             startIcon={showAddLink ? <CloseIcon /> : <AddIcon />}
@@ -186,10 +190,7 @@ const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
                       secondary={link.url}
                       slotProps={{
                         primary: {noWrap: true},
-                        secondary: {
-                          noWrap: true,
-                          sx: {fontFamily: 'monospace', fontSize: '0.75rem'},
-                        },
+                        secondary: RESOURCE_SECONDARY_TEXT_PROPS,
                       }}
                       sx={{pr: 12}}
                     />
@@ -207,9 +208,7 @@ const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
 
       <Box>
         <Box sx={{display: 'flex', alignItems: 'center', mb: 1}}>
-          <Typography variant="subtitle2" sx={{flexGrow: 1, fontWeight: 600}}>
-            Files and folders ({assets.length})
-          </Typography>
+          <SectionHeading sx={{flexGrow: 1}}>Files and folders ({assets.length})</SectionHeading>
           <Button
             size="small"
             startIcon={showAddAsset ? <CloseIcon /> : <AddIcon />}
@@ -273,10 +272,7 @@ const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
                       secondary={asset.path}
                       slotProps={{
                         primary: {noWrap: true},
-                        secondary: {
-                          noWrap: true,
-                          sx: {fontFamily: 'monospace', fontSize: '0.75rem'},
-                        },
+                        secondary: RESOURCE_SECONDARY_TEXT_PROPS,
                       }}
                       sx={{pr: 8}}
                     />

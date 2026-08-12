@@ -7,6 +7,7 @@ import TemplatesBarView from './TemplatesBarView';
 import DialogMenuItem from '../../../../components/DialogMenu/DialogMenuItem';
 import DialogMenu from '../../../../components/DialogMenu/DialogMenu';
 import useContextMenuFix from '../../../../hooks/useContextMenuFix';
+import {TEMPLATE_BUTTON_SX} from './styles';
 
 export interface TemplateFolderBtnProps extends Omit<TemplateBtnProps, 'template' | 'folder'> {
   template: TemplateFolder;
@@ -69,7 +70,7 @@ const TemplateFolderBtn: FC<TemplateFolderBtnProps> = ({
   return (
     <>
       <Button
-        sx={{m: 1, mt: 0, flexGrow: {xs: 1, sm: 0}}}
+        sx={TEMPLATE_BUTTON_SX}
         variant="outlined"
         onClick={handleClick}
         onContextMenu={handleCtxMenu}

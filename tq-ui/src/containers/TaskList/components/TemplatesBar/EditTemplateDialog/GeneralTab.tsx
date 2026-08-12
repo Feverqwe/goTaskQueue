@@ -1,6 +1,8 @@
 import React, {FC} from 'react';
-import {Box, Stack, TextField, Typography} from '@mui/material';
+import {Box, Stack, TextField} from '@mui/material';
 import {Field} from 'react-final-form';
+import {CODE_FIELD_SX} from '../../../../../components/CodeField/styles';
+import SectionHeading from '../../../../../components/SectionHeading/SectionHeading';
 import {required} from './formUtils';
 
 interface GeneralTabProps {
@@ -12,9 +14,7 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
   <Box component="section" role="tabpanel" hidden={hidden} aria-label="General template settings">
     <Stack spacing={2.5}>
       <Box>
-        <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
-          Template identity
-        </Typography>
+        <SectionHeading sx={{mb: 1}}>Template identity</SectionHeading>
         <Box
           sx={{
             display: 'grid',
@@ -45,7 +45,7 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
                 label="Id"
                 fullWidth
                 slotProps={{inputLabel: {shrink: true}}}
-                sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
+                sx={CODE_FIELD_SX}
               />
             )}
           </Field>
@@ -61,10 +61,7 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
                   error={meta.touched && Boolean(meta.error)}
                   helperText={meta.touched ? meta.error : undefined}
                   slotProps={{inputLabel: {shrink: true}}}
-                  sx={{
-                    gridColumn: {sm: '1 / -1'},
-                    '& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'},
-                  }}
+                  sx={[CODE_FIELD_SX, {gridColumn: {sm: '1 / -1'}}]}
                 />
               )}
             </Field>
@@ -73,9 +70,7 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
       </Box>
 
       <Box>
-        <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
-          Task presentation
-        </Typography>
+        <SectionHeading sx={{mb: 1}}>Task presentation</SectionHeading>
         <Box
           sx={{
             display: 'grid',

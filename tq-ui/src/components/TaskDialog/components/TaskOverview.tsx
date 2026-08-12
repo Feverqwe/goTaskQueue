@@ -2,6 +2,8 @@ import React, {FC, useEffect, useMemo, useState} from 'react';
 import {Box, Tooltip, Typography} from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import {Task, TaskState} from '../../types';
+import {DATA_LABEL_SX, DATA_VALUE_SX} from '../../DataValue/styles';
+import SectionHeading from '../../SectionHeading/SectionHeading';
 import KeyValue from './KeyValue';
 
 interface TaskOverviewProps {
@@ -74,9 +76,9 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
   return (
     <Box sx={{display: 'flex', flexDirection: 'column', gap: 2.5}}>
       <Box component="section" aria-labelledby="task-timeline-title">
-        <Typography id="task-timeline-title" variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
+        <SectionHeading id="task-timeline-title" sx={{mb: 1}}>
           Timeline
-        </Typography>
+        </SectionHeading>
         <Box
           sx={{
             display: 'flex',
@@ -110,22 +112,10 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  <Typography
-                    variant="caption"
-                    color="text.disabled"
-                    sx={{fontSize: '0.6875rem', lineHeight: 1.35}}
-                  >
+                  <Typography variant="caption" color="text.disabled" sx={DATA_LABEL_SX}>
                     {item.label}
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: 'monospace',
-                      fontSize: '0.8125rem',
-                      fontVariantNumeric: 'tabular-nums',
-                      lineHeight: 1.35,
-                    }}
-                  >
+                  <Typography variant="body2" sx={DATA_VALUE_SX}>
                     {item.type === 'date' ? formatCompactDate(item.value) : item.value}
                   </Typography>
                 </Box>
@@ -136,9 +126,9 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
       </Box>
 
       <Box component="section" aria-labelledby="task-execution-title">
-        <Typography id="task-execution-title" variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
+        <SectionHeading id="task-execution-title" sx={{mb: 1}}>
           Execution
-        </Typography>
+        </SectionHeading>
         <Box
           sx={{
             display: 'grid',

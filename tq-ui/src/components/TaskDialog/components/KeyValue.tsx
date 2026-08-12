@@ -1,6 +1,7 @@
 import React, {FC} from 'react';
 import {Box, SxProps, Theme, Typography} from '@mui/material';
 import {formatValue} from '../../../utils/formatValue';
+import {DATA_LABEL_SX, DATA_VALUE_SX} from '../../DataValue/styles';
 
 interface KeyValueProps {
   name: string;
@@ -22,29 +23,23 @@ const KeyValue: FC<KeyValueProps> = ({name, value, type, sx}) => {
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
     >
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        component="div"
-        sx={{fontSize: '0.6875rem', lineHeight: 1.35}}
-      >
+      <Typography variant="caption" color="text.disabled" component="div" sx={DATA_LABEL_SX}>
         {name}
       </Typography>
       <Typography
         variant="body2"
         component="div"
         title={String(displayValue)}
-        sx={{
-          mt: 0.5,
-          color: 'text.primary',
-          fontFamily: 'monospace',
-          fontSize: '0.8125rem',
-          fontVariantNumeric: 'tabular-nums',
-          lineHeight: 1.35,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
+        sx={[
+          DATA_VALUE_SX,
+          {
+            mt: 0.5,
+            color: 'text.primary',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          },
+        ]}
       >
         {displayValue}
       </Typography>

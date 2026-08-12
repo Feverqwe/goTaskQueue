@@ -1,6 +1,7 @@
 import React, {FC, useEffect, useId, useMemo, useRef} from 'react';
 import {editor} from 'monaco-editor';
 import {Box, FormHelperText} from '@mui/material';
+import {themeColors} from '../../tools/themeTokens';
 
 globalThis.MonacoEnvironment = {
   ...globalThis.MonacoEnvironment,
@@ -18,29 +19,29 @@ editor.defineTheme(editorTheme, {
   base: 'vs-dark',
   inherit: true,
   rules: [
-    {token: 'comment', foreground: '8E96A0', fontStyle: 'italic'},
-    {token: 'keyword', foreground: 'D5DAE0'},
-    {token: 'string', foreground: '75C997'},
-    {token: 'number', foreground: 'D6B46C'},
+    {token: 'comment', foreground: themeColors.primaryDark.slice(1), fontStyle: 'italic'},
+    {token: 'keyword', foreground: themeColors.primary.slice(1)},
+    {token: 'string', foreground: themeColors.success.slice(1)},
+    {token: 'number', foreground: themeColors.warning.slice(1)},
   ],
   colors: {
-    'editor.background': '#181B20',
-    'editor.foreground': '#F2F4F7',
-    'editorCursor.foreground': '#D5DAE0',
-    'editor.selectionBackground': '#49515CAA',
-    'editor.inactiveSelectionBackground': '#30353DBB',
+    'editor.background': themeColors.canvas,
+    'editor.foreground': themeColors.text,
+    'editorCursor.foreground': themeColors.primary,
+    'editor.selectionBackground': `${themeColors.line}AA`,
+    'editor.inactiveSelectionBackground': `${themeColors.raised}BB`,
     'editor.lineHighlightBackground': '#20242A',
     'editor.lineHighlightBorder': '#00000000',
     'editorLineNumber.foreground': '#7A838E',
-    'editorLineNumber.activeForeground': '#D5DAE0',
-    'editorIndentGuide.background1': '#30353D',
-    'editorIndentGuide.activeBackground1': '#49515C',
-    'editorWidget.background': '#30353D',
-    'editorWidget.border': '#49515C',
-    'editorSuggestWidget.background': '#30353D',
-    'editorSuggestWidget.border': '#49515C',
-    'input.background': '#252930',
-    focusBorder: '#69717C',
+    'editorLineNumber.activeForeground': themeColors.primary,
+    'editorIndentGuide.background1': themeColors.raised,
+    'editorIndentGuide.activeBackground1': themeColors.line,
+    'editorWidget.background': themeColors.raised,
+    'editorWidget.border': themeColors.line,
+    'editorSuggestWidget.background': themeColors.raised,
+    'editorSuggestWidget.border': themeColors.line,
+    'input.background': themeColors.panel,
+    focusBorder: themeColors.secondaryDark,
   },
 });
 

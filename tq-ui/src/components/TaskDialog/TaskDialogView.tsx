@@ -49,7 +49,15 @@ import TaskCommand from './components/TaskCommand';
 import TaskOutput from './components/TaskOutput';
 import TaskOverview from './components/TaskOverview';
 import TaskResources from './components/TaskResources';
-import {DIALOG_TAB_MIN_HEIGHT, DIALOG_TAB_PANEL_MIN_HEIGHT} from '../DialogTabs/layout';
+import {
+  DIALOG_ACTIONS_SX,
+  DIALOG_CLOSE_BUTTON_SX,
+  DIALOG_PANEL_PADDING,
+  DIALOG_TAB_PANEL_MIN_HEIGHT,
+  DIALOG_TABS_CONTAINER_SX,
+  DIALOG_TABS_SX,
+  DIALOG_TITLE_SX,
+} from '../DialogTabs/layout';
 
 interface TaskDialogViewProps {
   task: Task;
@@ -237,7 +245,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
 
   return (
     <>
-      <DialogTitle sx={{px: {xs: 1.5, sm: 2}, py: 1, bgcolor: 'background.paper'}}>
+      <DialogTitle sx={DIALOG_TITLE_SX}>
         <Box
           sx={{
             display: 'flex',
@@ -325,7 +333,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
                 size="small"
                 onClick={onClose}
                 aria-label="Close"
-                sx={{width: 34, height: 34}}
+                sx={DIALOG_CLOSE_BUTTON_SX}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
@@ -347,25 +355,23 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
             {actionError || task.error}
           </Alert>
         )}
-        <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+        <Box sx={DIALOG_TABS_CONTAINER_SX}>
           <Tabs
             value={activeTab}
             onChange={(_, value: number) => setActiveTab(value)}
             variant={isMobile ? 'fullWidth' : 'scrollable'}
             scrollButtons={isMobile ? false : 'auto'}
             aria-label="Task details"
-            sx={{
-              px: {xs: 0.5, sm: 2},
-              minHeight: DIALOG_TAB_MIN_HEIGHT,
-              '& .MuiTab-root': {
-                minWidth: {xs: 0, sm: 90},
-                minHeight: DIALOG_TAB_MIN_HEIGHT,
-                px: {xs: 0.5, sm: 1.25},
-                py: 0.5,
-                textTransform: 'none',
-                whiteSpace: 'nowrap',
+            sx={[
+              DIALOG_TABS_SX,
+              {
+                '& .MuiTab-root': {
+                  minWidth: {xs: 0, sm: 90},
+                  px: {xs: 0.5, sm: 1.25},
+                  whiteSpace: 'nowrap',
+                },
               },
-            }}
+            ]}
           >
             <Tab label="Overview" />
             <Tab label="Command" />
@@ -379,7 +385,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
             display: activeTab === 1 ? 'flex' : 'block',
             flex: isMobile ? 1 : undefined,
             flexDirection: 'column',
-            p: activeTab === 1 ? 0 : {xs: 1.5, sm: 2},
+            p: activeTab === 1 ? 0 : DIALOG_PANEL_PADDING,
           }}
         >
           {activeTab === 0 && <TaskOverview task={task} />}
@@ -389,7 +395,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         </Box>
       </DialogContent>
 
-      <DialogActions disableSpacing sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 1}}>
+      <DialogActions sx={DIALOG_ACTIONS_SX}>
         <Box sx={{mr: 'auto'}}>{primaryAction}</Box>
         <Button size="small" variant="outlined" onClick={onClose}>
           Close

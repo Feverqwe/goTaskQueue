@@ -1,53 +1,40 @@
 import {alpha, createTheme} from '@mui/material/styles';
-
-const colors = {
-  canvas: '#181b20',
-  panel: '#252930',
-  raised: '#30353d',
-  line: '#49515c',
-  muted: '#b2b9c2',
-  text: '#f2f4f7',
-  success: '#75c997',
-  warning: '#d6b46c',
-  error: '#e27685',
-  info: '#7eb2d3',
-};
-
-const uiFont = ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(',');
+import {alertClasses} from '@mui/material/Alert';
+import {themeColors as colors, uiFont} from './themeTokens';
 
 const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#d5dae0',
+      main: colors.primary,
       light: colors.text,
-      dark: '#8e96a0',
+      dark: colors.primaryDark,
       contrastText: colors.canvas,
     },
     secondary: {
-      main: '#9da5af',
-      light: '#c3c9d0',
-      dark: '#69717c',
+      main: colors.secondary,
+      light: colors.secondaryLight,
+      dark: colors.secondaryDark,
       contrastText: colors.canvas,
     },
     success: {
       main: colors.success,
-      dark: '#4f9d73',
+      dark: colors.successDark,
       contrastText: colors.canvas,
     },
     warning: {
       main: colors.warning,
-      dark: '#a88642',
+      dark: colors.warningDark,
       contrastText: colors.canvas,
     },
     error: {
       main: colors.error,
-      dark: '#b24f60',
+      dark: colors.errorDark,
       contrastText: colors.canvas,
     },
     info: {
       main: colors.info,
-      dark: '#5786a5',
+      dark: colors.infoDark,
       contrastText: colors.canvas,
     },
     text: {
@@ -134,11 +121,11 @@ const theme = createTheme({
           backgroundColor: colors.text,
           backgroundImage: 'none',
           color: colors.canvas,
-          boxShadow: `0 4px 12px ${alpha('#000000', 0.18)}`,
+          boxShadow: `0 4px 12px ${alpha(colors.black, 0.18)}`,
           '&:hover': {
-            backgroundColor: '#ffffff',
+            backgroundColor: colors.white,
             backgroundImage: 'none',
-            boxShadow: `0 5px 15px ${alpha('#000000', 0.24)}`,
+            boxShadow: `0 5px 15px ${alpha(colors.black, 0.24)}`,
           },
           '&.Mui-disabled': {
             backgroundImage: 'none',
@@ -149,7 +136,7 @@ const theme = createTheme({
           backgroundColor: colors.raised,
           '&:hover': {
             borderColor: colors.muted,
-            backgroundColor: '#373c45',
+            backgroundColor: colors.raisedHover,
           },
         },
         text: {
@@ -159,18 +146,10 @@ const theme = createTheme({
         },
       },
     },
-    MuiButtonGroup: {
-      styleOverrides: {
-        grouped: {
-          borderColor: `${colors.line} !important`,
-        },
-      },
-    },
     MuiIconButton: {
       styleOverrides: {
         root: {
           borderRadius: 8,
-          color: colors.muted,
           transition: 'background-color 140ms ease, color 140ms ease, transform 140ms ease',
           '&:hover': {
             color: colors.text,
@@ -186,8 +165,6 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          border: `1px solid ${colors.line}`,
-          boxShadow: `0 12px 32px ${alpha('#000000', 0.2)}`,
         },
         outlined: {
           backgroundColor: colors.raised,
@@ -200,10 +177,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           position: 'relative',
-          overflow: 'hidden',
+          border: `1px solid ${colors.line}`,
           backgroundColor: colors.raised,
-          borderColor: colors.line,
-          boxShadow: `0 8px 20px ${alpha('#000000', 0.16)}`,
+          boxShadow: `0 8px 20px ${alpha(colors.black, 0.16)}`,
         },
       },
     },
@@ -223,9 +199,9 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderColor: colors.line,
+          border: `1px solid ${colors.line}`,
           backgroundColor: colors.panel,
-          boxShadow: `0 24px 64px ${alpha('#000000', 0.45)}`,
+          boxShadow: `0 24px 64px ${alpha(colors.black, 0.45)}`,
         },
       },
     },
@@ -238,14 +214,14 @@ const theme = createTheme({
       },
     },
     MuiDialogActions: {
+      defaultProps: {
+        disableSpacing: true,
+      },
       styleOverrides: {
         root: {
           gap: 8,
           padding: '12px 20px 16px',
           borderTop: `1px solid ${colors.line}`,
-          '& > :not(style) ~ :not(style)': {
-            marginLeft: 0,
-          },
         },
       },
     },
@@ -282,7 +258,7 @@ const theme = createTheme({
             borderColor: colors.muted,
           },
           '&.Mui-focused': {
-            backgroundColor: '#353a43',
+            backgroundColor: colors.inputFocus,
             boxShadow: `0 0 0 3px ${alpha(colors.text, 0.09)}`,
           },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
@@ -333,9 +309,6 @@ const theme = createTheme({
     },
     MuiTabs: {
       styleOverrides: {
-        root: {
-          borderBottom: `1px solid ${colors.line}`,
-        },
         indicator: {
           height: 2,
           borderRadius: '2px 2px 0 0',
@@ -378,9 +351,9 @@ const theme = createTheme({
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderColor: colors.line,
+          border: `1px solid ${colors.line}`,
           backgroundColor: colors.raised,
-          boxShadow: `0 18px 44px ${alpha('#000000', 0.36)}`,
+          boxShadow: `0 18px 44px ${alpha(colors.black, 0.36)}`,
         },
         list: {
           padding: 6,
@@ -419,7 +392,7 @@ const theme = createTheme({
           border: `1px solid ${colors.line}`,
           borderRadius: 6,
           backgroundColor: colors.raised,
-          boxShadow: `0 8px 22px ${alpha('#000000', 0.3)}`,
+          boxShadow: `0 8px 22px ${alpha(colors.black, 0.3)}`,
           color: colors.text,
           fontSize: '0.6875rem',
         },
@@ -433,36 +406,29 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           backgroundImage: 'none',
-        },
-        colorSuccess: {
-          border: `1px solid ${alpha(colors.success, 0.3)}`,
-          backgroundColor: alpha(colors.success, 0.09),
-        },
-        colorWarning: {
-          border: `1px solid ${alpha(colors.warning, 0.3)}`,
-          backgroundColor: alpha(colors.warning, 0.09),
-        },
-        colorError: {
-          border: `1px solid ${alpha(colors.error, 0.3)}`,
-          backgroundColor: alpha(colors.error, 0.09),
-        },
-        colorInfo: {
-          border: `1px solid ${alpha(colors.info, 0.3)}`,
-          backgroundColor: alpha(colors.info, 0.09),
-        },
-      },
-    },
-    MuiCircularProgress: {
-      styleOverrides: {
-        root: {
-          color: colors.text,
+          [`&.${alertClasses.standard}.${alertClasses.colorSuccess}`]: {
+            border: `1px solid ${alpha(colors.success, 0.3)}`,
+            backgroundColor: alpha(colors.success, 0.09),
+          },
+          [`&.${alertClasses.standard}.${alertClasses.colorWarning}`]: {
+            border: `1px solid ${alpha(colors.warning, 0.3)}`,
+            backgroundColor: alpha(colors.warning, 0.09),
+          },
+          [`&.${alertClasses.standard}.${alertClasses.colorError}`]: {
+            border: `1px solid ${alpha(colors.error, 0.3)}`,
+            backgroundColor: alpha(colors.error, 0.09),
+          },
+          [`&.${alertClasses.standard}.${alertClasses.colorInfo}`]: {
+            border: `1px solid ${alpha(colors.info, 0.3)}`,
+            backgroundColor: alpha(colors.info, 0.09),
+          },
         },
       },
     },
     MuiLink: {
       styleOverrides: {
         root: {
-          color: '#d5dae0',
+          color: colors.primary,
           textDecorationColor: alpha(colors.muted, 0.5),
           textUnderlineOffset: 3,
           '&:hover': {

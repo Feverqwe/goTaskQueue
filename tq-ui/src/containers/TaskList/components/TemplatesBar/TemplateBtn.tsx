@@ -6,6 +6,7 @@ import DialogMenuItem from '../../../../components/DialogMenu/DialogMenuItem';
 import {useConfirmDialog} from '../../../../hooks/useConfirmDialog';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import useContextMenuFix from '../../../../hooks/useContextMenuFix';
+import {TEMPLATE_BUTTON_SX} from './styles';
 
 export interface TemplateBtnProps {
   folder: TemplateFolder;
@@ -83,7 +84,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
   return (
     <>
       <ActionButton
-        sx={{m: 1, mt: 0, flexGrow: {xs: 1, sm: 0}}}
+        sx={TEMPLATE_BUTTON_SX}
         variant="outlined"
         onSubmit={handleClick}
         onContextMenu={handleCtxMenu}

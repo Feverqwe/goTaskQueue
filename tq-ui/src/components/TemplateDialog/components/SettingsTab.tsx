@@ -1,6 +1,8 @@
 import React, {FC} from 'react';
-import {Box, Checkbox, FormControlLabel, Stack, TextField, Typography} from '@mui/material';
+import {Box, Checkbox, FormControlLabel, Stack, TextField} from '@mui/material';
 import {Field} from 'react-final-form';
+import {CODE_FIELD_SX} from '../../CodeField/styles';
+import SectionHeading from '../../SectionHeading/SectionHeading';
 
 interface SettingsTabProps {
   hasTemplatePlace: boolean;
@@ -12,9 +14,9 @@ const SettingsTab: FC<SettingsTabProps> = ({hasTemplatePlace, hidden, isPtySuppo
   <Box component="section" role="tabpanel" hidden={hidden} aria-label="Task settings">
     <Stack spacing={2.5}>
       <Box component="section" aria-labelledby="template-details-title">
-        <Typography id="template-details-title" variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
+        <SectionHeading id="template-details-title" sx={{mb: 1}}>
           Task details
-        </Typography>
+        </SectionHeading>
         <Box
           sx={{
             display: 'grid',
@@ -60,7 +62,7 @@ const SettingsTab: FC<SettingsTabProps> = ({hasTemplatePlace, hidden, isPtySuppo
                   inputLabel: {shrink: true},
                   htmlInput: {min: 0},
                 }}
-                sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
+                sx={CODE_FIELD_SX}
               />
             )}
           </Field>
@@ -68,9 +70,9 @@ const SettingsTab: FC<SettingsTabProps> = ({hasTemplatePlace, hidden, isPtySuppo
       </Box>
 
       <Box component="section" aria-labelledby="template-execution-title">
-        <Typography id="template-execution-title" variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
+        <SectionHeading id="template-execution-title" sx={{mb: 1}}>
           Execution
-        </Typography>
+        </SectionHeading>
         <Box
           sx={{
             display: 'grid',

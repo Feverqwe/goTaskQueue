@@ -11,6 +11,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   FormControlLabel,
   IconButton,
   Stack,
@@ -84,6 +85,9 @@ const ThemePreview = () => (
           <Alert severity="error">
             Task exited with status 1. Review the output before retrying.
           </Alert>
+          <Alert severity="info" variant="outlined">
+            Outlined alerts keep their variant styling.
+          </Alert>
         </Stack>
 
         <Card>
@@ -113,6 +117,10 @@ const ThemePreview = () => (
         {statusItems.map(({label, color, icon}) => (
           <Chip key={label} label={label} color={color} icon={icon} variant="outlined" />
         ))}
+        <IconButton aria-label="Retry warning" color="warning" size="small">
+          <ErrorOutlineRoundedIcon />
+        </IconButton>
+        <CircularProgress aria-label="Warning progress" color="warning" size={24} />
       </Stack>
     </Box>
   </Box>

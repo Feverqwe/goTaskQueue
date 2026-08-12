@@ -2,6 +2,7 @@ import React, {FC} from 'react';
 import {Box, IconButton, MenuItem, Paper, TextField, Typography} from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import {Field} from 'react-final-form';
+import {CODE_FIELD_SX, CODE_MENU_ITEM_SX} from '../../../../../components/CodeField/styles';
 import CopyButton from '../../../../../components/TaskDialog/components/CopyButton';
 import {TemplateVariableType} from '../../../../../components/types';
 import {parseOptions, required, variableKey} from './formUtils';
@@ -78,7 +79,7 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
               error={meta.touched && Boolean(meta.error)}
               helperText={meta.touched ? meta.error : undefined}
               slotProps={{inputLabel: {shrink: true}}}
-              sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
+              sx={CODE_FIELD_SX}
             />
           )}
         </Field>
@@ -129,10 +130,7 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
                   error={meta.touched && Boolean(meta.error)}
                   helperText={meta.touched && meta.error ? meta.error : 'One option per line'}
                   slotProps={{inputLabel: {shrink: true}}}
-                  sx={{
-                    gridColumn: {sm: 'span 2'},
-                    '& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'},
-                  }}
+                  sx={[CODE_FIELD_SX, {gridColumn: {sm: 'span 2'}}]}
                 />
               )}
             </Field>
@@ -146,15 +144,13 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
                   value={options.includes(input.value) ? input.value : ''}
                   helperText="The first option is used if unset"
                   slotProps={{inputLabel: {shrink: true}}}
-                  sx={{
-                    '& .MuiSelect-select': {fontFamily: 'monospace', fontSize: '0.8125rem'},
-                  }}
+                  sx={CODE_FIELD_SX}
                 >
-                  <MenuItem value="" sx={{fontFamily: 'monospace'}}>
+                  <MenuItem value="" sx={CODE_MENU_ITEM_SX}>
                     First option
                   </MenuItem>
                   {options.map((option) => (
-                    <MenuItem key={option} value={option} sx={{fontFamily: 'monospace'}}>
+                    <MenuItem key={option} value={option} sx={CODE_MENU_ITEM_SX}>
                       {option}
                     </MenuItem>
                   ))}
@@ -170,10 +166,7 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
                 size="small"
                 label="Default value"
                 slotProps={{inputLabel: {shrink: true}}}
-                sx={{
-                  gridColumn: {sm: 'span 2'},
-                  '& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'},
-                }}
+                sx={[CODE_FIELD_SX, {gridColumn: {sm: 'span 2'}}]}
               />
             )}
           </Field>

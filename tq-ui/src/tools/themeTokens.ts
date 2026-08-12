@@ -1,0 +1,27 @@
+export const themeColors = {
+  black: '#000000',
+  white: '#ffffff',
+  canvas: '#181b20',
+  panel: '#252930',
+  raised: '#30353d',
+  raisedHover: '#373c45',
+  inputFocus: '#353a43',
+  line: '#49515c',
+  muted: '#b2b9c2',
+  text: '#f2f4f7',
+  primary: '#d5dae0',
+  primaryDark: '#8e96a0',
+  secondary: '#9da5af',
+  secondaryLight: '#c3c9d0',
+  secondaryDark: '#69717c',
+  success: '#75c997',
+  successDark: '#4f9d73',
+  warning: '#d6b46c',
+  warningDark: '#a88642',
+  error: '#e27685',
+  errorDark: '#b24f60',
+  info: '#7eb2d3',
+  infoDark: '#5786a5',
+} as const;
+
+export const uiFont = ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(',');

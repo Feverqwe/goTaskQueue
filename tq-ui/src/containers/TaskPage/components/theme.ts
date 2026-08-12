@@ -1,8 +1,10 @@
+import {themeColors} from '../../../tools/themeTokens';
+
 export const theme = {
-  background: '#181b20',
-  foreground: '#f2f4f7',
-  cursor: '#d5dae0',
-  cursorAccent: '#181b20',
-  selectionBackground: '#49515c',
-  selectionInactiveBackground: '#30353d',
+  background: themeColors.canvas,
+  foreground: themeColors.text,
+  cursor: themeColors.primary,
+  cursorAccent: themeColors.canvas,
+  selectionBackground: themeColors.line,
+  selectionInactiveBackground: themeColors.raised,
 };

@@ -1,6 +1,8 @@
 import React, {FC} from 'react';
-import {Box, Checkbox, FormControlLabel, Stack, TextField, Typography} from '@mui/material';
+import {Box, Checkbox, FormControlLabel, Stack, TextField} from '@mui/material';
 import {Field} from 'react-final-form';
+import {CODE_FIELD_SX} from '../../../../../components/CodeField/styles';
+import SectionHeading from '../../../../../components/SectionHeading/SectionHeading';
 
 interface SettingsTabProps {
   hidden: boolean;
@@ -11,9 +13,7 @@ const SettingsTab: FC<SettingsTabProps> = ({hidden, isPtySupported}) => (
   <Box component="section" role="tabpanel" hidden={hidden} aria-label="Template execution settings">
     <Stack spacing={2.5}>
       <Box>
-        <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
-          Lifecycle
-        </Typography>
+        <SectionHeading sx={{mb: 1}}>Lifecycle</SectionHeading>
         <Field<number | string> name="ttl">
           {({input}) => (
             <TextField
@@ -22,15 +22,13 @@ const SettingsTab: FC<SettingsTabProps> = ({hidden, isPtySupported}) => (
               label="TTL after finish (seconds)"
               type="number"
               slotProps={{inputLabel: {shrink: true}, htmlInput: {min: 0}}}
-              sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
+              sx={CODE_FIELD_SX}
             />
           )}
         </Field>
       </Box>
       <Box>
-        <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
-          Execution
-        </Typography>
+        <SectionHeading sx={{mb: 1}}>Execution</SectionHeading>
         <Box
           sx={{
             display: 'grid',

@@ -21,8 +21,15 @@ import {RawTemplate, TemplateFolder} from '../../../../components/types';
 import {RootStoreCtx} from '../../../../components/RootStore/RootStoreCtx';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import {
-  DIALOG_TAB_MIN_HEIGHT,
+  DIALOG_ACTIONS_SX,
+  DIALOG_CLOSE_BUTTON_SX,
+  DIALOG_CONTENT_SX,
+  DIALOG_PANEL_PADDING,
   DIALOG_TAB_PANEL_MIN_HEIGHT,
+  DIALOG_TABS_CONTAINER_SX,
+  DIALOG_TABS_SX,
+  DIALOG_TITLE_ROW_SX,
+  DIALOG_TITLE_SX,
 } from '../../../../components/DialogTabs/layout';
 import CommandTab from './EditTemplateDialog/CommandTab';
 import GeneralTab from './EditTemplateDialog/GeneralTab';
@@ -124,11 +131,8 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
 
           return (
             <Box component="form" onSubmit={submit} sx={{display: 'contents'}}>
-              <DialogTitle
-                id="template-editor-title"
-                sx={{px: {xs: 1.5, sm: 2}, py: 1, bgcolor: 'background.paper'}}
-              >
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minHeight: 30}}>
+              <DialogTitle id="template-editor-title" sx={DIALOG_TITLE_SX}>
+                <Box sx={DIALOG_TITLE_ROW_SX}>
                   <Box sx={{minWidth: 0, flexGrow: 1}}>
                     <Typography variant="subtitle1" sx={{fontWeight: 600}}>
                       {isNew ? 'Add template' : 'Edit template'}
@@ -147,31 +151,29 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                     size="small"
                     onClick={onClose}
                     aria-label="Close"
-                    sx={{width: 34, height: 34}}
+                    sx={DIALOG_CLOSE_BUTTON_SX}
                   >
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Box>
               </DialogTitle>
 
-              <DialogContent sx={{p: 0}}>
-                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+              <DialogContent sx={DIALOG_CONTENT_SX}>
+                <Box sx={DIALOG_TABS_CONTAINER_SX}>
                   <Tabs
                     value={activeTab}
                     onChange={(_, value: EditorTab) => setActiveTab(value)}
                     variant={isMobile ? 'scrollable' : 'standard'}
                     scrollButtons={isMobile ? 'auto' : false}
                     aria-label="Template editor sections"
-                    sx={{
-                      px: {xs: 0.5, sm: 2},
-                      minHeight: DIALOG_TAB_MIN_HEIGHT,
-                      '& .MuiTab-root': {
-                        minHeight: DIALOG_TAB_MIN_HEIGHT,
-                        px: {xs: 1.25, sm: 2},
-                        py: 0.5,
-                        textTransform: 'none',
+                    sx={[
+                      DIALOG_TABS_SX,
+                      {
+                        '& .MuiTab-root': {
+                          px: {xs: 1.25, sm: 2},
+                        },
                       },
-                    }}
+                    ]}
                   >
                     <Tab value="general" label="General" />
                     <Tab value="variables" label={`Variables (${values.variables.length})`} />
@@ -189,7 +191,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                 <Box
                   sx={{
                     minHeight: DIALOG_TAB_PANEL_MIN_HEIGHT,
-                    p: activeTab === 'command' ? 0 : {xs: 1.5, sm: 2},
+                    p: activeTab === 'command' ? 0 : DIALOG_PANEL_PADDING,
                   }}
                 >
                   <GeneralTab hidden={activeTab !== 'general'} isNew={isNew} />
@@ -204,7 +206,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                 </Box>
               </DialogContent>
 
-              <DialogActions disableSpacing sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 1}}>
+              <DialogActions sx={DIALOG_ACTIONS_SX}>
                 <Button size="small" variant="outlined" onClick={onClose}>
                   Cancel
                 </Button>

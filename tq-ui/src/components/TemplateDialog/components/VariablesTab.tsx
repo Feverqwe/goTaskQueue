@@ -2,6 +2,7 @@ import React, {FC} from 'react';
 import {Box, MenuItem, TextField} from '@mui/material';
 import {Field} from 'react-final-form';
 import {RawTemplate} from '../../types';
+import {CODE_FIELD_SX, CODE_MENU_ITEM_SX} from '../../CodeField/styles';
 
 interface VariablesTabProps {
   hidden: boolean;
@@ -35,16 +36,11 @@ const VariablesTab: FC<VariablesTabProps> = ({hidden, isNew, variables}) => (
                 disabled={isSelect && !options?.length}
                 helperText={isSelect && !options?.length ? 'No options configured' : undefined}
                 slotProps={{inputLabel: {shrink: true}}}
-                sx={{
-                  '& .MuiInputBase-input, & .MuiSelect-select': {
-                    fontFamily: 'monospace',
-                    fontSize: '0.8125rem',
-                  },
-                }}
+                sx={CODE_FIELD_SX}
               >
                 {isSelect
                   ? options?.map((option) => (
-                      <MenuItem key={option} value={option} sx={{fontFamily: 'monospace'}}>
+                      <MenuItem key={option} value={option} sx={CODE_MENU_ITEM_SX}>
                         {option}
                       </MenuItem>
                     ))

@@ -75,7 +75,6 @@ const CopyButton: FC<CopyButtonProps> = ({
             disabled={disabled}
             sx={{
               fontFamily: 'monospace',
-              fontSize: '0.6875rem',
               '& .MuiChip-icon': {ml: 0.75, mr: -0.125},
               '& .MuiChip-label': {px: 0.75},
             }}

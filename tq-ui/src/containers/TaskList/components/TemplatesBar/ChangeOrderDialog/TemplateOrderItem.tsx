@@ -22,9 +22,9 @@ const TemplateOrderItem: FC<TemplateOrderItemProps> = ({
       minHeight: 48,
       px: {xs: 1, sm: 1.25},
       py: 0.5,
-      borderColor: overlay ? 'primary.main' : 'divider',
+      borderColor: overlay ? 'primary.main' : undefined,
       bgcolor: overlay ? 'action.selected' : 'background.paper',
-      boxShadow: overlay ? 6 : 0,
+      boxShadow: overlay ? 6 : undefined,
       cursor: overlay ? 'grabbing' : 'default',
     }}
   >

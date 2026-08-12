@@ -20,7 +20,17 @@ import {Form} from 'react-final-form';
 import {AddTaskRequest, RawTemplate} from '../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
-import {DIALOG_TAB_MIN_HEIGHT, DIALOG_TAB_PANEL_MIN_HEIGHT} from '../DialogTabs/layout';
+import {
+  DIALOG_ACTIONS_SX,
+  DIALOG_CLOSE_BUTTON_SX,
+  DIALOG_CONTENT_SX,
+  DIALOG_PANEL_PADDING,
+  DIALOG_TAB_PANEL_MIN_HEIGHT,
+  DIALOG_TABS_CONTAINER_SX,
+  DIALOG_TABS_SX,
+  DIALOG_TITLE_ROW_SX,
+  DIALOG_TITLE_SX,
+} from '../DialogTabs/layout';
 import CommandTab from './components/CommandTab';
 import SettingsTab from './components/SettingsTab';
 import VariablesTab from './components/VariablesTab';
@@ -187,15 +197,8 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
               onSubmit={(event: SyntheticEvent) => submit(event, {isRun: true})}
               sx={{display: 'contents'}}
             >
-              <DialogTitle
-                id="template-dialog-title"
-                sx={{
-                  px: {xs: 1.5, sm: 2},
-                  py: 1,
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minHeight: 30}}>
+              <DialogTitle id="template-dialog-title" sx={DIALOG_TITLE_SX}>
+                <Box sx={DIALOG_TITLE_ROW_SX}>
                   <Typography
                     variant="subtitle1"
                     noWrap
@@ -208,31 +211,29 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                     size="small"
                     onClick={onClose}
                     aria-label="Close"
-                    sx={{width: 34, height: 34}}
+                    sx={DIALOG_CLOSE_BUTTON_SX}
                   >
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Box>
               </DialogTitle>
 
-              <DialogContent sx={{p: 0}}>
+              <DialogContent sx={DIALOG_CONTENT_SX}>
                 {!isQuickRun && (
-                  <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                  <Box sx={DIALOG_TABS_CONTAINER_SX}>
                     <Tabs
                       value={activeTab}
                       onChange={(_, value: TemplateDialogTab) => setActiveTab(value)}
                       variant={isMobile ? 'fullWidth' : 'standard'}
                       aria-label="Task configuration"
-                      sx={{
-                        px: {xs: 0.5, sm: 2},
-                        minHeight: DIALOG_TAB_MIN_HEIGHT,
-                        '& .MuiTab-root': {
-                          minHeight: DIALOG_TAB_MIN_HEIGHT,
-                          px: {xs: 0.75, sm: 2},
-                          py: 0.5,
-                          textTransform: 'none',
+                      sx={[
+                        DIALOG_TABS_SX,
+                        {
+                          '& .MuiTab-root': {
+                            px: {xs: 0.75, sm: 2},
+                          },
                         },
-                      }}
+                      ]}
                     >
                       {templateVariables.length > 0 && <Tab value="variables" label="Run" />}
                       <Tab value="command" label="Command" />
@@ -243,7 +244,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 <Box
                   sx={{
                     minHeight: isQuickRun ? undefined : DIALOG_TAB_PANEL_MIN_HEIGHT,
-                    p: activeTab === 'command' ? 0 : {xs: 1.5, sm: 2},
+                    p: activeTab === 'command' ? 0 : DIALOG_PANEL_PADDING,
                   }}
                 >
                   {templateVariables.length > 0 && (
@@ -263,7 +264,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 </Box>
               </DialogContent>
 
-              <DialogActions disableSpacing sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 1}}>
+              <DialogActions sx={DIALOG_ACTIONS_SX}>
                 <Button size="small" variant="outlined" onClick={onClose}>
                   Cancel
                 </Button>

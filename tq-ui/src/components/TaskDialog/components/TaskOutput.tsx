@@ -3,6 +3,7 @@ import {Box, Button, Chip, Paper, Typography} from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import {Task, TaskState} from '../../types';
+import SectionHeading from '../../SectionHeading/SectionHeading';
 
 interface TaskOutputProps {
   task: Task;
@@ -68,9 +69,7 @@ const TaskOutput: FC<TaskOutputProps> = ({task}) => {
   return (
     <Box sx={{display: 'flex', flexDirection: 'column', gap: 1.5}}>
       <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-        <Typography variant="subtitle2" sx={{flexGrow: 1, fontWeight: 600}}>
-          Logs
-        </Typography>
+        <SectionHeading sx={{flexGrow: 1}}>Logs</SectionHeading>
         <Chip
           size="small"
           variant="outlined"
