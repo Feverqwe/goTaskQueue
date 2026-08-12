@@ -56,6 +56,12 @@ type Story = StoryObj<typeof meta>;
 
 export const TemplateVariables: Story = {};
 
+export const RunAs: Story = {
+  args: {
+    isRunAs: true,
+  },
+};
+
 export const NewTask: Story = {
   args: {
     isNew: true,

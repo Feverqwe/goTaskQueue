@@ -91,9 +91,7 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
                 label="Label"
                 fullWidth
                 error={Boolean(meta.error)}
-                helperText={
-                  meta.error || 'Use the lowercase key, for example: {{ vars.environment }}'
-                }
+                helperText={meta.error}
                 slotProps={{inputLabel: {shrink: true}}}
               />
             )}
@@ -106,9 +104,7 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
                 label="Group"
                 fullWidth
                 error={Boolean(meta.error)}
-                helperText={
-                  meta.error || 'Use the lowercase key, for example: {{ vars.environment }}'
-                }
+                helperText={meta.error}
                 slotProps={{inputLabel: {shrink: true}}}
               />
             )}

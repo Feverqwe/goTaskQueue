@@ -2,7 +2,6 @@ import React, {FC, SyntheticEvent, useCallback, useContext, useMemo, useState} f
 import {
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -66,35 +65,29 @@ const ChangeOrderDialog: FC<ChangeOrderDialogProps> = ({onClose, onSubmit, open}
       aria-labelledby="template-order-title"
     >
       <Box component="form" onSubmit={handleSubmit} sx={{display: 'contents'}}>
-        <DialogTitle id="template-order-title" sx={{px: {xs: 1.5, sm: 2}, py: 1}}>
+        <DialogTitle
+          id="template-order-title"
+          sx={{px: {xs: 1.5, sm: 2}, py: 1, bgcolor: 'background.paper'}}
+        >
           <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minHeight: 30}}>
-            <Box sx={{minWidth: 0, flexGrow: 1}}>
-              <Typography variant="subtitle1" sx={{fontWeight: 600}}>
-                Template order
-              </Typography>
-              <Typography variant="caption" color="text.secondary" component="div">
-                Arrange templates as they should appear in the task bar
-              </Typography>
-            </Box>
-            <Chip size="small" variant="outlined" label={places.length} sx={{height: 24}} />
-            <IconButton size="small" onClick={onClose} aria-label="Close">
+            <Typography variant="subtitle1" sx={{minWidth: 0, flexGrow: 1, fontWeight: 600}}>
+              Template order
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={onClose}
+              aria-label="Close"
+              sx={{width: 34, height: 34}}
+            >
               <CloseIcon fontSize="small" />
             </IconButton>
           </Box>
         </DialogTitle>
 
-        <DialogContent
-          dividers
-          sx={{
-            p: {xs: 1.5, sm: 2},
-            bgcolor: 'background.default',
-          }}
-        >
-          <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>
-            Drag by the handle. With a keyboard, focus a handle, press Space, then use the arrow
-            keys.
-          </Typography>
-          <TemplateOrderList places={places} onChange={setPlaces} />
+        <DialogContent sx={{p: 0}}>
+          <Box sx={{p: {xs: 1.5, sm: 2}}}>
+            <TemplateOrderList places={places} onChange={setPlaces} />
+          </Box>
         </DialogContent>
 
         <DialogActions sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 0.5}}>

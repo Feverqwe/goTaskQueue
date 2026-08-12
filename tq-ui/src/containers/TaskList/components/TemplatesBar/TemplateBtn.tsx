@@ -92,12 +92,8 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
         {name}
       </ActionButton>
       <DialogMenu open={showMenu} onClose={handleCloseMenu} title={name}>
-        {!template.variables.length && (
-          <>
-            <DialogMenuItem onClick={handleRunAs}>Run as</DialogMenuItem>
-            <Divider />
-          </>
-        )}
+        <DialogMenuItem onClick={handleRunAs}>Run as</DialogMenuItem>
+        <Divider />
         <DialogMenuItem onClick={handleEdit}>Edit</DialogMenuItem>
         <DialogMenuItem onClick={handleConfirmClone}>Clone</DialogMenuItem>
         <Divider />

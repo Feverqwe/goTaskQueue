@@ -341,7 +341,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
             <Tab label="Output" />
           </Tabs>
         </Box>
-        <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 256}}}>
+        <Box sx={{p: activeTab === 1 ? 0 : {xs: 1.5, sm: 2}}}>
           {activeTab === 0 && <TaskOverview task={task} />}
           {activeTab === 1 && <TaskCommand task={task} />}
           {activeTab === 2 && <TaskResources task={task} onUpdate={onUpdate} />}

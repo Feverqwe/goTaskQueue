@@ -130,7 +130,7 @@ const TemplatesBar: FC<TaskInputProps> = ({onUpdate}) => {
         const isNewTab = 'metaKey' in e && Boolean(e.metaKey);
         await handleAdd({templatePlace, isPty, isRun: true}, isNewTab);
       } else {
-        setRunDialog({template});
+        setRunDialog({template, isRunAs: as});
       }
     },
     [handleAdd],

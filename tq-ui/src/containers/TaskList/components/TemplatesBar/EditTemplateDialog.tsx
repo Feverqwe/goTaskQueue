@@ -177,7 +177,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                     <Tab value="settings" label="Settings" />
                   </Tabs>
                 </Box>
-                <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 288}}}>
+                <Box sx={{p: activeTab === 'command' ? 0 : {xs: 1.5, sm: 2}}}>
                   <GeneralTab hidden={activeTab !== 'general'} isNew={isNew} />
                   <VariablesTab
                     hidden={activeTab !== 'variables'}

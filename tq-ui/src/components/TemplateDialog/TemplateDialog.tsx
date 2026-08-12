@@ -30,6 +30,7 @@ export interface TemplateDialogProps {
   onSubmit: (runTask: AddTaskRequest, isNewTab?: boolean) => Promise<void>;
   template: RawTemplate;
   isNew?: boolean;
+  isRunAs?: boolean;
   initVariables?: Partial<Record<string, string>>;
 }
 
@@ -61,6 +62,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
   onSubmit,
   onClose,
   isNew,
+  isRunAs,
   initVariables = EMPTY_INIT_VARIABLES,
 }) => {
   const {
@@ -80,6 +82,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
   const {isPtySupported} = useContext(RootStoreCtx);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isQuickRun = !isNew && !isRunAs && templateVariables.length > 0;
   const [activeTab, setActiveTab] = useState<TemplateDialogTab>(() =>
     templateVariables.length > 0 ? 'variables' : 'command',
   );
@@ -165,7 +168,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
       onClose={handleClose}
       fullWidth
       fullScreen={isMobile}
-      maxWidth="md"
+      maxWidth={isQuickRun ? 'sm' : 'md'}
       scroll="paper"
       aria-labelledby="template-dialog-title"
     >
@@ -185,51 +188,58 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
             >
               <DialogTitle
                 id="template-dialog-title"
-                sx={{px: {xs: 1.5, sm: 2}, bgcolor: 'background.paper'}}
+                sx={{
+                  px: {xs: 1.5, sm: 2},
+                  py: isQuickRun ? 1 : undefined,
+                  bgcolor: 'background.paper',
+                }}
               >
                 <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minHeight: 30}}>
-                  <Box sx={{minWidth: 0, flexGrow: 1}}>
-                    <Typography variant="subtitle1" noWrap title={name} sx={{fontWeight: 600}}>
-                      {name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {templateVariables.length > 0
-                        ? `Configure ${templateVariables.length} ${templateVariables.length === 1 ? 'variable' : 'variables'}`
-                        : 'Configure and run this task'}
-                    </Typography>
-                  </Box>
-                  <IconButton size="small" onClick={onClose} aria-label="Close">
+                  <Typography
+                    variant="subtitle1"
+                    noWrap
+                    title={name}
+                    sx={{minWidth: 0, flexGrow: 1, fontWeight: 600}}
+                  >
+                    {name}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    onClick={onClose}
+                    aria-label="Close"
+                    sx={isQuickRun ? {width: 34, height: 34} : undefined}
+                  >
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Box>
               </DialogTitle>
 
               <DialogContent sx={{p: 0}}>
-                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-                  <Tabs
-                    value={activeTab}
-                    onChange={(_, value: TemplateDialogTab) => setActiveTab(value)}
-                    variant={isMobile ? 'fullWidth' : 'standard'}
-                    aria-label="Task configuration"
-                    sx={{
-                      px: {xs: 0.5, sm: 2},
-                      minHeight: 40,
-                      '& .MuiTab-root': {
+                {!isQuickRun && (
+                  <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                    <Tabs
+                      value={activeTab}
+                      onChange={(_, value: TemplateDialogTab) => setActiveTab(value)}
+                      variant={isMobile ? 'fullWidth' : 'standard'}
+                      aria-label="Task configuration"
+                      sx={{
+                        px: {xs: 0.5, sm: 2},
                         minHeight: 40,
-                        px: {xs: 0.75, sm: 2},
-                        py: 0.5,
-                        textTransform: 'none',
-                      },
-                    }}
-                  >
-                    {templateVariables.length > 0 && (
-                      <Tab value="variables" label={`Variables (${templateVariables.length})`} />
-                    )}
-                    <Tab value="command" label="Command" />
-                    <Tab value="settings" label="Settings" />
-                  </Tabs>
-                </Box>
-                <Box sx={{p: {xs: 1.5, sm: 2}, minHeight: {sm: 160}}}>
+                        '& .MuiTab-root': {
+                          minHeight: 40,
+                          px: {xs: 0.75, sm: 2},
+                          py: 0.5,
+                          textTransform: 'none',
+                        },
+                      }}
+                    >
+                      {templateVariables.length > 0 && <Tab value="variables" label="Run" />}
+                      <Tab value="command" label="Command" />
+                      <Tab value="settings" label="Settings" />
+                    </Tabs>
+                  </Box>
+                )}
+                <Box sx={{p: activeTab === 'command' ? 0 : {xs: 1.5, sm: 2}}}>
                   {templateVariables.length > 0 && (
                     <VariablesTab
                       hidden={activeTab !== 'variables'}
@@ -277,7 +287,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                     })
                   }
                 >
-                  Add &amp; {values.isPty ? 'Open' : 'Run'}
+                  {values.isPty ? 'Open terminal' : 'Run'}
                 </ActionButton>
               </DialogActions>
             </Box>

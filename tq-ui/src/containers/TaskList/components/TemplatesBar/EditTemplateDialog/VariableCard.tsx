@@ -2,6 +2,7 @@ import React, {FC} from 'react';
 import {Box, IconButton, MenuItem, Paper, TextField, Typography} from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import {Field} from 'react-final-form';
+import CopyButton from '../../../../../components/TaskDialog/components/CopyButton';
 import {TemplateVariableType} from '../../../../../components/types';
 import {parseOptions, required, variableKey} from './formUtils';
 import {EditorVariable} from './types';
@@ -15,6 +16,10 @@ interface VariableCardProps {
 
 const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, variable}) => {
   const options = parseOptions(variable.optionsText);
+  const key = variable.value.trim();
+  const placeholder = `{{ vars.${key} }}`;
+  const environmentName = `TASK_VAR_${key.toUpperCase()}`;
+  const canCopy = !duplicateKey && !variableKey(variable.value);
 
   return (
     <Paper variant="outlined" sx={{p: 1.5, bgcolor: 'background.paper'}}>
@@ -33,9 +38,23 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
         >
           VAR {String(index + 1).padStart(2, '0')}
         </Typography>
-        <IconButton size="small" onClick={onRemove} aria-label={`Delete variable ${index + 1}`}>
-          <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
+        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.75}}>
+          <CopyButton
+            value={placeholder}
+            label={canCopy ? `Copy ${placeholder} for label or group` : 'Copy text variable'}
+            disabled={!canCopy}
+            displayLabel="Text"
+          />
+          <CopyButton
+            value={environmentName}
+            label={canCopy ? `Copy ${environmentName} for command` : 'Copy command variable'}
+            disabled={!canCopy}
+            displayLabel="ENV"
+          />
+          <IconButton size="small" onClick={onRemove} aria-label={`Delete variable ${index + 1}`}>
+            <DeleteOutlineIcon fontSize="small" />
+          </IconButton>
+        </Box>
       </Box>
       <Box
         sx={{
@@ -57,13 +76,7 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
               label="Key"
               required
               error={meta.touched && Boolean(meta.error)}
-              helperText={
-                meta.touched && meta.error
-                  ? meta.error
-                  : input.value
-                    ? `Environment: TASK_VAR_${input.value.toUpperCase()}`
-                    : 'Lowercase identifier'
-              }
+              helperText={meta.touched ? meta.error : undefined}
               slotProps={{inputLabel: {shrink: true}}}
               sx={{'& .MuiInputBase-input': {fontFamily: 'monospace', fontSize: '0.8125rem'}}}
             />
@@ -77,7 +90,7 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
               label="Label"
               required
               error={meta.touched && Boolean(meta.error)}
-              helperText={meta.touched ? meta.error : 'Shown when running'}
+              helperText={meta.touched ? meta.error : undefined}
               slotProps={{inputLabel: {shrink: true}}}
             />
           )}

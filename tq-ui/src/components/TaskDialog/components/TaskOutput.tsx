@@ -67,23 +67,16 @@ const TaskOutput: FC<TaskOutputProps> = ({task}) => {
 
   return (
     <Box sx={{display: 'flex', flexDirection: 'column', gap: 1.5}}>
-      <Box>
-        <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-          <Typography variant="subtitle2" sx={{flexGrow: 1, fontWeight: 600}}>
-            Logs
-          </Typography>
-          <Chip
-            size="small"
-            variant="outlined"
-            color={task.isWriteLogs ? 'success' : 'default'}
-            label={task.isWriteLogs ? 'Persisted' : 'In memory'}
-          />
-        </Box>
-        <Typography variant="caption" color="text.disabled">
-          {task.isWriteLogs
-            ? 'Logs are persisted and remain available after an application restart.'
-            : 'Logs are kept in memory and are unavailable after an application restart.'}
+      <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+        <Typography variant="subtitle2" sx={{flexGrow: 1, fontWeight: 600}}>
+          Logs
         </Typography>
+        <Chip
+          size="small"
+          variant="outlined"
+          color={task.isWriteLogs ? 'success' : 'default'}
+          label={task.isWriteLogs ? 'Persisted' : 'In memory'}
+        />
       </Box>
       <LogRow id={task.id} name="Combined" path="combined" disabled={disabled} />
       {!task.isOnlyCombined && (
