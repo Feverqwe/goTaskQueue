@@ -1,6 +1,28 @@
 import React, {FC, FunctionComponent, useEffect, useRef, useState} from 'react';
-import {Box, CircularProgress} from '@mui/material';
-import {CommandFieldProps} from './CommandField';
+import {Box, CircularProgress, Typography} from '@mui/material';
+import type {CommandFieldProps} from './CommandField';
+
+export const CommandFieldLoading: FC = () => (
+  <Box
+    role="status"
+    aria-label="Loading command editor"
+    sx={{
+      position: 'absolute',
+      inset: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 1.5,
+      bgcolor: '#1e1e1e',
+    }}
+  >
+    <CircularProgress size={24} />
+    <Typography variant="caption" color="text.secondary">
+      Loading editor…
+    </Typography>
+  </Box>
+);
 
 const CommandFieldAsync: FC<CommandFieldProps> = (props) => {
   const {ref, defaultValue} = props;
@@ -29,11 +51,7 @@ const CommandFieldAsync: FC<CommandFieldProps> = (props) => {
   }
 
   if (isLoading) {
-    return (
-      <Box>
-        <CircularProgress />
-      </Box>
-    );
+    return <CommandFieldLoading />;
   }
 
   const Component = refComponent.current;

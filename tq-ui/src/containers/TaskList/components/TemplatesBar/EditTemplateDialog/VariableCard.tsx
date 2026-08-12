@@ -38,7 +38,7 @@ const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, var
         >
           VAR {String(index + 1).padStart(2, '0')}
         </Typography>
-        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.75}}>
+        <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
           <CopyButton
             value={placeholder}
             label={canCopy ? `Copy ${placeholder} for label or group` : 'Copy text variable'}

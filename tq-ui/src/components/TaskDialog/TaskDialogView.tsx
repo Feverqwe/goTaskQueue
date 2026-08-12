@@ -49,6 +49,7 @@ import TaskCommand from './components/TaskCommand';
 import TaskOutput from './components/TaskOutput';
 import TaskOverview from './components/TaskOverview';
 import TaskResources from './components/TaskResources';
+import {DIALOG_TAB_MIN_HEIGHT, DIALOG_TAB_PANEL_MIN_HEIGHT} from '../DialogTabs/layout';
 
 interface TaskDialogViewProps {
   task: Task;
@@ -236,7 +237,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
 
   return (
     <>
-      <DialogTitle sx={{px: {xs: 1.5, sm: 2}, bgcolor: 'background.paper'}}>
+      <DialogTitle sx={{px: {xs: 1.5, sm: 2}, py: 1, bgcolor: 'background.paper'}}>
         <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, minHeight: 30}}>
           {!isEditTitle && (
             <Chip
@@ -300,7 +301,12 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
                   <MoreVertIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
-              <IconButton size="small" onClick={onClose} aria-label="Close">
+              <IconButton
+                size="small"
+                onClick={onClose}
+                aria-label="Close"
+                sx={{width: 34, height: 34}}
+              >
                 <CloseIcon fontSize="small" />
               </IconButton>
             </>
@@ -323,10 +329,10 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
             aria-label="Task details"
             sx={{
               px: {xs: 0.5, sm: 2},
-              minHeight: 36,
+              minHeight: DIALOG_TAB_MIN_HEIGHT,
               '& .MuiTab-root': {
                 minWidth: {xs: 0, sm: 90},
-                minHeight: 36,
+                minHeight: DIALOG_TAB_MIN_HEIGHT,
                 px: {xs: 0.5, sm: 1.25},
                 py: 0.5,
                 fontSize: {xs: '0.72rem', sm: '0.8125rem'},
@@ -341,7 +347,12 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
             <Tab label="Output" />
           </Tabs>
         </Box>
-        <Box sx={{p: activeTab === 1 ? 0 : {xs: 1.5, sm: 2}}}>
+        <Box
+          sx={{
+            minHeight: DIALOG_TAB_PANEL_MIN_HEIGHT,
+            p: activeTab === 1 ? 0 : {xs: 1.5, sm: 2},
+          }}
+        >
           {activeTab === 0 && <TaskOverview task={task} />}
           {activeTab === 1 && <TaskCommand task={task} />}
           {activeTab === 2 && <TaskResources task={task} onUpdate={onUpdate} />}
@@ -349,7 +360,7 @@ const TaskDialogView: FC<TaskDialogViewProps> = ({task, onUpdate, onClose}) => {
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{px: {xs: 1.5, sm: 2}, py: 1}}>
+      <DialogActions disableSpacing sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 1}}>
         <Box sx={{mr: 'auto'}}>{primaryAction}</Box>
         <Button size="small" variant="outlined" onClick={onClose}>
           Close

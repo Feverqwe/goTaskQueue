@@ -20,6 +20,7 @@ import {Form} from 'react-final-form';
 import {AddTaskRequest, RawTemplate} from '../types';
 import {RootStoreCtx} from '../RootStore/RootStoreCtx';
 import ActionButton from '../ActionButton/ActionButton';
+import {DIALOG_TAB_MIN_HEIGHT, DIALOG_TAB_PANEL_MIN_HEIGHT} from '../DialogTabs/layout';
 import CommandTab from './components/CommandTab';
 import SettingsTab from './components/SettingsTab';
 import VariablesTab from './components/VariablesTab';
@@ -190,7 +191,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 id="template-dialog-title"
                 sx={{
                   px: {xs: 1.5, sm: 2},
-                  py: isQuickRun ? 1 : undefined,
+                  py: 1,
                   bgcolor: 'background.paper',
                 }}
               >
@@ -207,7 +208,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                     size="small"
                     onClick={onClose}
                     aria-label="Close"
-                    sx={isQuickRun ? {width: 34, height: 34} : undefined}
+                    sx={{width: 34, height: 34}}
                   >
                     <CloseIcon fontSize="small" />
                   </IconButton>
@@ -224,9 +225,9 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                       aria-label="Task configuration"
                       sx={{
                         px: {xs: 0.5, sm: 2},
-                        minHeight: 40,
+                        minHeight: DIALOG_TAB_MIN_HEIGHT,
                         '& .MuiTab-root': {
-                          minHeight: 40,
+                          minHeight: DIALOG_TAB_MIN_HEIGHT,
                           px: {xs: 0.75, sm: 2},
                           py: 0.5,
                           textTransform: 'none',
@@ -239,7 +240,12 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                     </Tabs>
                   </Box>
                 )}
-                <Box sx={{p: activeTab === 'command' ? 0 : {xs: 1.5, sm: 2}}}>
+                <Box
+                  sx={{
+                    minHeight: isQuickRun ? undefined : DIALOG_TAB_PANEL_MIN_HEIGHT,
+                    p: activeTab === 'command' ? 0 : {xs: 1.5, sm: 2},
+                  }}
+                >
                   {templateVariables.length > 0 && (
                     <VariablesTab
                       hidden={activeTab !== 'variables'}
@@ -257,7 +263,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
                 </Box>
               </DialogContent>
 
-              <DialogActions sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 0.5}}>
+              <DialogActions disableSpacing sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 1}}>
                 <Button size="small" variant="outlined" onClick={onClose}>
                   Cancel
                 </Button>

@@ -1,0 +1,2 @@
+export const DIALOG_TAB_MIN_HEIGHT = 40;
+export const DIALOG_TAB_PANEL_MIN_HEIGHT = 216;

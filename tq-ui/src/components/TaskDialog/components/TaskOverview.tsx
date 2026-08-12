@@ -74,7 +74,7 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
   return (
     <Box sx={{display: 'flex', flexDirection: 'column', gap: 2.5}}>
       <Box component="section" aria-labelledby="task-timeline-title">
-        <Typography id="task-timeline-title" variant="subtitle2" sx={{mb: 1.25, fontWeight: 600}}>
+        <Typography id="task-timeline-title" variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
           Timeline
         </Typography>
         <Box
@@ -82,7 +82,7 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
-            columnGap: {xs: 1.25, sm: 0.75},
+            columnGap: {xs: 1.5, sm: 1},
             rowGap: 0.5,
           }}
         >
@@ -136,7 +136,7 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
       </Box>
 
       <Box component="section" aria-labelledby="task-execution-title">
-        <Typography id="task-execution-title" variant="subtitle2" sx={{mb: 1.25, fontWeight: 600}}>
+        <Typography id="task-execution-title" variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
           Execution
         </Typography>
         <Box
@@ -144,7 +144,7 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
             display: 'grid',
             gridTemplateColumns: {xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))'},
             columnGap: {xs: 2, sm: 3},
-            rowGap: 1.75,
+            rowGap: 1.5,
           }}
         >
           <KeyValue name="Group" value={task.group || '−'} />

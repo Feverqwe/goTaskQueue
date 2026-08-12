@@ -20,6 +20,10 @@ import {Form} from 'react-final-form';
 import {RawTemplate, TemplateFolder} from '../../../../components/types';
 import {RootStoreCtx} from '../../../../components/RootStore/RootStoreCtx';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
+import {
+  DIALOG_TAB_MIN_HEIGHT,
+  DIALOG_TAB_PANEL_MIN_HEIGHT,
+} from '../../../../components/DialogTabs/layout';
 import CommandTab from './EditTemplateDialog/CommandTab';
 import GeneralTab from './EditTemplateDialog/GeneralTab';
 import SettingsTab from './EditTemplateDialog/SettingsTab';
@@ -122,7 +126,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
             <Box component="form" onSubmit={submit} sx={{display: 'contents'}}>
               <DialogTitle
                 id="template-editor-title"
-                sx={{px: {xs: 1.5, sm: 2}, bgcolor: 'background.paper'}}
+                sx={{px: {xs: 1.5, sm: 2}, py: 1, bgcolor: 'background.paper'}}
               >
                 <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minHeight: 30}}>
                   <Box sx={{minWidth: 0, flexGrow: 1}}>
@@ -139,7 +143,12 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                       {isNew ? `New template in ${folder.place || 'root'}` : template.place}
                     </Typography>
                   </Box>
-                  <IconButton size="small" onClick={onClose} aria-label="Close">
+                  <IconButton
+                    size="small"
+                    onClick={onClose}
+                    aria-label="Close"
+                    sx={{width: 34, height: 34}}
+                  >
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Box>
@@ -155,9 +164,9 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                     aria-label="Template editor sections"
                     sx={{
                       px: {xs: 0.5, sm: 2},
-                      minHeight: 40,
+                      minHeight: DIALOG_TAB_MIN_HEIGHT,
                       '& .MuiTab-root': {
-                        minHeight: 40,
+                        minHeight: DIALOG_TAB_MIN_HEIGHT,
                         px: {xs: 1.25, sm: 2},
                         py: 0.5,
                         textTransform: 'none',
@@ -177,7 +186,12 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                     <Tab value="settings" label="Settings" />
                   </Tabs>
                 </Box>
-                <Box sx={{p: activeTab === 'command' ? 0 : {xs: 1.5, sm: 2}}}>
+                <Box
+                  sx={{
+                    minHeight: DIALOG_TAB_PANEL_MIN_HEIGHT,
+                    p: activeTab === 'command' ? 0 : {xs: 1.5, sm: 2},
+                  }}
+                >
                   <GeneralTab hidden={activeTab !== 'general'} isNew={isNew} />
                   <VariablesTab
                     hidden={activeTab !== 'variables'}
@@ -190,7 +204,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
                 </Box>
               </DialogContent>
 
-              <DialogActions sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 0.5}}>
+              <DialogActions disableSpacing sx={{px: {xs: 1.5, sm: 2}, py: 1, gap: 1}}>
                 <Button size="small" variant="outlined" onClick={onClose}>
                   Cancel
                 </Button>

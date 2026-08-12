@@ -16,6 +16,7 @@ const CommandTab: FC<CommandTabProps> = ({hidden}) => (
     aria-label="Template command"
     sx={{
       position: 'relative',
+      minHeight: 'inherit',
       '& .MuiFormHelperText-root': {px: {xs: 1.5, sm: 2}},
     }}
   >

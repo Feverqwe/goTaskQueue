@@ -8,7 +8,13 @@ interface CommandTabProps {
 }
 
 const CommandTab: FC<CommandTabProps> = ({hidden}) => (
-  <Box component="section" role="tabpanel" hidden={hidden} aria-label="Task command">
+  <Box
+    component="section"
+    role="tabpanel"
+    hidden={hidden}
+    aria-label="Task command"
+    sx={{position: 'relative', minHeight: 'inherit'}}
+  >
     <Field<string> name="command" subscription={{value: true}}>
       {({input}) => <CommandFieldAsync defaultValue={input.value} onChange={input.onChange} />}
     </Field>
