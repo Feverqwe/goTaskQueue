@@ -75,7 +75,6 @@ const NotificationStack: FC<NotificationStackProps> = ({notifications, onClose})
                 alignItems: 'flex-start',
                 overflow: 'hidden',
                 border: `1px solid ${alpha(color, 0.34)}`,
-                borderLeft: `3px solid ${color}`,
                 borderRadius: 1.5,
                 backgroundColor: alpha(theme.palette.background.paper, 0.97),
                 boxShadow: `0 12px 32px ${alpha(theme.palette.common.black, 0.34)}`,
