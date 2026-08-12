@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import {Box, MenuItem, TextField} from '@mui/material';
+import {Box, MenuItem, TextField, Typography} from '@mui/material';
 import {Field} from 'react-final-form';
 import {RawTemplate} from '../../types';
 
@@ -11,6 +11,14 @@ interface VariablesTabProps {
 
 const VariablesTab: FC<VariablesTabProps> = ({hidden, isNew, variables}) => (
   <Box component="section" role="tabpanel" hidden={hidden} aria-label="Template variables">
+    <Box sx={{mb: 1.5}}>
+      <Typography variant="subtitle2" sx={{fontWeight: 600}}>
+        Variables
+      </Typography>
+      <Typography variant="caption" color="text.disabled">
+        Values substituted into this task before launch
+      </Typography>
+    </Box>
     <Box
       sx={{
         display: 'grid',

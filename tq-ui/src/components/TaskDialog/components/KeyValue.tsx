@@ -1,5 +1,5 @@
-import React, {FC, useMemo} from 'react';
-import {Box, SxProps, Theme, useTheme} from '@mui/material';
+import React, {FC} from 'react';
+import {Box, SxProps, Theme, Typography} from '@mui/material';
 import {formatValue} from '../../../utils/formatValue';
 
 interface KeyValueProps {
@@ -10,28 +10,41 @@ interface KeyValueProps {
 }
 
 const KeyValue: FC<KeyValueProps> = ({name, value, type, sx}) => {
-  const theme = useTheme();
-
   const formattedValue = formatValue(value, type);
-
-  const lineStyle = useMemo(
-    () => ({borderBottom: `1px dotted  ${theme.palette.divider}`, flexGrow: 1, minWidth: '10%'}),
-    [theme.palette.divider],
-  );
+  const displayValue = formattedValue ?? '–';
 
   return (
     <Box
       sx={[
         {
-          display: 'flex',
-          alignItems: 'baseline',
+          minWidth: 0,
         },
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
     >
-      <span>{name}</span>
-      <span style={lineStyle} />
-      <span>{formattedValue ?? '–'}</span>
+      <Typography
+        variant="caption"
+        color="text.disabled"
+        component="div"
+        sx={{fontSize: '0.6875rem', lineHeight: 1.35}}
+      >
+        {name}
+      </Typography>
+      <Typography
+        variant="body2"
+        component="div"
+        title={String(displayValue)}
+        sx={{
+          mt: 0.5,
+          color: 'text.primary',
+          lineHeight: 1.35,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {displayValue}
+      </Typography>
     </Box>
   );
 };

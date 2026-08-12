@@ -27,7 +27,7 @@ const VariablesTab: FC<VariablesTabProps> = ({hidden, onAdd, onRemove, variables
         <Typography variant="subtitle2" sx={{fontWeight: 600}}>
           Input variables
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" color="text.disabled">
           Key <code>url</code>: command{' '}
           <Box component="code" sx={{whiteSpace: 'nowrap'}}>
             TASK_VAR_URL

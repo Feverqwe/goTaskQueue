@@ -67,11 +67,7 @@ const SettingsTab: FC<SettingsTabProps> = ({hasTemplatePlace, hidden, isPtySuppo
       </Box>
 
       <Box component="section" aria-labelledby="template-execution-title">
-        <Typography
-          id="template-execution-title"
-          variant="subtitle2"
-          sx={{mb: 0.5, fontWeight: 600}}
-        >
+        <Typography id="template-execution-title" variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
           Execution
         </Typography>
         <Box

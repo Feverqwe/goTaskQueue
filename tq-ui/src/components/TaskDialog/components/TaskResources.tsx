@@ -91,7 +91,7 @@ const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
     <Box sx={{display: 'flex', flexDirection: 'column', gap: 3}}>
       <Box>
         <Box sx={{display: 'flex', alignItems: 'center', mb: 1}}>
-          <Typography variant="subtitle2" color="text.secondary" sx={{flexGrow: 1}}>
+          <Typography variant="subtitle2" sx={{flexGrow: 1, fontWeight: 600}}>
             Links ({task.links.length})
           </Typography>
           <Button
@@ -204,7 +204,7 @@ const TaskResources: FC<TaskResourcesProps> = ({task, onUpdate}) => {
 
       <Box>
         <Box sx={{display: 'flex', alignItems: 'center', mb: 1}}>
-          <Typography variant="subtitle2" color="text.secondary" sx={{flexGrow: 1}}>
+          <Typography variant="subtitle2" sx={{flexGrow: 1, fontWeight: 600}}>
             Files and folders ({assets.length})
           </Typography>
           <Button

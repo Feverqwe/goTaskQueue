@@ -74,7 +74,7 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
   return (
     <Box sx={{display: 'flex', flexDirection: 'column', gap: 1.5}}>
       <Box>
-        <Typography variant="subtitle2" color="text.secondary" sx={{mb: 0.75}}>
+        <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
           Timeline
         </Typography>
         <Box
@@ -124,15 +124,15 @@ const TaskOverview: FC<TaskOverviewProps> = ({task}) => {
       </Box>
 
       <Box>
-        <Typography variant="subtitle2" color="text.secondary" sx={{mb: 0.5}}>
+        <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
           Execution
         </Typography>
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: {xs: '1fr', md: 'repeat(2, minmax(0, 1fr))'},
-            columnGap: 3,
-            rowGap: 0.5,
+            gridTemplateColumns: {xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))'},
+            columnGap: {xs: 2, sm: 3},
+            rowGap: 1.5,
           }}
         >
           <KeyValue name="Group" value={task.group || '−'} />

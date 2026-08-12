@@ -10,6 +10,14 @@ interface CommandTabProps {
 
 const CommandTab: FC<CommandTabProps> = ({hidden}) => (
   <Box component="section" role="tabpanel" hidden={hidden} aria-label="Template command">
+    <Box sx={{mb: 1.5}}>
+      <Typography variant="subtitle2" sx={{fontWeight: 600}}>
+        Launch command
+      </Typography>
+      <Typography variant="caption" color="text.disabled">
+        Command saved in this template
+      </Typography>
+    </Box>
     <Field<string> name="command" subscription={{error: true, value: true}}>
       {({input, meta}) => (
         <CommandFieldAsync
