@@ -33,7 +33,7 @@ func TestMCPRequiresBearerTokenAndListsTaskTools(t *testing.T) {
 	}
 	body := response.Body.String()
 	for _, toolName := range []string{
-		"templates_search", "template_create", "template_update", "template_delete", "tasks_cleanup", "task_start", "task_follow", "task_input", "task_resize", "task_delete",
+		"templates_search", "template_create", "template_update", "template_delete", "tasks_cleanup", "task_start", "task_tail", "task_screen", "task_follow", "task_input", "task_resize", "task_delete",
 	} {
 		if !strings.Contains(body, `"name":"`+toolName+`"`) {
 			t.Errorf("tools/list response does not contain %q: %s", toolName, body)
@@ -41,6 +41,24 @@ func TestMCPRequiresBearerTokenAndListsTaskTools(t *testing.T) {
 	}
 	if !strings.Contains(body, "next_cursor") || !strings.Contains(body, "CTRL_C") {
 		t.Fatalf("tools/list response is missing PTY workflow details: %s", body)
+	}
+	for _, variableGuide := range []string{"TASK_VAR_", "UPPERCASE_KEY", "[a-z][a-z0-9_]*", "{{ vars.key }}", "select variable"} {
+		if !strings.Contains(body, variableGuide) {
+			t.Errorf("tools/list response is missing template variable guidance %q: %s", variableGuide, body)
+		}
+	}
+
+	initialize := `{"jsonrpc":"2.0","id":2,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test-client","version":"test"}}}`
+	response = callAuthorizedMCP(router, initialize)
+	if response.Code != http.StatusOK {
+		t.Fatalf("initialize status = %d, body = %s", response.Code, response.Body.String())
+	}
+	for _, instruction := range []string{
+		"TASK_VAR_", `{{ vars.key }}`, "PowerShell", "cmd.exe", "defaultValue", "Legacy {key}",
+	} {
+		if !strings.Contains(response.Body.String(), instruction) {
+			t.Errorf("initialize response is missing template instruction %q: %s", instruction, response.Body.String())
+		}
 	}
 }
 
@@ -181,6 +199,43 @@ func TestTaskServiceWritesToPtyAndFollowsOutput(t *testing.T) {
 	}
 	if screen := task.TerminalScreen(); !strings.Contains(screen, "reply:hello agent") {
 		t.Fatalf("terminal screen = %q, want command response", screen)
+	}
+	screen, err := service.TaskScreen(task.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(screen.Screen, "reply:hello agent") {
+		t.Fatalf("TaskScreen() = %q, want command response", screen.Screen)
+	}
+	tail, err := service.TaskTail(task.Id, 1, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(tail.Output, "reply:hello agent") {
+		t.Fatalf("TaskTail() = %q, want command response", tail.Output)
+	}
+	if tail.NextCursor < tail.StartCursor {
+		t.Fatalf("TaskTail() cursors = %d..%d", tail.StartCursor, tail.NextCursor)
+	}
+}
+
+func TestTailLineStart(t *testing.T) {
+	tests := []struct {
+		name  string
+		data  string
+		lines int
+		want  string
+	}{
+		{name: "trailing newline", data: "one\ntwo\nthree\n", lines: 2, want: "two\nthree\n"},
+		{name: "open final line", data: "one\ntwo\nthree", lines: 1, want: "three"},
+		{name: "more requested than available", data: "one\ntwo", lines: 10, want: "one\ntwo"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := test.data[tailLineStart([]byte(test.data), test.lines):]; got != test.want {
+				t.Fatalf("tail = %q, want %q", got, test.want)
+			}
+		})
 	}
 }
 

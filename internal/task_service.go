@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -18,6 +19,8 @@ const (
 	maxTaskFollowWait      = 30 * time.Second
 	maxTaskOutputSettle    = 2 * time.Second
 	maxTaskInputBytes      = 64 * 1024
+	defaultTaskTailLines   = 100
+	maxTaskTailLines       = 1000
 )
 
 type AddTaskInput struct {
@@ -45,6 +48,21 @@ type TaskOutput struct {
 	Truncated  bool                  `json:"truncated,omitempty"`
 	TimedOut   bool                  `json:"timed_out,omitempty"`
 	Finished   bool                  `json:"finished"`
+}
+
+type TaskScreen struct {
+	Task     taskQueue.TaskSummary `json:"task"`
+	Screen   string                `json:"screen"`
+	Finished bool                  `json:"finished"`
+}
+
+type TaskTail struct {
+	Task        taskQueue.TaskSummary `json:"task"`
+	Output      string                `json:"output"`
+	StartCursor int64                 `json:"start_cursor"`
+	NextCursor  int64                 `json:"next_cursor"`
+	Truncated   bool                  `json:"truncated,omitempty"`
+	Finished    bool                  `json:"finished"`
 }
 
 type TaskService struct {
@@ -348,6 +366,72 @@ func (s *TaskService) TaskOutput(ctx context.Context, id string, cursor int64, w
 			quiet.Reset(settle)
 		}
 	}
+}
+
+func (s *TaskService) TaskScreen(id string) (TaskScreen, error) {
+	task, err := s.queue.Get(id)
+	if err != nil {
+		return TaskScreen{}, err
+	}
+	if !task.IsPtyTask() {
+		return TaskScreen{}, errors.New("task does not use a pseudo-terminal")
+	}
+	return TaskScreen{
+		Task:     task.Summary(),
+		Screen:   task.TerminalScreen(),
+		Finished: task.IsDone(),
+	}, nil
+}
+
+func (s *TaskService) TaskTail(id string, lines, maxBytes int) (TaskTail, error) {
+	task, err := s.queue.Get(id)
+	if err != nil {
+		return TaskTail{}, err
+	}
+	if lines <= 0 {
+		lines = defaultTaskTailLines
+	}
+	if lines > maxTaskTailLines {
+		return TaskTail{}, fmt.Errorf("tail lines must not exceed %d", maxTaskTailLines)
+	}
+	if maxBytes <= 0 {
+		maxBytes = defaultTaskOutputBytes
+	}
+	if maxBytes > maxTaskOutputBytes {
+		maxBytes = maxTaskOutputBytes
+	}
+
+	result, err := task.ReadCombinedTail(maxBytes)
+	if err != nil {
+		return TaskTail{}, err
+	}
+	start := tailLineStart(result.Data, lines)
+	data := result.Data[start:]
+	return TaskTail{
+		Task:        task.Summary(),
+		Output:      string(data),
+		StartCursor: result.Offset - int64(len(result.Data)-start),
+		NextCursor:  result.Offset,
+		Truncated:   result.WasTrimmed || start > 0,
+		Finished:    task.IsDone(),
+	}, nil
+}
+
+func tailLineStart(data []byte, lines int) int {
+	position := len(data)
+	if position > 0 && data[position-1] == '\n' {
+		position--
+	}
+	start := 0
+	for range lines {
+		index := bytes.LastIndexByte(data[:position], '\n')
+		if index < 0 {
+			return 0
+		}
+		start = index + 1
+		position = index
+	}
+	return start
 }
 
 var taskInputKeys = map[string]string{

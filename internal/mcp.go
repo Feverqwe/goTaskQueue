@@ -23,13 +23,57 @@ type mcpGetTemplateInput struct {
 	Place string `json:"place,omitempty" jsonschema:"Exact template place returned by templates_search. Use when the template has no ID."`
 }
 
+type mcpTemplateVariable struct {
+	Name         string   `json:"name" jsonschema:"Human-readable label shown when asking for the variable value, for example Environment"`
+	Value        string   `json:"value" jsonschema:"Unique machine-readable key matching [a-z][a-z0-9_]*, for example environment. task_start uses this key in variables; commands receive it uppercased as TASK_VAR_ENVIRONMENT; label and group use {{ vars.environment }}."`
+	DefaultValue string   `json:"defaultValue,omitempty" jsonschema:"Value used when task_start omits this key. For select variables, set this to one of options (normally the first option)."`
+	Type         string   `json:"type,omitempty" jsonschema:"Variable input type: text (or omitted) accepts free-form text; select presents the values in options."`
+	Options      []string `json:"options,omitempty" jsonschema:"Allowed choices for a select variable. Provide at least one unique value for type select; omit for text."`
+}
+
+type mcpTemplate struct {
+	Place            string                `json:"place" jsonschema:"Slash-separated path relative to the profile templates directory, for example deploy/worker. The template is stored in this directory and its command runs with this directory as the working directory."`
+	Command          string                `json:"command" jsonschema:"Command source passed to the configured runner. Read variables from TASK_VAR_<UPPERCASE_KEY> environment variables and quote shell expansions. Do not use {{ vars.key }} in commands."`
+	Name             string                `json:"name" jsonschema:"Required human-readable template name shown in the UI and template search."`
+	Description      string                `json:"description,omitempty" jsonschema:"Explain what the template does, when to use it, where results appear, and important side effects so agents can select it safely."`
+	ID               string                `json:"id,omitempty" jsonschema:"Optional stable exact identifier for template_get and task_start. Keep it unique when set; place can always identify the template."`
+	Variables        []mcpTemplateVariable `json:"variables" jsonschema:"Variable definitions. Keys must be unique. Values supplied by task_start override defaultValue and resolved values are stored with the created task."`
+	Label            string                `json:"label,omitempty" jsonschema:"Task label. Insert variables with {{ vars.key }}; unknown keys make task creation fail. Rendering is one pass, so variable values are treated as plain text."`
+	Group            string                `json:"group,omitempty" jsonschema:"Task group. Insert variables with {{ vars.key }}; unknown keys make task creation fail. Rendering is one pass."`
+	IsPty            bool                  `json:"isPty,omitempty" jsonschema:"Run inside a pseudo-terminal for interactive or full-screen programs. Use task_screen and task_input for interactive PTY tasks."`
+	IsOnlyCombined   bool                  `json:"isOnlyCombined,omitempty" jsonschema:"Store and expose combined stdout/stderr only instead of also keeping separate stdout and stderr streams."`
+	IsSingleInstance bool                  `json:"isSingleInstance,omitempty" jsonschema:"Reject starting another active task from the same template place."`
+	IsStartOnBoot    bool                  `json:"isStartOnBoot,omitempty" jsonschema:"Clone and run one queued task for this template place when GoTaskQueue starts."`
+	IsWriteLogs      bool                  `json:"isWriteLogs,omitempty" jsonschema:"Persist task output to the configured log directory so it survives process restarts."`
+	TTL              int64                 `json:"ttl,omitempty" jsonschema:"Seconds to retain a successfully finished task before automatic cleanup. Zero disables TTL cleanup; errors and canceled tasks are not TTL-cleaned."`
+}
+
+func (t mcpTemplate) taskQueueTemplate() taskQueue.Template {
+	variables := make([]taskQueue.TemplateVariable, len(t.Variables))
+	for i, variable := range t.Variables {
+		variables[i] = taskQueue.TemplateVariable{
+			Name: variable.Name, Value: variable.Value, DefaultValue: variable.DefaultValue,
+			Type: variable.Type, Options: variable.Options,
+		}
+	}
+	return taskQueue.Template{
+		Place: t.Place, Command: t.Command, Name: t.Name, Description: t.Description,
+		Id: t.ID, Variables: variables,
+		NewTaskBase: taskQueue.NewTaskBase{
+			Label: t.Label, Group: t.Group, IsPty: t.IsPty, IsOnlyCombined: t.IsOnlyCombined,
+			IsSingleInstance: t.IsSingleInstance, IsStartOnBoot: t.IsStartOnBoot,
+			IsWriteLogs: t.IsWriteLogs, TTL: t.TTL,
+		},
+	}
+}
+
 type mcpCreateTemplateInput struct {
-	Template taskQueue.Template `json:"template" jsonschema:"Complete template definition. The place is a slash-separated path relative to the templates directory; the command is stored but not run."`
+	Template mcpTemplate `json:"template" jsonschema:"Complete template definition. The command is stored but not run."`
 }
 
 type mcpUpdateTemplateInput struct {
-	CurrentPlace string             `json:"current_place" jsonschema:"Exact current template place returned by templates_search or template_get"`
-	Template     taskQueue.Template `json:"template" jsonschema:"Complete replacement template definition. Set template.place to a different place to move the template while updating it."`
+	CurrentPlace string      `json:"current_place" jsonschema:"Exact current template place returned by templates_search or template_get"`
+	Template     mcpTemplate `json:"template" jsonschema:"Complete replacement template definition. Set template.place to a different place to move the template while updating it."`
 }
 
 type mcpTemplatePlaceInput struct {
@@ -60,6 +104,12 @@ type mcpTaskOutputInput struct {
 	ID       string `json:"id" jsonschema:"Exact task ID"`
 	Cursor   *int64 `json:"cursor,omitempty" jsonschema:"next_cursor returned by the previous read. Omit for recent history or the current PTY screen."`
 	MaxBytes int    `json:"max_bytes,omitempty" jsonschema:"Maximum incremental output bytes, from 1 to 262144; defaults to 65536"`
+}
+
+type mcpTaskTailInput struct {
+	ID       string `json:"id" jsonschema:"Exact task ID"`
+	Lines    int    `json:"lines,omitempty" jsonschema:"Number of trailing lines to return, from 1 to 1000; defaults to 100"`
+	MaxBytes int    `json:"max_bytes,omitempty" jsonschema:"Maximum bytes to inspect from the end of the log, from 1 to 262144; defaults to 65536. A very long line may be truncated."`
 }
 
 type mcpFollowTaskInput struct {
@@ -124,7 +174,15 @@ func newMCPServer(service *TaskService, version string) *mcp.Server {
 	server := mcp.NewServer(
 		&mcp.Implementation{Name: "GoTaskQueue", Version: version},
 		&mcp.ServerOptions{Instructions: strings.TrimSpace(`
-GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-terminal (PTY). Prefer a documented template over an interactive shell when one matches the user's intent. Use templates_search first and resolve an exact template ID or place; never guess identifiers. template_create stores a new template without running it. Before template_update, read the current template with template_get and send its complete replacement definition; current_place identifies the existing template, while template.place may relocate it. task_start creates and immediately runs a task, while task_rerun clones the exact stored configuration of an existing task. Use task_output for an immediate read or task_follow for bounded long polling, and always continue from next_cursor. For PTY tasks, screen is the current plain-text viewport and output is the incremental terminal byte stream, which may include ANSI control sequences. Read the current task output before sending input, send one command or response at a time with task_input, then read again. Use CTRL_C before task_stop when merely interrupting a foreground command. Do not create or update templates, retry failed tasks, stop running tasks, or send terminal input unless the user requested the corresponding action. template_delete irreversibly removes a template and its stored command. task_delete and tasks_cleanup irreversibly remove queued tasks and their persisted logs; obtain explicit confirmation immediately before calling any of these deletion tools. Templates and shell commands can change the host or external systems with the permissions of the GoTaskQueue process.`)},
+GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-terminal (PTY). Prefer a documented template over an interactive shell when one matches the user's intent. Use templates_search first and resolve an exact template ID or place; never guess identifiers.
+
+Template variables have a human-readable name and a unique lowercase key in value matching [a-z][a-z0-9_]*. task_start.variables is keyed by value; omitted values use defaultValue, and resolved values are stored with the queued task. Commands receive each valid key as TASK_VAR_<UPPERCASE_KEY>: use "$TASK_VAR_ENVIRONMENT" in POSIX shell, $env:TASK_VAR_ENVIRONMENT in PowerShell, or "%TASK_VAR_ENVIRONMENT%" in cmd.exe. Quote expansions unless splitting is intentional. Commands run in the template directory. Use {{ vars.key }} only in label and group, where rendering is one pass and unknown keys fail task creation. Do not put {{ vars.key }} in command source. type text (or omitted) is free-form; type select must provide options and defaultValue should be one of them. Legacy {key} placeholders remain readable for compatibility but must not be introduced in new or updated templates.
+
+template_create stores a new template without running it. Before template_update, read the current template with template_get and send its complete replacement definition; current_place identifies the existing template, while template.place may relocate it. Document purpose, selection criteria, outputs, and side effects in description.
+
+task_start creates and immediately runs a task, while task_rerun clones the exact stored configuration of an existing task. Use task_tail for a compact read of the last lines, task_screen when only the current plain-text PTY viewport is needed, task_output for an immediate incremental read, or task_follow for bounded long polling. Continue incremental reads from next_cursor. PTY incremental output may include ANSI control sequences. Read the current task output or screen before sending input, send one command or response at a time with task_input, then read again. Use CTRL_C before task_stop when merely interrupting a foreground command.
+
+Do not create or update templates, retry failed tasks, stop running tasks, or send terminal input unless the user requested the corresponding action. template_delete irreversibly removes a template and its stored command. task_delete and tasks_cleanup irreversibly remove queued tasks and their persisted logs; obtain explicit confirmation immediately before calling any of these deletion tools. Templates and shell commands can change the host or external systems with the permissions of the GoTaskQueue process.`)},
 	)
 
 	mcp.AddTool(server, readOnlyMCPTool("templates_search", "Search and rank task templates by name, description, path, ID, and variables."),
@@ -143,7 +201,7 @@ GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-termin
 
 	mcp.AddTool(server, localWriteMCPTool("template_create", "Create and persist a new task template. This stores the command but does not run it; the place must not already exist.", false, false),
 		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpCreateTemplateInput) (*mcp.CallToolResult, mcpTemplateOutput, error) {
-			template, err := service.CreateTemplate(input.Template)
+			template, err := service.CreateTemplate(input.Template.taskQueueTemplate())
 			if template == nil {
 				return nil, mcpTemplateOutput{}, err
 			}
@@ -152,7 +210,7 @@ GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-termin
 
 	mcp.AddTool(server, localWriteMCPTool("template_update", "Replace an existing task template and optionally move it to a new place. This stores the command but does not run it.", true, false),
 		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpUpdateTemplateInput) (*mcp.CallToolResult, mcpTemplateOutput, error) {
-			template, err := service.UpdateTemplate(input.CurrentPlace, input.Template)
+			template, err := service.UpdateTemplate(input.CurrentPlace, input.Template.taskQueueTemplate())
 			if template == nil {
 				return nil, mcpTemplateOutput{}, err
 			}
@@ -200,6 +258,18 @@ GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-termin
 	mcp.AddTool(server, readOnlyMCPTool("task_output", "Read immediately available incremental output and the current plain-text PTY screen."),
 		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskOutputInput) (*mcp.CallToolResult, TaskOutput, error) {
 			output, err := service.TaskOutput(ctx, input.ID, mcpCursor(input.Cursor), 0, 0, input.MaxBytes)
+			return nil, output, err
+		})
+
+	mcp.AddTool(server, readOnlyMCPTool("task_tail", "Read the last N lines from the end of a task's combined log without scanning the entire log."),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskTailInput) (*mcp.CallToolResult, TaskTail, error) {
+			output, err := service.TaskTail(input.ID, input.Lines, input.MaxBytes)
+			return nil, output, err
+		})
+
+	mcp.AddTool(server, readOnlyMCPTool("task_screen", "Read only the current plain-text viewport of a PTY task, without returning its incremental log or ANSI snapshot."),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskIDInput) (*mcp.CallToolResult, TaskScreen, error) {
+			output, err := service.TaskScreen(input.ID)
 			return nil, output, err
 		})
 

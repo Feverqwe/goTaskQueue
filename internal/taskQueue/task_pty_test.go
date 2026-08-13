@@ -91,6 +91,29 @@ func TestReadCombinedReturnsPtySnapshotAndThenLiveOutput(t *testing.T) {
 	}
 }
 
+func TestReadCombinedTailReadsBoundedEndOfLog(t *testing.T) {
+	combined := gzbuffer.NewGzBuffer().GetDataStore()
+	raw := []byte("one\ntwo\nthree\n")
+	if _, err := combined.Write(raw); err != nil {
+		t.Fatal(err)
+	}
+	task := &Task{Combined: combined}
+
+	result, err := task.ReadCombinedTail(10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Offset != int64(len(raw)) {
+		t.Fatalf("tail offset = %d, want %d", result.Offset, len(raw))
+	}
+	if got, want := string(result.Data), "two\nthree\n"; got != want {
+		t.Fatalf("tail data = %q, want %q", got, want)
+	}
+	if !result.WasTrimmed {
+		t.Fatal("bounded tail was not marked truncated")
+	}
+}
+
 func TestReadCombinedFallsBackToHistoryForRestoredPtyTask(t *testing.T) {
 	combined := gzbuffer.NewGzBuffer().GetDataStore()
 	raw := bytes.Repeat([]byte("x"), HistorySize+100)

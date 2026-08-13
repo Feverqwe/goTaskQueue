@@ -609,6 +609,30 @@ func (s *Task) ReadCombinedChunk(offset int64, maxBytes int) (CombinedReadResult
 	return CombinedReadResult{Offset: offset, Data: fragment, WasTrimmed: wasTrimmed}, nil
 }
 
+func (s *Task) ReadCombinedTail(maxBytes int) (CombinedReadResult, error) {
+	s.cmu.RLock()
+	defer s.cmu.RUnlock()
+
+	combined := s.Combined
+	if combined == nil {
+		return CombinedReadResult{}, errors.New("combined log is not available")
+	}
+	combinedLen := combined.Len()
+	start := combinedLen - int64(maxBytes)
+	if start < 0 {
+		start = 0
+	}
+	fragment, err := combined.ReadAt(start)
+	if err != nil {
+		return CombinedReadResult{}, err
+	}
+	return CombinedReadResult{
+		Offset:     s.combinedOffset + combinedLen,
+		Data:       fragment,
+		WasTrimmed: s.combinedOffset > 0 || start > 0,
+	}, nil
+}
+
 func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
 	result, err := s.ReadCombinedChunk(offset, 0)
 	return result.Offset, result.Data, err
