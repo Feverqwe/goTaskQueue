@@ -348,6 +348,13 @@ const theme = createTheme({
         },
       },
     },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottomColor: colors.line,
+        },
+      },
+    },
     MuiMenu: {
       styleOverrides: {
         paper: {
