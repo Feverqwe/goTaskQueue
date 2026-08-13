@@ -42,6 +42,10 @@ type mcpListTasksInput struct {
 	Limit  int      `json:"limit,omitempty" jsonschema:"Maximum newest tasks to return, from 1 to 100; defaults to 20"`
 }
 
+type mcpCleanupTasksInput struct {
+	Statuses []string `json:"statuses" jsonschema:"Task states to delete: FINISHED, CANCELED, and/or ERROR. An empty list deletes nothing."`
+}
+
 type mcpTaskIDInput struct {
 	ID string `json:"id" jsonschema:"Exact task ID returned by task_start, task_rerun, tasks_list, or task_get"`
 }
@@ -120,7 +124,7 @@ func newMCPServer(service *TaskService, version string) *mcp.Server {
 	server := mcp.NewServer(
 		&mcp.Implementation{Name: "GoTaskQueue", Version: version},
 		&mcp.ServerOptions{Instructions: strings.TrimSpace(`
-GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-terminal (PTY). Prefer a documented template over an interactive shell when one matches the user's intent. Use templates_search first and resolve an exact template ID or place; never guess identifiers. template_create stores a new template without running it. Before template_update, read the current template with template_get and send its complete replacement definition; current_place identifies the existing template, while template.place may relocate it. task_start creates and immediately runs a task, while task_rerun clones the exact stored configuration of an existing task. Use task_output for an immediate read or task_follow for bounded long polling, and always continue from next_cursor. For PTY tasks, screen is the current plain-text viewport and output is the incremental terminal byte stream, which may include ANSI control sequences. Read the current task output before sending input, send one command or response at a time with task_input, then read again. Use CTRL_C before task_stop when merely interrupting a foreground command. Do not create or update templates, retry failed tasks, stop running tasks, or send terminal input unless the user requested the corresponding action. template_delete irreversibly removes a template and its stored command, and task_delete irreversibly removes a queued task and its persisted logs; obtain explicit confirmation immediately before calling either tool. Templates and shell commands can change the host or external systems with the permissions of the GoTaskQueue process.`)},
+GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-terminal (PTY). Prefer a documented template over an interactive shell when one matches the user's intent. Use templates_search first and resolve an exact template ID or place; never guess identifiers. template_create stores a new template without running it. Before template_update, read the current template with template_get and send its complete replacement definition; current_place identifies the existing template, while template.place may relocate it. task_start creates and immediately runs a task, while task_rerun clones the exact stored configuration of an existing task. Use task_output for an immediate read or task_follow for bounded long polling, and always continue from next_cursor. For PTY tasks, screen is the current plain-text viewport and output is the incremental terminal byte stream, which may include ANSI control sequences. Read the current task output before sending input, send one command or response at a time with task_input, then read again. Use CTRL_C before task_stop when merely interrupting a foreground command. Do not create or update templates, retry failed tasks, stop running tasks, or send terminal input unless the user requested the corresponding action. template_delete irreversibly removes a template and its stored command. task_delete and tasks_cleanup irreversibly remove queued tasks and their persisted logs; obtain explicit confirmation immediately before calling any of these deletion tools. Templates and shell commands can change the host or external systems with the permissions of the GoTaskQueue process.`)},
 	)
 
 	mcp.AddTool(server, readOnlyMCPTool("templates_search", "Search and rank task templates by name, description, path, ID, and variables."),
@@ -164,6 +168,12 @@ GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-termin
 	mcp.AddTool(server, readOnlyMCPTool("tasks_list", "List newest tasks with optional state and text filters."),
 		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpListTasksInput) (*mcp.CallToolResult, mcpTasksOutput, error) {
 			return nil, mcpTasksOutput{Tasks: filterTaskSummaries(service.ListTasks(), input)}, nil
+		})
+
+	mcp.AddTool(server, localWriteMCPTool("tasks_cleanup", "Permanently remove all tasks in the selected FINISHED, CANCELED, and/or ERROR states, including their persisted logs. Confirm with the user immediately before calling.", true, true),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpCleanupTasksInput) (*mcp.CallToolResult, mcpStatusOutput, error) {
+			err := service.CleanupTasks(input.Statuses)
+			return nil, mcpStatusOutput{Status: "ok"}, err
 		})
 
 	mcp.AddTool(server, readOnlyMCPTool("task_get", "Get one task by its exact ID, including command, resolved variables, status, links, and assets."),

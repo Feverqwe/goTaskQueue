@@ -58,9 +58,10 @@ default_tools_approval_mode = "writes"
 
 The MCP server can search, create, update, and delete documented templates;
 create and follow tasks; read incremental logs; rerun or stop tasks; and send
-input or resize messages to PTY tasks. A PTY shell has the same effective access
-as the operating-system user running GoTaskQueue. Treat the MCP token like an
-SSH credential, expose the endpoint only over trusted HTTPS, and do not run
+input or resize messages to PTY tasks. Completed, canceled, and failed tasks can
+also be cleaned up in bulk. A PTY shell has the same effective access as the
+operating-system user running GoTaskQueue. Treat the MCP token like an SSH
+credential, expose the endpoint only over trusted HTTPS, and do not run
 GoTaskQueue as root.
 
 Install the optional [GoTaskQueue skill](skills/gotaskqueue/SKILL.md) to teach

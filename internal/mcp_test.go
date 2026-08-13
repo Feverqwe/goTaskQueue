@@ -33,7 +33,7 @@ func TestMCPRequiresBearerTokenAndListsTaskTools(t *testing.T) {
 	}
 	body := response.Body.String()
 	for _, toolName := range []string{
-		"templates_search", "template_create", "template_update", "template_delete", "task_start", "task_follow", "task_input", "task_resize", "task_delete",
+		"templates_search", "template_create", "template_update", "template_delete", "tasks_cleanup", "task_start", "task_follow", "task_input", "task_resize", "task_delete",
 	} {
 		if !strings.Contains(body, `"name":"`+toolName+`"`) {
 			t.Errorf("tools/list response does not contain %q: %s", toolName, body)
@@ -41,6 +41,45 @@ func TestMCPRequiresBearerTokenAndListsTaskTools(t *testing.T) {
 	}
 	if !strings.Contains(body, "next_cursor") || !strings.Contains(body, "CTRL_C") {
 		t.Fatalf("tools/list response is missing PTY workflow details: %s", body)
+	}
+}
+
+func TestMCPTasksCleanupUsesDialogStatuses(t *testing.T) {
+	queue := taskQueue.NewQueue()
+	service := NewTaskService(queue, &cfg.Config{})
+	router := NewRouter()
+	HandleMCP(router, service, "test-secret", "test")
+
+	finished := queue.Add(&cfg.Config{}, taskQueue.TaskBase{})
+	finished.IsStarted = true
+	finished.IsFinished = true
+	finished.State = "FINISHED"
+	failed := queue.Add(&cfg.Config{}, taskQueue.TaskBase{})
+	failed.IsStarted = true
+	failed.IsFinished = true
+	failed.IsError = true
+	failed.State = "ERROR"
+	idle := queue.Add(&cfg.Config{}, taskQueue.TaskBase{})
+
+	invalid := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"tasks_cleanup","arguments":{"statuses":["IDLE"]}}}`
+	response := callAuthorizedMCP(router, invalid)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"isError":true`) {
+		t.Fatalf("invalid tasks_cleanup status = %d, body = %s", response.Code, response.Body.String())
+	}
+
+	cleanup := `{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tasks_cleanup","arguments":{"statuses":["FINISHED","ERROR"]}}}`
+	response = callAuthorizedMCP(router, cleanup)
+	if response.Code != http.StatusOK || strings.Contains(response.Body.String(), `"isError":true`) {
+		t.Fatalf("tasks_cleanup status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if _, err := queue.Get(finished.Id); err == nil {
+		t.Fatal("finished task still exists after tasks_cleanup")
+	}
+	if _, err := queue.Get(failed.Id); err == nil {
+		t.Fatal("error task still exists after tasks_cleanup")
+	}
+	if _, err := queue.Get(idle.Id); err != nil {
+		t.Fatal("idle task was removed by tasks_cleanup")
 	}
 }
 

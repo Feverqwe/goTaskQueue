@@ -132,7 +132,10 @@ func handleAction(router *Router, config *cfg.Config, service *TaskService, call
 
 			statuses := payload.Statuses
 
-			service.CleanupTasks(statuses)
+			err = service.CleanupTasks(statuses)
+			if err != nil {
+				return nil, err
+			}
 
 			res := true
 

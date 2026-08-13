@@ -199,8 +199,16 @@ func (s *TaskService) DeleteTask(id string) error {
 	return s.queue.Del(s.config, id)
 }
 
-func (s *TaskService) CleanupTasks(statuses []string) {
+func (s *TaskService) CleanupTasks(statuses []string) error {
+	for _, status := range statuses {
+		switch status {
+		case "FINISHED", "CANCELED", "ERROR":
+		default:
+			return fmt.Errorf("invalid cleanup status %q", status)
+		}
+	}
 	s.queue.CleanupByStatuses(statuses, s.config)
+	return nil
 }
 
 func (s *TaskService) SetTaskLabel(id, label string) error {
