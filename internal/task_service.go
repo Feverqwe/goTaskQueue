@@ -86,6 +86,35 @@ func (s *TaskService) GetTemplate(id, place string) (*taskQueue.Template, error)
 	return nil, errors.New("template id or place is required")
 }
 
+func (s *TaskService) CreateTemplate(template taskQueue.Template) (*taskQueue.Template, error) {
+	if err := taskQueue.WriteTemplate(template, true); err != nil {
+		return nil, err
+	}
+	return taskQueue.ReadTemplate(template.Place)
+}
+
+func (s *TaskService) UpdateTemplate(currentPlace string, template taskQueue.Template) (*taskQueue.Template, error) {
+	if currentPlace == "" {
+		return nil, errors.New("current template place is required")
+	}
+	if currentPlace != template.Place {
+		if err := taskQueue.MoveTemplate(currentPlace, template.Place); err != nil {
+			return nil, err
+		}
+	}
+	if err := taskQueue.WriteTemplate(template, false); err != nil {
+		return nil, err
+	}
+	return taskQueue.ReadTemplate(template.Place)
+}
+
+func (s *TaskService) DeleteTemplate(place string) error {
+	if place == "" {
+		return errors.New("template place is required")
+	}
+	return taskQueue.RemoveTemplate(place)
+}
+
 func (s *TaskService) AddTask(input AddTaskInput) (*taskQueue.Task, error) {
 	var template *taskQueue.Template
 	var err error

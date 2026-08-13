@@ -374,16 +374,11 @@ func handleAction(router *Router, config *cfg.Config, service *TaskService, call
 				return "", err
 			}
 
-			isNew := len(payload.PrevRelPlace) == 0
-
-			if !isNew && payload.PrevRelPlace != payload.Template.Place {
-				err = taskQueue.MoveTemplate(payload.PrevRelPlace, payload.Template.Place)
-				if err != nil {
-					return "", err
-				}
+			if payload.PrevRelPlace == "" {
+				_, err = service.CreateTemplate(payload.Template)
+			} else {
+				_, err = service.UpdateTemplate(payload.PrevRelPlace, payload.Template)
 			}
-
-			err = taskQueue.WriteTemplate(payload.Template, isNew)
 			if err != nil {
 				return "", err
 			}
@@ -453,7 +448,7 @@ func handleAction(router *Router, config *cfg.Config, service *TaskService, call
 				return "", err
 			}
 
-			err = taskQueue.RemoveTemplate(payload.RelPlace)
+			err = service.DeleteTemplate(payload.RelPlace)
 			if err != nil {
 				return "", err
 			}

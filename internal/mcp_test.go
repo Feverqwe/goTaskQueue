@@ -33,7 +33,7 @@ func TestMCPRequiresBearerTokenAndListsTaskTools(t *testing.T) {
 	}
 	body := response.Body.String()
 	for _, toolName := range []string{
-		"templates_search", "task_start", "task_follow", "task_input", "task_resize", "task_delete",
+		"templates_search", "template_create", "template_update", "template_delete", "task_start", "task_follow", "task_input", "task_resize", "task_delete",
 	} {
 		if !strings.Contains(body, `"name":"`+toolName+`"`) {
 			t.Errorf("tools/list response does not contain %q: %s", toolName, body)
@@ -41,6 +41,58 @@ func TestMCPRequiresBearerTokenAndListsTaskTools(t *testing.T) {
 	}
 	if !strings.Contains(body, "next_cursor") || !strings.Contains(body, "CTRL_C") {
 		t.Fatalf("tools/list response is missing PTY workflow details: %s", body)
+	}
+}
+
+func TestMCPTemplateCreateAndUpdate(t *testing.T) {
+	previousProfilePath := cfg.PROFILE_PATH_CACHE
+	cfg.PROFILE_PATH_CACHE = t.TempDir()
+	t.Cleanup(func() {
+		cfg.PROFILE_PATH_CACHE = previousProfilePath
+		taskQueue.FlushTemplateCache()
+	})
+	taskQueue.FlushTemplateCache()
+
+	service := NewTaskService(taskQueue.NewQueue(), &cfg.Config{})
+	router := NewRouter()
+	HandleMCP(router, service, "test-secret", "test")
+
+	create := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"template_create","arguments":{"template":{"place":"agents/example","command":"printf create","name":"Agent example","description":"Created through MCP","id":"agent-example","variables":[],"label":"Example","group":"Agents","isPty":false,"isOnlyCombined":false,"isSingleInstance":false,"isStartOnBoot":false,"isWriteLogs":true,"ttl":0}}}}`
+	response := callAuthorizedMCP(router, create)
+	if response.Code != http.StatusOK || strings.Contains(response.Body.String(), `"isError":true`) {
+		t.Fatalf("template_create status = %d, body = %s", response.Code, response.Body.String())
+	}
+	template, err := taskQueue.ReadTemplate("agents/example")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if template.Command != "printf create" || template.Description != "Created through MCP" {
+		t.Fatalf("created template = %#v", template)
+	}
+
+	update := `{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"template_update","arguments":{"current_place":"agents/example","template":{"place":"agents/renamed","command":"printf updated","name":"Updated example","description":"Updated through MCP","id":"agent-example","variables":[],"label":"Updated","group":"Agents","isPty":false,"isOnlyCombined":true,"isSingleInstance":false,"isStartOnBoot":false,"isWriteLogs":true,"ttl":60}}}}`
+	response = callAuthorizedMCP(router, update)
+	if response.Code != http.StatusOK || strings.Contains(response.Body.String(), `"isError":true`) {
+		t.Fatalf("template_update status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if _, err := taskQueue.ReadTemplate("agents/example"); err == nil {
+		t.Fatal("old template place still exists after update")
+	}
+	template, err = taskQueue.ReadTemplate("agents/renamed")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if template.Command != "printf updated" || template.Name != "Updated example" || template.TTL != 60 || !template.IsOnlyCombined {
+		t.Fatalf("updated template = %#v", template)
+	}
+
+	deleteRequest := `{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"template_delete","arguments":{"place":"agents/renamed"}}}`
+	response = callAuthorizedMCP(router, deleteRequest)
+	if response.Code != http.StatusOK || strings.Contains(response.Body.String(), `"isError":true`) {
+		t.Fatalf("template_delete status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if _, err := taskQueue.ReadTemplate("agents/renamed"); err == nil {
+		t.Fatal("template still exists after template_delete")
 	}
 }
 
@@ -99,4 +151,12 @@ func newMCPRequest(body string) *http.Request {
 	request.Header.Set("Accept", "application/json, text/event-stream")
 	request.Header.Set("MCP-Protocol-Version", "2025-06-18")
 	return request
+}
+
+func callAuthorizedMCP(router *Router, body string) *httptest.ResponseRecorder {
+	request := newMCPRequest(body)
+	request.Header.Set("Authorization", "Bearer test-secret")
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	return response
 }
