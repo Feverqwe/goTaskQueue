@@ -13,6 +13,8 @@ const deployTemplate: RawTemplate = {
   place: 'deploy/worker',
   name: 'Deploy worker',
   id: 'deploy-worker',
+  description:
+    'Deploys the task queue worker to the selected environment. Production changes live traffic.',
   command:
     'deploy-tool release --environment "$TASK_VAR_ENVIRONMENT" --service task-queue-worker --image "$TASK_VAR_IMAGE"',
   label: 'Deploy worker to {{ vars.environment }}',

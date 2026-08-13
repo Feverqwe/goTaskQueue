@@ -101,6 +101,10 @@ export const api = {
     method: 'GET',
     path: '/api/templates',
   }),
+  templatesSearch: action<{query?: string; limit?: number}, RawTemplate[]>({
+    method: 'GET',
+    path: '/api/templates/search',
+  }),
   getTemplate: action<{id: string}, RawTemplate>({
     method: 'GET',
     path: '/api/getTemplate',

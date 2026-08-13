@@ -2,14 +2,13 @@ package internal
 
 import (
 	"encoding/json"
-	"fmt"
 	"goTaskQueue/internal/cfg"
 	memstorage "goTaskQueue/internal/memStorage"
 	"goTaskQueue/internal/shared"
 	"goTaskQueue/internal/taskQueue"
 	"goTaskQueue/internal/utils"
 	"net/http"
-	"syscall"
+	"strconv"
 
 	"github.com/NYTimes/gziphandler"
 )
@@ -22,11 +21,11 @@ type JsonSuccessResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func HandleApi(router *Router, queue *taskQueue.Queue, memStorage *memstorage.MemStorage, config *cfg.Config, callChan chan string) {
+func HandleApi(router *Router, service *TaskService, memStorage *memstorage.MemStorage, config *cfg.Config, callChan chan string) {
 	apiRouter := NewRouter()
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
-	handleAction(apiRouter, config, queue, callChan)
+	handleAction(apiRouter, config, service, callChan)
 	handleMemStorage(apiRouter, memStorage)
 	handleFobidden(apiRouter)
 
@@ -39,7 +38,7 @@ func handleFobidden(router *Router) {
 	})
 }
 
-func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, callChan chan string) {
+func handleAction(router *Router, config *cfg.Config, service *TaskService, callChan chan string) {
 	type GetTaskPayload struct {
 		Id string `json:"id"`
 	}
@@ -56,22 +55,6 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 	type SignalTaskPayload struct {
 		Id     string `json:"id"`
 		Signal int    `json:"signal"`
-	}
-
-	type AddTaskPayload struct {
-		Command          *string           `json:"command"`
-		Label            *string           `json:"label"`
-		Group            *string           `json:"group"`
-		IsPty            *bool             `json:"isPty"`
-		IsOnlyCombined   *bool             `json:"isOnlyCombined"`
-		IsSingleInstance *bool             `json:"isSingleInstance"`
-		IsStartOnBoot    *bool             `json:"isStartOnBoot"`
-		IsWriteLogs      *bool             `json:"isWriteLogs"`
-		TemplatePlace    string            `json:"templatePlace"`
-		TemplateId       string            `json:"templateId"`
-		Variables        map[string]string `json:"variables"`
-		IsRun            bool              `json:"isRun"`
-		TTL              *int64            `json:"ttl"`
 	}
 
 	type SetLabelPayload struct {
@@ -101,7 +84,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Get("/api/tasks", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() ([]*taskQueue.Task, error) {
-			tasks := queue.GetAll(config)
+			tasks := service.ListTasks()
 			return tasks, nil
 		})
 	})
@@ -113,7 +96,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			err = queue.Del(config, payload.Id)
+			err = service.DeleteTask(payload.Id)
 
 			return "ok", err
 		})
@@ -121,62 +104,11 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 	router.Post("/api/add", func(w http.ResponseWriter, r *http.Request) {
 		apiCall(w, func() (*taskQueue.Task, error) {
-			payload, err := utils.ParseJson[AddTaskPayload](r.Body)
+			payload, err := utils.ParseJson[AddTaskInput](r.Body)
 			if err != nil {
 				return nil, err
 			}
-
-			var template *taskQueue.Template
-			if payload.TemplatePlace != "" {
-				template, err = taskQueue.ReadTemplate(payload.TemplatePlace)
-				if err != nil {
-					return nil, fmt.Errorf("template not found by place %v", payload.TemplatePlace)
-				}
-			}
-			if template == nil && payload.TemplateId != "" {
-				template, err = taskQueue.GetTemplate(payload.TemplateId)
-				if err != nil {
-					return nil, fmt.Errorf("template not found by id %v", payload.TemplateId)
-				}
-			}
-			if template == nil {
-				template = &taskQueue.Template{}
-			}
-
-			taskBase := taskQueue.TaskBase{}
-			taskBase.TemplatePlace = template.Place
-
-			taskBase.Command = setValue(payload.Command, template.Command)
-			taskBase.Label = setValue(payload.Label, template.Label)
-			taskBase.Group = setValue(payload.Group, template.Group)
-			taskBase.IsPty = setValue(payload.IsPty, template.IsPty)
-			taskBase.IsOnlyCombined = setValue(payload.IsOnlyCombined, template.IsOnlyCombined)
-			taskBase.IsSingleInstance = setValue(payload.IsSingleInstance, template.IsSingleInstance)
-			taskBase.IsStartOnBoot = setValue(payload.IsStartOnBoot, template.IsStartOnBoot)
-			taskBase.IsWriteLogs = setValue(payload.IsWriteLogs, template.IsWriteLogs)
-			taskBase.TTL = setValue(payload.TTL, template.TTL)
-
-			taskBase.Variables = taskQueue.ResolveTemplateVariables(template.Variables, payload.Variables)
-			taskBase.Command = taskQueue.RenderLegacyCommand(taskBase.Command, taskBase.Variables)
-			taskBase.Label, err = taskQueue.RenderTemplateText(taskBase.Label, taskBase.Variables)
-			if err != nil {
-				return nil, err
-			}
-			taskBase.Group, err = taskQueue.RenderTemplateText(taskBase.Group, taskBase.Variables)
-			if err != nil {
-				return nil, err
-			}
-
-			task := queue.Add(config, taskBase)
-
-			if payload.IsRun {
-				err := task.Run(config, queue)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			return task, err
+			return service.AddTask(*payload)
 		})
 	})
 
@@ -187,19 +119,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return nil, err
 			}
 
-			task, err := queue.Clone(config, payload.Id)
-			if err != nil {
-				return nil, err
-			}
-
-			if payload.IsRun {
-				err = task.Run(config, queue)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			return task, err
+			return service.CloneTask(payload.Id, payload.IsRun)
 		})
 	})
 
@@ -212,7 +132,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 
 			statuses := payload.Statuses
 
-			queue.CleanupByStatuses(statuses, config)
+			service.CleanupTasks(statuses)
 
 			res := true
 
@@ -224,7 +144,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		apiCall(w, func() (*taskQueue.Task, error) {
 			id := r.URL.Query().Get("id")
 
-			task, err := queue.Get(id)
+			task, err := service.GetTask(id)
 			return task, err
 		})
 	})
@@ -236,12 +156,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task, err := queue.Get(payload.Id)
-			if err != nil {
-				return "", err
-			}
-
-			err = task.Run(config, queue)
+			err = service.RunTask(payload.Id)
 
 			return "ok", err
 		})
@@ -254,12 +169,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task, err := queue.Get(payload.Id)
-			if err != nil {
-				return "", err
-			}
-
-			err = task.Kill()
+			err = service.StopTask(payload.Id)
 
 			return "ok", err
 		})
@@ -272,14 +182,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task, err := queue.Get(payload.Id)
-			if err != nil {
-				return "", err
-			}
-
-			sig := syscall.Signal(payload.Signal)
-
-			err = task.Signal(sig)
+			err = service.SignalTask(payload.Id, payload.Signal)
 
 			return "ok", err
 		})
@@ -292,12 +195,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task, err := queue.Get(payload.Id)
-			if err != nil {
-				return "", err
-			}
-
-			task.SetLabel(payload.Label)
+			err = service.SetTaskLabel(payload.Id, payload.Label)
 
 			return "ok", err
 		})
@@ -310,12 +208,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task, err := queue.Get(payload.Id)
-			if err != nil {
-				return "", err
-			}
-
-			task.AddLink(payload.TaskLink)
+			err = service.AddTaskLink(payload.Id, payload.TaskLink)
 
 			return "ok", err
 		})
@@ -328,12 +221,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task, err := queue.Get(payload.Id)
-			if err != nil {
-				return "", err
-			}
-
-			task.DelLink(payload.Name)
+			err = service.DeleteTaskLink(payload.Id, payload.Name)
 
 			return "ok", err
 		})
@@ -346,14 +234,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return nil, err
 			}
 
-			task, err := queue.Get(payload.Id)
-			if err != nil {
-				return nil, err
-			}
-
-			asset, err := task.AddAsset(payload.Path)
-
-			return asset, err
+			return service.AddTaskAsset(payload.Id, payload.Path)
 		})
 	})
 
@@ -364,12 +245,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 				return "", err
 			}
 
-			task, err := queue.Get(payload.Id)
-			if err != nil {
-				return "", err
-			}
-
-			task.DelAsset(payload.Path)
+			err = service.DeleteTaskAsset(payload.Id, payload.Path)
 
 			return "ok", err
 		})
@@ -425,7 +301,7 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 		logType := r.URL.Path[10:]
 		id := r.URL.Query().Get("id")
 
-		task, err := queue.Get(id)
+		task, err := service.GetTask(id)
 		if err != nil {
 			sendStatus(w, 403)
 			return
@@ -455,6 +331,21 @@ func handleAction(router *Router, config *cfg.Config, queue *taskQueue.Queue, ca
 			templates := taskQueue.GetTemplates()
 
 			return templates, nil
+		})
+	})
+
+	router.Get("/api/templates/search", func(w http.ResponseWriter, r *http.Request) {
+		apiCall(w, func() ([]taskQueue.Template, error) {
+			query := r.URL.Query().Get("query")
+			limit := 20
+			if value := r.URL.Query().Get("limit"); value != "" {
+				parsed, err := strconv.Atoi(value)
+				if err != nil {
+					return nil, err
+				}
+				limit = parsed
+			}
+			return service.SearchTemplates(query, limit), nil
 		})
 	})
 

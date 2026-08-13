@@ -29,6 +29,8 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+var Version = "1.0.0-dev"
+
 var DEBUG_UI = os.Getenv("DEBUG_UI") == "1"
 
 func main() {
@@ -42,6 +44,7 @@ func main() {
 
 	var powerControl = powerCtr.GetPowerControl()
 	var taskQueue = taskQueue.LoadQueue(&config)
+	var taskService = internal.NewTaskService(taskQueue, &config)
 	var memStorage = memstorage.GetMemStorage()
 
 	callChan := make(chan string)
@@ -60,8 +63,12 @@ func main() {
 			router := internal.NewRouter()
 
 			powerLock(router, powerControl)
-			handleWebsocket(router, taskQueue)
-			internal.HandleApi(router, taskQueue, memStorage, &config, callChan)
+			handleWebsocket(router, taskService)
+			internal.HandleApi(router, taskService, memStorage, &config, callChan)
+			if config.MCPToken != "" {
+				internal.HandleMCP(router, taskService, config.MCPToken, Version)
+				log.Printf("MCP endpoint enabled at /mcp")
+			}
 			handleWww(router, taskQueue, memStorage, &config)
 
 			address := config.GetAddress()
@@ -131,7 +138,7 @@ func powerLock(router *internal.Router, powerControl *powerCtr.PowerControl) {
 	})
 }
 
-func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
+func handleWebsocket(router *internal.Router, service *internal.TaskService) {
 	const CHUNK_SIZE = 16 * 1024
 	const HISTORY_DATA = "h"
 	const ACTUAL_DATA = "a"
@@ -149,7 +156,7 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 
 		id := ws.Request().URL.Query().Get("id")
 
-		task, err := queue.Get(id)
+		task, err := service.GetTask(id)
 		if err != nil {
 			_ = sendFrame(ERROR_DATA, []byte(err.Error()))
 			return
@@ -182,12 +189,14 @@ func handleWebsocket(router *internal.Router, queue *taskQueue.Queue) {
 				if len(data) > 0 {
 					switch data[0:1] {
 					case "i":
-						task.Send(data[1:])
+						if err := service.SendTaskInput(id, data[1:], "", false); err != nil {
+							log.Println("task input error", err)
+						}
 					case "r":
 						reader := strings.NewReader(data[1:])
 						payload, err := utils.ParseJson[taskQueue.PtyScreenSize](reader)
 						if err == nil {
-							err = task.Resize(payload)
+							err = service.ResizeTask(id, *payload)
 							signalHistoryReady()
 							if err != nil {
 								log.Println("resize error", err)

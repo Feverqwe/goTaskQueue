@@ -13,6 +13,7 @@ export interface RawTemplate {
   command: string;
 
   id?: string;
+  description?: string;
   label?: string;
   group?: string;
   name: string;
@@ -75,7 +76,10 @@ export interface TaskAsset {
   isDir: boolean;
 }
 
-export interface Task extends Omit<Required<RawTemplate>, 'place' | 'name' | 'variables'> {
+export interface Task extends Omit<
+  Required<RawTemplate>,
+  'place' | 'name' | 'variables' | 'description'
+> {
   templatePlace: string;
   variables?: Record<string, string>;
   state: TaskState;

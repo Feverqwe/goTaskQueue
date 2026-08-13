@@ -98,9 +98,30 @@ type Task struct {
 	combinedOffset int64
 	ptyTerminal    *xterm.Terminal
 	ptySnapshot    []byte
+	ptyScreen      string
 	Links          []TaskLink `json:"links"`
 	queue          *Queue
 	Assets         []TaskAsset `json:"assets"`
+}
+
+type TaskSummary struct {
+	Id            string    `json:"id"`
+	Label         string    `json:"label"`
+	Group         string    `json:"group"`
+	TemplatePlace string    `json:"templatePlace"`
+	State         string    `json:"state"`
+	Error         string    `json:"error,omitempty"`
+	IsPty         bool      `json:"isPty"`
+	CreatedAt     time.Time `json:"createdAt"`
+	StartedAt     time.Time `json:"startedAt"`
+	FinishedAt    time.Time `json:"finishedAt"`
+}
+
+type CombinedReadResult struct {
+	Offset     int64
+	Data       []byte
+	IsSnapshot bool
+	WasTrimmed bool
 }
 
 func (s *Task) MarshalJSON() ([]byte, error) {
@@ -115,6 +136,41 @@ func (s *Task) taskBaseSnapshot() TaskBase {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.TaskBase
+}
+
+func (s *Task) Summary() TaskSummary {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return TaskSummary{
+		Id:            s.Id,
+		Label:         s.Label,
+		Group:         s.Group,
+		TemplatePlace: s.TemplatePlace,
+		State:         s.State,
+		Error:         s.Error,
+		IsPty:         s.IsPty,
+		CreatedAt:     s.CreatedAt,
+		StartedAt:     s.StartedAt,
+		FinishedAt:    s.FinishedAt,
+	}
+}
+
+func (s *Task) IsRunning() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.IsStarted && !s.IsFinished
+}
+
+func (s *Task) IsPtyTask() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.IsPty
+}
+
+func (s *Task) IsDone() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.IsFinished
 }
 
 func (s *Task) canDelete() bool {
@@ -508,23 +564,27 @@ func (s *Task) RunDirect(config *cfg.Config) error {
 	return nil
 }
 
-func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
+func (s *Task) ReadCombinedChunk(offset int64, maxBytes int) (CombinedReadResult, error) {
 	s.cmu.RLock()
 	defer s.cmu.RUnlock()
 
 	combined := s.Combined
 	if combined == nil {
-		return offset, nil, errors.New("combined log is not available")
+		return CombinedReadResult{Offset: offset}, errors.New("combined log is not available")
 	}
 	combinedOffset := s.combinedOffset
 	combinedLen := combined.Len()
 	if offset == -1 && s.IsPty {
 		if s.ptyTerminal != nil || s.ptySnapshot != nil || combinedLen == 0 {
-			return combinedOffset + combinedLen, s.ptySnapshotLocked(), nil
+			return CombinedReadResult{
+				Offset:     combinedOffset + combinedLen,
+				Data:       s.ptySnapshotLocked(),
+				IsSnapshot: true,
+			}, nil
 		}
 	}
 	if offset == combinedLen+combinedOffset {
-		return offset, make([]byte, 0), nil
+		return CombinedReadResult{Offset: offset, Data: make([]byte, 0)}, nil
 	}
 	if offset == -1 {
 		offset = combinedOffset
@@ -532,16 +592,26 @@ func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
 			offset = combinedOffset + combinedLen - HistorySize
 		}
 	}
+	wasTrimmed := false
 	if offset < combinedOffset {
 		log.Println("skip", combinedOffset-offset)
 		offset = combinedOffset
+		wasTrimmed = true
 	}
 	fragment, err := combined.ReadAt(offset - combinedOffset)
 	if err != nil {
-		return 0, nil, err
+		return CombinedReadResult{}, err
+	}
+	if maxBytes > 0 && len(fragment) > maxBytes {
+		fragment = fragment[:maxBytes]
 	}
 	offset += int64(len(fragment))
-	return offset, fragment, nil
+	return CombinedReadResult{Offset: offset, Data: fragment, WasTrimmed: wasTrimmed}, nil
+}
+
+func (s *Task) ReadCombined(offset int64) (int64, []byte, error) {
+	result, err := s.ReadCombinedChunk(offset, 0)
+	return result.Offset, result.Data, err
 }
 
 func (s *Task) ptySnapshotLocked() []byte {
@@ -563,11 +633,21 @@ func (s *Task) ptySnapshotLocked() []byte {
 	return append([]byte(nil), s.ptySnapshot...)
 }
 
+func (s *Task) TerminalScreen() string {
+	s.cmu.RLock()
+	defer s.cmu.RUnlock()
+	if s.ptyTerminal != nil {
+		return s.ptyTerminal.String()
+	}
+	return s.ptyScreen
+}
+
 func (s *Task) freezePtyTerminalLocked() {
 	if s.ptyTerminal == nil {
 		return
 	}
 	s.ptySnapshot = s.ptySnapshotLocked()
+	s.ptyScreen = s.ptyTerminal.String()
 	s.ptyTerminal.Dispose()
 	s.ptyTerminal = nil
 }
@@ -575,8 +655,12 @@ func (s *Task) freezePtyTerminalLocked() {
 func (s *Task) Send(data string) error {
 	s.mu.RLock()
 	if !s.IsStarted || s.IsFinished {
+		started := s.IsStarted
 		s.mu.RUnlock()
-		return nil
+		if !started {
+			return errors.New("process_not_started")
+		}
+		return errors.New("process_finished")
 	}
 	stdin := s.stdin
 	s.mu.RUnlock()

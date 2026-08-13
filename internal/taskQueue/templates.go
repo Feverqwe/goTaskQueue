@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 
@@ -30,9 +31,10 @@ type Template struct {
 	Place   string `json:"place"`
 	Command string `json:"command"`
 
-	Name      string             `json:"name"`
-	Id        string             `json:"id"`
-	Variables []TemplateVariable `json:"variables"`
+	Name        string             `json:"name"`
+	Description string             `json:"description,omitempty"`
+	Id          string             `json:"id"`
+	Variables   []TemplateVariable `json:"variables"`
 
 	NewTaskBase
 }
@@ -317,6 +319,85 @@ func GetTemplates() []Template {
 	return append([]Template(nil), TEMPLATES_CACHE...)
 }
 
+// SearchTemplates returns templates ranked by how well their user-facing
+// metadata matches query. Every query word must match at least one field.
+func SearchTemplates(query string, limit int) []Template {
+	templates := GetTemplates()
+	terms := strings.Fields(strings.ToLower(strings.TrimSpace(query)))
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	type match struct {
+		template Template
+		score    int
+	}
+	matches := make([]match, 0, len(templates))
+	for _, template := range templates {
+		name := strings.ToLower(template.Name)
+		description := strings.ToLower(template.Description)
+		place := strings.ToLower(template.Place)
+		id := strings.ToLower(template.Id)
+		variableText := strings.Builder{}
+		for _, variable := range template.Variables {
+			variableText.WriteByte(' ')
+			variableText.WriteString(strings.ToLower(variable.Name))
+			variableText.WriteByte(' ')
+			variableText.WriteString(strings.ToLower(variable.Value))
+		}
+
+		score := 0
+		matched := true
+		for _, term := range terms {
+			termScore := 0
+			switch {
+			case name == term || id == term || place == term:
+				termScore = 100
+			case strings.HasPrefix(name, term):
+				termScore = 60
+			case strings.Contains(name, term):
+				termScore = 40
+			case strings.Contains(description, term):
+				termScore = 25
+			case strings.Contains(id, term) || strings.Contains(place, term):
+				termScore = 15
+			case strings.Contains(variableText.String(), term):
+				termScore = 10
+			default:
+				matched = false
+			}
+			score += termScore
+		}
+		if matched {
+			matches = append(matches, match{template: template, score: score})
+		}
+	}
+
+	sort.SliceStable(matches, func(i, j int) bool {
+		if matches[i].score != matches[j].score {
+			return matches[i].score > matches[j].score
+		}
+		left := strings.ToLower(matches[i].template.Name)
+		right := strings.ToLower(matches[j].template.Name)
+		if left != right {
+			return left < right
+		}
+		return matches[i].template.Place < matches[j].template.Place
+	})
+
+	if len(matches) > limit {
+		matches = matches[:limit]
+	}
+	result := make([]Template, len(matches))
+	for i, match := range matches {
+		result[i] = match.template
+	}
+	return result
+}
+
 func FlushTemplateCache() {
 	templatesCacheMu.Lock()
 	defer templatesCacheMu.Unlock()
@@ -402,6 +483,47 @@ func copyDefaultTemplates(templatesPath string) error {
 	})
 }
 
+func fillDefaultTemplateDescriptions(templatesPath string) error {
+	return fs.WalkDir(assets.Files, "templates", func(assetPath string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() || entry.Name() != TEMPALTE_NAME {
+			return nil
+		}
+
+		defaultData, err := assets.Files.ReadFile(assetPath)
+		if err != nil {
+			return err
+		}
+		defaultTemplate, err := utils.ParseJson[Template](bytes.NewReader(defaultData))
+		if err != nil || strings.TrimSpace(defaultTemplate.Description) == "" {
+			return err
+		}
+
+		relPath := strings.TrimPrefix(assetPath, "templates/")
+		targetPath := filepath.Join(templatesPath, filepath.FromSlash(relPath))
+		targetData, err := os.ReadFile(targetPath)
+		if os.IsNotExist(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		targetTemplate, err := utils.ParseJson[Template](bytes.NewReader(targetData))
+		if err != nil || strings.TrimSpace(targetTemplate.Description) != "" {
+			return err
+		}
+
+		targetTemplate.Description = defaultTemplate.Description
+		updated, err := json.Marshal(targetTemplate)
+		if err != nil {
+			return err
+		}
+		return atomic.WriteFile(targetPath, bytes.NewReader(updated))
+	})
+}
+
 func InitTemplates() {
 	place := getTemplatesPath()
 	_, err := os.Stat(place)
@@ -412,5 +534,9 @@ func InitTemplates() {
 	}
 	if err != nil {
 		log.Println("Init templates error", err)
+		return
+	}
+	if err := fillDefaultTemplateDescriptions(place); err != nil {
+		log.Println("Update default template descriptions error", err)
 	}
 }

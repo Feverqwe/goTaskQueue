@@ -1,1 +1,1 @@
-{"place":"","command":"","name":"sh","variables":[],"label":"sh","group":"","isPty":true,"isOnlyCombined":true,"isSingleInstance":false,"isStartOnBoot":false}
+{"place":"","command":"","name":"sh","description":"Open an interactive shell on the GoTaskQueue host. Use for server inspection, project maintenance, configuration changes, and commands without a dedicated template. Commands run with the permissions of the GoTaskQueue process.","variables":[],"label":"sh","group":"","isPty":true,"isOnlyCombined":true,"isWriteLogs":true,"isSingleInstance":false,"isStartOnBoot":false}

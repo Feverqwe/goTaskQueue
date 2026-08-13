@@ -8,6 +8,7 @@ export interface EditorVariable extends Omit<TemplateVariable, 'options'> {
 
 export interface TemplateEditorValues {
   command: string;
+  description: string;
   group: string;
   id: string;
   isOnlyCombined: boolean;

@@ -24,6 +24,7 @@ type Config struct {
 	PtyRunEnv     []string
 	RunEnv        []string
 	TemplateOrder []string
+	MCPToken      string `json:"-"`
 }
 
 var APP_ID = "com.rndnm.gotaskqueue"
@@ -111,6 +112,9 @@ func LoadConfig() Config {
 
 	if config.LogFolder == "" {
 		config.LogFolder = newConfig.LogFolder
+	}
+	if token := os.Getenv("MCP_TOKEN"); token != "" {
+		config.MCPToken = token
 	}
 
 	err = os.MkdirAll(config.GetLogsFolder(), 0700)

@@ -1,1 +1,1 @@
-{"place":"","command":"","name":"Youtube audio","label":"Youtube [A] {{ vars.url }}","group":"","variables":[{"name":"URL","value":"url","defaultValue":""}],"isPty":false,"isOnlyCombined":true}
+{"place":"","command":"","name":"Youtube audio","description":"Download audio from a YouTube URL as M4A when available using yt-dlp. Progress and errors are available in the task output.","label":"Youtube [A] {{ vars.url }}","group":"","variables":[{"name":"URL","value":"url","defaultValue":""}],"isPty":false,"isOnlyCombined":true}

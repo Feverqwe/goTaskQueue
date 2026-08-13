@@ -5,7 +5,7 @@ node_modules
 .DS_Store
 storage.json
 open.lock
-goTaskQueue
+/goTaskQueue
 /ui/dist
 /tq-ui/storybook-static
 /tq-ui/debug-storybook.log

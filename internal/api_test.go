@@ -24,7 +24,7 @@ func TestTaskLogEndpointsMapPublicNamesToStoredLogs(t *testing.T) {
 	task.Combined = testDataStore("combined data")
 
 	router := NewRouter()
-	HandleApi(router, queue, memstorage.GetMemStorage(), config, make(chan string))
+	HandleApi(router, NewTaskService(queue, config), memstorage.GetMemStorage(), config, make(chan string))
 
 	for _, tc := range []struct {
 		name string
@@ -54,7 +54,7 @@ func TestCloneAndRunUnknownTaskReturnsApiError(t *testing.T) {
 	queue := taskQueue.NewQueue()
 	config := &cfg.Config{}
 	router := NewRouter()
-	HandleApi(router, queue, memstorage.GetMemStorage(), config, make(chan string))
+	HandleApi(router, NewTaskService(queue, config), memstorage.GetMemStorage(), config, make(chan string))
 
 	request := httptest.NewRequest(
 		http.MethodPost,
@@ -87,7 +87,7 @@ func TestSetTemplateOrderReturnsSaveErrorAndKeepsConfig(t *testing.T) {
 
 	config := &cfg.Config{TemplateOrder: []string{"old"}}
 	router := NewRouter()
-	HandleApi(router, taskQueue.NewQueue(), memstorage.GetMemStorage(), config, make(chan string))
+	HandleApi(router, NewTaskService(taskQueue.NewQueue(), config), memstorage.GetMemStorage(), config, make(chan string))
 
 	request := httptest.NewRequest(
 		http.MethodPost,
@@ -103,6 +103,38 @@ func TestSetTemplateOrderReturnsSaveErrorAndKeepsConfig(t *testing.T) {
 	}
 	if len(config.TemplateOrder) != 1 || config.TemplateOrder[0] != "old" {
 		t.Fatalf("template order = %#v, want unchanged order", config.TemplateOrder)
+	}
+}
+
+func TestSearchTemplatesEndpointFindsDescription(t *testing.T) {
+	originalProfilePath := cfg.PROFILE_PATH_CACHE
+	cfg.PROFILE_PATH_CACHE = t.TempDir()
+	taskQueue.FlushTemplateCache()
+	t.Cleanup(func() {
+		cfg.PROFILE_PATH_CACHE = originalProfilePath
+		taskQueue.FlushTemplateCache()
+	})
+
+	if err := taskQueue.WriteTemplate(taskQueue.Template{
+		Place: "ops/deploy", Name: "Release worker",
+		Description: "Deploy the background worker to production", Command: "true",
+		Variables: []taskQueue.TemplateVariable{},
+	}, true); err != nil {
+		t.Fatal(err)
+	}
+
+	config := &cfg.Config{}
+	router := NewRouter()
+	HandleApi(router, NewTaskService(taskQueue.NewQueue(), config), memstorage.GetMemStorage(), config, make(chan string))
+	request := httptest.NewRequest(http.MethodGet, "/api/templates/search?query=production&limit=5", nil)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"description":"Deploy the background worker to production"`) {
+		t.Fatalf("search response does not contain template description: %s", response.Body.String())
 	}
 }
 

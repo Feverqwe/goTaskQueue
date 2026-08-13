@@ -71,6 +71,7 @@ const EditTemplateDialog: FC<TemplateDialogProps> = ({
       const newTemplate: RawTemplate = {
         place: isNew ? path.join(folder.place, values.name.trim()) : values.place.trim(),
         command: values.command,
+        description: values.description.trim(),
         label: values.label,
         group: values.group,
         name: values.name.trim(),

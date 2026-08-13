@@ -1,1 +1,1 @@
-{"place":"","command":"","name":"Youtube","label":"Youtube {{ vars.url }}","group":"","variables":[{"name":"URL","value":"url","defaultValue":""}],"isPty":false,"isOnlyCombined":true}
+{"place":"","command":"","name":"Youtube","description":"Download a YouTube video up to 1080p as MP4 with yt-dlp. Provide the video URL; progress and errors are available in the task output.","label":"Youtube {{ vars.url }}","group":"","variables":[{"name":"URL","value":"url","defaultValue":""}],"isPty":false,"isOnlyCombined":true}

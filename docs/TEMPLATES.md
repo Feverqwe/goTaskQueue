@@ -3,6 +3,23 @@
 A template consists of `template.json` and a `command.sh` file in its template
 directory. The editor manages both files through the application UI.
 
+## Descriptions and discovery
+
+Use the optional `description` field to explain what a template does, when it
+should be selected, where its result appears, and any important side effects.
+The browser UI exposes the description as help text, while the HTTP and MCP
+template search use it to help agents choose the right operation.
+
+```json
+{
+  "name": "Deploy worker",
+  "description": "Deploys the worker to staging or production. Production changes live traffic."
+}
+```
+
+Descriptions are user-facing documentation, not an authorization boundary.
+Commands still run with the permissions of the GoTaskQueue process.
+
 ## Variables
 
 Each variable has a human-readable `name` and a machine-readable `value`. The

@@ -1,1 +1,1 @@
-{"place":"","command":"","name":"mc","variables":[],"label":"mc","group":"","isPty":true,"isOnlyCombined":true,"isSingleInstance":false,"isStartOnBoot":false}
+{"place":"","command":"","name":"mc","description":"Open Midnight Commander in an interactive PTY for browsing and managing files on the GoTaskQueue host.","variables":[],"label":"mc","group":"","isPty":true,"isOnlyCombined":true,"isWriteLogs":true,"isSingleInstance":false,"isStartOnBoot":false}

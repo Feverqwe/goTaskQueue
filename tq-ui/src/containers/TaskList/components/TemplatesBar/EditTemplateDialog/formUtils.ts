@@ -104,6 +104,7 @@ export const validateTemplateReferences = (
 
 export const getInitialValues = (template: RawTemplate): TemplateEditorValues => ({
   command: template.command,
+  description: template.description || '',
   group: template.group || '',
   id: template.id || '',
   isOnlyCombined: Boolean(template.isOnlyCombined),

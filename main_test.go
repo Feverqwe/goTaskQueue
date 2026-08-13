@@ -19,9 +19,10 @@ import (
 
 func TestWebsocketHandlerReturnsWhenIdleClientDisconnects(t *testing.T) {
 	queue := taskQueue.NewQueue()
-	task := queue.Add(&cfg.Config{}, taskQueue.TaskBase{})
+	config := &cfg.Config{}
+	task := queue.Add(config, taskQueue.TaskBase{})
 	router := internal.NewRouter()
-	handleWebsocket(router, queue)
+	handleWebsocket(router, internal.NewTaskService(queue, config))
 
 	requestDone := make(chan struct{})
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +52,8 @@ func TestWebsocketHandlerReturnsWhenIdleClientDisconnects(t *testing.T) {
 
 func TestWebsocketHandlerDrainsFinalOutputBeforeClosing(t *testing.T) {
 	queue := taskQueue.NewQueue()
-	task := queue.Add(&cfg.Config{}, taskQueue.TaskBase{})
+	config := &cfg.Config{}
+	task := queue.Add(config, taskQueue.TaskBase{})
 	task.IsFinished = true
 
 	var lenCalls atomic.Int32
@@ -75,7 +77,7 @@ func TestWebsocketHandlerDrainsFinalOutputBeforeClosing(t *testing.T) {
 	}
 
 	router := internal.NewRouter()
-	handleWebsocket(router, queue)
+	handleWebsocket(router, internal.NewTaskService(queue, config))
 	server := httptest.NewServer(router)
 	defer server.Close()
 
@@ -100,7 +102,7 @@ func TestWebsocketHandlerDrainsFinalOutputBeforeClosing(t *testing.T) {
 func TestWebsocketHandlerReportsUnknownTask(t *testing.T) {
 	queue := taskQueue.NewQueue()
 	router := internal.NewRouter()
-	handleWebsocket(router, queue)
+	handleWebsocket(router, internal.NewTaskService(queue, &cfg.Config{}))
 	server := httptest.NewServer(router)
 	defer server.Close()
 
@@ -122,7 +124,8 @@ func TestWebsocketHandlerReportsUnknownTask(t *testing.T) {
 
 func TestWebsocketHandlerReportsLogReadError(t *testing.T) {
 	queue := taskQueue.NewQueue()
-	task := queue.Add(&cfg.Config{}, taskQueue.TaskBase{})
+	config := &cfg.Config{}
+	task := queue.Add(config, taskQueue.TaskBase{})
 	task.Combined = &shared.DataStore{
 		Len: func() int64 { return 1 },
 		ReadAt: func(int64) ([]byte, error) {
@@ -131,7 +134,7 @@ func TestWebsocketHandlerReportsLogReadError(t *testing.T) {
 	}
 
 	router := internal.NewRouter()
-	handleWebsocket(router, queue)
+	handleWebsocket(router, internal.NewTaskService(queue, config))
 	server := httptest.NewServer(router)
 	defer server.Close()
 

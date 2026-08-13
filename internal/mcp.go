@@ -1,0 +1,274 @@
+package internal
+
+import (
+	"context"
+	"crypto/subtle"
+	"net/http"
+	"slices"
+	"strings"
+	"time"
+
+	"goTaskQueue/internal/taskQueue"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+type mcpSearchTemplatesInput struct {
+	Query string `json:"query,omitempty" jsonschema:"Words to find in template names, descriptions, paths, IDs, and variable names. Omit to browse templates."`
+	Limit int    `json:"limit,omitempty" jsonschema:"Maximum templates to return, from 1 to 100; defaults to 20"`
+}
+
+type mcpGetTemplateInput struct {
+	ID    string `json:"id,omitempty" jsonschema:"Exact template ID returned by templates_search"`
+	Place string `json:"place,omitempty" jsonschema:"Exact template place returned by templates_search. Use when the template has no ID."`
+}
+
+type mcpListTasksInput struct {
+	Query  string   `json:"query,omitempty" jsonschema:"Case-insensitive text to find in task ID, label, group, or template place"`
+	States []string `json:"states,omitempty" jsonschema:"Optional states: IDLE, STARTED, FINISHED, ERROR, or CANCELED"`
+	Limit  int      `json:"limit,omitempty" jsonschema:"Maximum newest tasks to return, from 1 to 100; defaults to 20"`
+}
+
+type mcpTaskIDInput struct {
+	ID string `json:"id" jsonschema:"Exact task ID returned by task_start, task_rerun, tasks_list, or task_get"`
+}
+
+type mcpStartTaskInput struct {
+	TemplateID    string            `json:"template_id,omitempty" jsonschema:"Exact template ID returned by templates_search"`
+	TemplatePlace string            `json:"template_place,omitempty" jsonschema:"Exact template place returned by templates_search. Use when the template has no ID."`
+	Variables     map[string]string `json:"variables,omitempty" jsonschema:"Template variable values keyed by their machine-readable variable names"`
+}
+
+type mcpTaskOutputInput struct {
+	ID       string `json:"id" jsonschema:"Exact task ID"`
+	Cursor   *int64 `json:"cursor,omitempty" jsonschema:"next_cursor returned by the previous read. Omit for recent history or the current PTY screen."`
+	MaxBytes int    `json:"max_bytes,omitempty" jsonschema:"Maximum incremental output bytes, from 1 to 262144; defaults to 65536"`
+}
+
+type mcpFollowTaskInput struct {
+	ID          string `json:"id" jsonschema:"Exact task ID"`
+	Cursor      *int64 `json:"cursor,omitempty" jsonschema:"next_cursor returned by the previous read. Omit for recent history or the current PTY screen."`
+	WaitSeconds int    `json:"wait_seconds,omitempty" jsonschema:"Long-poll timeout from 0 to 30 seconds; defaults to 5"`
+	SettleMs    *int   `json:"settle_ms,omitempty" jsonschema:"After output starts, wait for this many quiet milliseconds before returning, from 0 to 2000; defaults to 250"`
+	MaxBytes    int    `json:"max_bytes,omitempty" jsonschema:"Maximum incremental output bytes, from 1 to 262144; defaults to 65536"`
+}
+
+type mcpTaskInputInput struct {
+	ID     string `json:"id" jsonschema:"Exact running task ID"`
+	Text   string `json:"text,omitempty" jsonschema:"Text to send to the task. Use submit to append Enter."`
+	Key    string `json:"key,omitempty" jsonschema:"Special key: ENTER, TAB, ESCAPE, BACKSPACE, CTRL_C, CTRL_D, ARROW_UP, ARROW_DOWN, ARROW_LEFT, or ARROW_RIGHT. Use either key or text."`
+	Submit bool   `json:"submit,omitempty" jsonschema:"Append Enter after text. Do not combine with key."`
+}
+
+type mcpResizeTaskInput struct {
+	ID   string `json:"id" jsonschema:"Exact running PTY task ID"`
+	Cols int    `json:"cols" jsonschema:"Terminal width from 1 to 1000 columns"`
+	Rows int    `json:"rows" jsonschema:"Terminal height from 1 to 1000 rows"`
+}
+
+type mcpTemplatesOutput struct {
+	Templates []taskQueue.Template `json:"templates"`
+}
+
+type mcpTemplateOutput struct {
+	Template taskQueue.Template `json:"template"`
+}
+
+type mcpTasksOutput struct {
+	Tasks []taskQueue.TaskSummary `json:"tasks"`
+}
+
+type mcpTaskOutput struct {
+	Task *taskQueue.Task `json:"task"`
+}
+
+type mcpStatusOutput struct {
+	Status string `json:"status"`
+	ID     string `json:"id,omitempty"`
+}
+
+// HandleMCP mounts a bearer-token protected Streamable HTTP MCP endpoint on
+// the running GoTaskQueue server.
+func HandleMCP(router *Router, service *TaskService, token, version string) {
+	server := newMCPServer(service, version)
+	handler := mcp.NewStreamableHTTPHandler(
+		func(*http.Request) *mcp.Server { return server },
+		&mcp.StreamableHTTPOptions{
+			Stateless:                    true,
+			JSONResponse:                 true,
+			MaxRequestBodyBytes:          1 << 20,
+			PropagateRequestCancellation: true,
+		},
+	)
+	router.All("/mcp", requireMCPBearerToken(token, handler).ServeHTTP)
+}
+
+func newMCPServer(service *TaskService, version string) *mcp.Server {
+	server := mcp.NewServer(
+		&mcp.Implementation{Name: "GoTaskQueue", Version: version},
+		&mcp.ServerOptions{Instructions: strings.TrimSpace(`
+GoTaskQueue runs commands as persistent tasks, optionally inside a pseudo-terminal (PTY). Prefer a documented template over an interactive shell when one matches the user's intent. Use templates_search first and resolve an exact template ID or place; never guess identifiers. task_start creates and immediately runs a task, while task_rerun clones the exact stored configuration of an existing task. Use task_output for an immediate read or task_follow for bounded long polling, and always continue from next_cursor. For PTY tasks, screen is the current plain-text viewport and output is the incremental terminal byte stream, which may include ANSI control sequences. Read the current task output before sending input, send one command or response at a time with task_input, then read again. Use CTRL_C before task_stop when merely interrupting a foreground command. Do not retry failed tasks, stop running tasks, or send terminal input unless the user requested the corresponding action. task_delete irreversibly removes the queued task and its persisted logs, so obtain explicit confirmation immediately before calling it. Templates and shell commands can change the host or external systems with the permissions of the GoTaskQueue process.`)},
+	)
+
+	mcp.AddTool(server, readOnlyMCPTool("templates_search", "Search and rank task templates by name, description, path, ID, and variables."),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpSearchTemplatesInput) (*mcp.CallToolResult, mcpTemplatesOutput, error) {
+			return nil, mcpTemplatesOutput{Templates: service.SearchTemplates(input.Query, input.Limit)}, nil
+		})
+
+	mcp.AddTool(server, readOnlyMCPTool("template_get", "Get one template by its exact ID or place, including its command, description, variables, and execution settings."),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpGetTemplateInput) (*mcp.CallToolResult, mcpTemplateOutput, error) {
+			template, err := service.GetTemplate(input.ID, input.Place)
+			if template == nil {
+				return nil, mcpTemplateOutput{}, err
+			}
+			return nil, mcpTemplateOutput{Template: *template}, err
+		})
+
+	mcp.AddTool(server, readOnlyMCPTool("tasks_list", "List newest tasks with optional state and text filters."),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpListTasksInput) (*mcp.CallToolResult, mcpTasksOutput, error) {
+			return nil, mcpTasksOutput{Tasks: filterTaskSummaries(service.ListTasks(), input)}, nil
+		})
+
+	mcp.AddTool(server, readOnlyMCPTool("task_get", "Get one task by its exact ID, including command, resolved variables, status, links, and assets."),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskIDInput) (*mcp.CallToolResult, mcpTaskOutput, error) {
+			task, err := service.GetTask(input.ID)
+			return nil, mcpTaskOutput{Task: task}, err
+		})
+
+	mcp.AddTool(server, openWorldWriteMCPTool("task_start", "Create and immediately run a task from an exact template. The template command may change the host or external systems.", true, false),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpStartTaskInput) (*mcp.CallToolResult, mcpTaskOutput, error) {
+			task, err := service.AddTask(AddTaskInput{
+				TemplateId: input.TemplateID, TemplatePlace: input.TemplatePlace,
+				Variables: input.Variables, IsRun: true,
+			})
+			return nil, mcpTaskOutput{Task: task}, err
+		})
+
+	mcp.AddTool(server, openWorldWriteMCPTool("task_rerun", "Clone an existing task's exact stored command and variables, then run the clone.", true, false),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskIDInput) (*mcp.CallToolResult, mcpTaskOutput, error) {
+			task, err := service.CloneTask(input.ID, true)
+			return nil, mcpTaskOutput{Task: task}, err
+		})
+
+	mcp.AddTool(server, readOnlyMCPTool("task_output", "Read immediately available incremental output and the current plain-text PTY screen."),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskOutputInput) (*mcp.CallToolResult, TaskOutput, error) {
+			output, err := service.TaskOutput(ctx, input.ID, mcpCursor(input.Cursor), 0, 0, input.MaxBytes)
+			return nil, output, err
+		})
+
+	mcp.AddTool(server, readOnlyMCPTool("task_follow", "Wait up to 30 seconds for task output or a status change, returning a continuation cursor and PTY screen."),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpFollowTaskInput) (*mcp.CallToolResult, TaskOutput, error) {
+			waitSeconds := input.WaitSeconds
+			if waitSeconds == 0 {
+				waitSeconds = 5
+			}
+			settleMs := 250
+			if input.SettleMs != nil {
+				settleMs = *input.SettleMs
+			}
+			output, err := service.TaskOutput(ctx, input.ID, mcpCursor(input.Cursor), time.Duration(waitSeconds)*time.Second, time.Duration(settleMs)*time.Millisecond, input.MaxBytes)
+			return nil, output, err
+		})
+
+	mcp.AddTool(server, openWorldWriteMCPTool("task_input", "Send text or a special key to a running task's stdin or PTY. Read current output first; submitted shell commands may change the host or external systems.", true, false),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskInputInput) (*mcp.CallToolResult, mcpStatusOutput, error) {
+			err := service.SendTaskInput(input.ID, input.Text, input.Key, input.Submit)
+			return nil, mcpStatusOutput{Status: "ok", ID: input.ID}, err
+		})
+
+	mcp.AddTool(server, localWriteMCPTool("task_resize", "Resize a running PTY task. This changes terminal rendering but not the command itself.", false, true),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpResizeTaskInput) (*mcp.CallToolResult, mcpStatusOutput, error) {
+			err := service.ResizeTask(input.ID, taskQueue.PtyScreenSize{Cols: input.Cols, Rows: input.Rows})
+			return nil, mcpStatusOutput{Status: "ok", ID: input.ID}, err
+		})
+
+	mcp.AddTool(server, openWorldWriteMCPTool("task_stop", "Force-stop a running task and its process tree.", true, false),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskIDInput) (*mcp.CallToolResult, mcpStatusOutput, error) {
+			err := service.StopTask(input.ID)
+			return nil, mcpStatusOutput{Status: "ok", ID: input.ID}, err
+		})
+
+	mcp.AddTool(server, localWriteMCPTool("task_delete", "Permanently remove an idle or finished task and its persisted logs. Confirm with the user immediately before calling.", true, false),
+		func(ctx context.Context, _ *mcp.CallToolRequest, input mcpTaskIDInput) (*mcp.CallToolResult, mcpStatusOutput, error) {
+			err := service.DeleteTask(input.ID)
+			return nil, mcpStatusOutput{Status: "ok", ID: input.ID}, err
+		})
+
+	return server
+}
+
+func mcpCursor(cursor *int64) int64 {
+	if cursor == nil {
+		return -1
+	}
+	return *cursor
+}
+
+func filterTaskSummaries(tasks []*taskQueue.Task, input mcpListTasksInput) []taskQueue.TaskSummary {
+	limit := input.Limit
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	query := strings.ToLower(strings.TrimSpace(input.Query))
+	states := make([]string, 0, len(input.States))
+	for _, state := range input.States {
+		states = append(states, strings.ToUpper(state))
+	}
+
+	result := make([]taskQueue.TaskSummary, 0, limit)
+	for i := len(tasks) - 1; i >= 0 && len(result) < limit; i-- {
+		summary := tasks[i].Summary()
+		if len(states) > 0 && !slices.Contains(states, summary.State) {
+			continue
+		}
+		searchText := strings.ToLower(strings.Join([]string{
+			summary.Id, summary.Label, summary.Group, summary.TemplatePlace,
+		}, " "))
+		if query != "" && !strings.Contains(searchText, query) {
+			continue
+		}
+		result = append(result, summary)
+	}
+	return result
+}
+
+func requireMCPBearerToken(token string, next http.Handler) http.Handler {
+	expected := []byte("Bearer " + token)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		actual := []byte(r.Header.Get("Authorization"))
+		if len(actual) != len(expected) || subtle.ConstantTimeCompare(actual, expected) != 1 {
+			w.Header().Set("WWW-Authenticate", `Bearer realm="GoTaskQueue MCP"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func readOnlyMCPTool(name, description string) *mcp.Tool {
+	openWorld := false
+	return &mcp.Tool{
+		Name: name, Description: description,
+		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, OpenWorldHint: &openWorld},
+	}
+}
+
+func localWriteMCPTool(name, description string, destructive, idempotent bool) *mcp.Tool {
+	return writeMCPTool(name, description, destructive, idempotent, false)
+}
+
+func openWorldWriteMCPTool(name, description string, destructive, idempotent bool) *mcp.Tool {
+	return writeMCPTool(name, description, destructive, idempotent, true)
+}
+
+func writeMCPTool(name, description string, destructive, idempotent, openWorld bool) *mcp.Tool {
+	return &mcp.Tool{
+		Name: name, Description: description,
+		Annotations: &mcp.ToolAnnotations{
+			DestructiveHint: &destructive, IdempotentHint: idempotent, OpenWorldHint: &openWorld,
+		},
+	}
+}

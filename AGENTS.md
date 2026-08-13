@@ -16,7 +16,9 @@ Read these files before making a non-trivial change:
 
 - `main.go`: application entry point, server lifecycle, WebSocket endpoint, and
   static UI serving.
-- `internal/api.go`: JSON HTTP API.
+- `internal/api.go`: JSON HTTP API; shared task operations for HTTP, MCP, and
+  WebSocket live in `internal/task_service.go`; MCP tools live in
+  `internal/mcp.go`.
 - `internal/taskQueue/`: queue persistence, task lifecycle, templates, and logs.
 - `internal/cfg/`: profile location and persisted application configuration.
 - `internal/logStore/`, `internal/gzBuffer/`, `internal/memStorage/`: storage
@@ -38,6 +40,9 @@ Read these files before making a non-trivial change:
   profiles and updating both Go and TypeScript types.
 - When changing an API endpoint, update `internal/api.go`,
   `tq-ui/src/tools/api.ts`, and the relevant types/call sites together.
+- Keep the HTTP, MCP, and WebSocket task contracts aligned through
+  `TaskService`. Update MCP schemas, descriptions, server instructions, and
+  tests when task or template capabilities change.
 - Queue and task state is accessed by multiple goroutines. Preserve locking,
   atomic writes, and notification behavior when changing lifecycle code.
 - Production Go builds stage the UI in `assets/www` before compiling. Use

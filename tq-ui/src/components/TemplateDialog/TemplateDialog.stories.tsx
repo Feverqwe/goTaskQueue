@@ -7,6 +7,8 @@ import TemplateDialog from './TemplateDialog';
 const deployTemplate: RawTemplate = {
   place: 'deploy/worker',
   name: 'Deploy task queue worker',
+  description:
+    'Deploys the task queue worker to the selected environment. Production changes live traffic.',
   command:
     'deploy-tool release --environment "$TASK_VAR_ENVIRONMENT" --service task-queue-worker --image "$TASK_VAR_IMAGE" --strategy rolling --timeout 15m',
   label: 'Deploy worker to {{ vars.environment }}',

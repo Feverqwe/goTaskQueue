@@ -66,6 +66,21 @@ const GeneralTab: FC<GeneralTabProps> = ({hidden, isNew}) => (
               )}
             </Field>
           )}
+          <Field<string> name="description">
+            {({input}) => (
+              <TextField
+                {...input}
+                size="small"
+                label="Description"
+                fullWidth
+                multiline
+                minRows={3}
+                helperText="Explain what the template does, when to use it, and its important side effects."
+                slotProps={{inputLabel: {shrink: true}}}
+                sx={{gridColumn: {sm: '1 / -1'}}}
+              />
+            )}
+          </Field>
         </Box>
       </Box>
 

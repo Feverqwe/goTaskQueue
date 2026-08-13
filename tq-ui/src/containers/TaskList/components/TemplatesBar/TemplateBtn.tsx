@@ -86,6 +86,7 @@ const TemplateBtn: FC<TemplateBtnProps> = ({
       <ActionButton
         sx={TEMPLATE_BUTTON_SX}
         variant="outlined"
+        title={template.description || name}
         onSubmit={handleClick}
         onContextMenu={handleCtxMenu}
         {...iosContextMenuEvents}

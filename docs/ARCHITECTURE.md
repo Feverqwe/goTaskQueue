@@ -19,6 +19,11 @@ React UI
                    profile config, queue, and logs
 ```
 
+Agents can connect to the same running process through the bearer-protected
+Streamable HTTP MCP endpoint at `/mcp`. HTTP handlers, MCP tools, and WebSocket
+terminal input share `internal.TaskService`, so they use the same task creation,
+process lifecycle, PTY input, resize, and log semantics.
+
 `main.go` loads the configuration and templates, restores the queue, starts the
 HTTP server, runs boot tasks, schedules cleanup, and starts the tray integration.
 The server uses the small router in `internal/router.go` rather than an external
