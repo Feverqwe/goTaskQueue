@@ -178,7 +178,7 @@ const TemplateDialog: FC<TemplateDialogProps> = ({
       open={open}
       onClose={handleClose}
       fullWidth
-      fullScreen={isMobile}
+      fullScreen={isMobile && !isQuickRun}
       maxWidth={isQuickRun ? 'sm' : 'md'}
       scroll="paper"
       aria-labelledby="template-dialog-title"

@@ -58,6 +58,21 @@ type Story = StoryObj<typeof meta>;
 
 export const TemplateVariables: Story = {};
 
+export const QuickRunSingleVariableMobile: Story = {
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
+  },
+  args: {
+    template: {
+      ...deployTemplate,
+      name: 'Deploy task queue worker',
+      variables: [deployTemplate.variables[0]],
+    },
+  },
+};
+
 export const RunAs: Story = {
   args: {
     isRunAs: true,
