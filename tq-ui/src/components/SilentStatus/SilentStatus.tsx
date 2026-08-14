@@ -9,7 +9,7 @@ interface SilentStatusProps {
 
 const SilentStatus: FC<SilentStatusProps> = ({status, onRetry}) => {
   return (
-    <Box sx={{position: 'fixed', right: 2, bottom: 2}}>
+    <Box sx={{position: 'fixed', right: 2, bottom: 2, zIndex: 'snackbar'}}>
       {status === 'loading' && (
         <Box
           sx={{
