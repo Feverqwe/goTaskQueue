@@ -3,12 +3,50 @@ package taskQueue
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 
 	gzbuffer "goTaskQueue/internal/gzBuffer"
 
 	xterm "github.com/gitpod-io/xterm-go"
 )
+
+func TestResizePtyTerminalWithFullWrappedScreen(t *testing.T) {
+	const initialCols = 400
+	terminal := newPtyTerminal(initialCols, PtyInitialRows)
+
+	if _, err := terminal.Write([]byte(strings.Repeat("x", initialCols*120-1) + "\r\ntail marker")); err != nil {
+		t.Fatal(err)
+	}
+	task := &Task{
+		TaskBase:    TaskBase{NewTaskBase: NewTaskBase{IsPty: true}},
+		ptyTerminal: terminal,
+	}
+	t.Cleanup(func() {
+		task.cmu.Lock()
+		defer task.cmu.Unlock()
+		task.ptyTerminal.Dispose()
+	})
+
+	if err := task.Resize(&PtyScreenSize{Cols: 39, Rows: 39}); err != nil {
+		t.Fatal(err)
+	}
+	if got := task.ptyTerminal.Cols(); got != 39 {
+		t.Fatalf("terminal columns = %d, want 39", got)
+	}
+	if got := task.ptyTerminal.Rows(); got != 39 {
+		t.Fatalf("terminal rows = %d, want 39", got)
+	}
+	if screen := task.TerminalScreen(); !strings.Contains(screen, "tail marker") {
+		t.Fatalf("terminal state was not restored after resize: %q", screen)
+	}
+	if _, err := task.ptyTerminal.Write([]byte("resize recovered")); err != nil {
+		t.Fatalf("write after resize recovery: %v", err)
+	}
+	if screen := task.TerminalScreen(); !strings.Contains(screen, "resize recovered") {
+		t.Fatalf("terminal did not accept output after resize recovery: %q", screen)
+	}
+}
 
 func TestReadCombinedReturnsPtySnapshotAndThenLiveOutput(t *testing.T) {
 	const cols = 20

@@ -3,6 +3,7 @@ package taskQueue
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"goTaskQueue/internal/cfg"
 	gzbuffer "goTaskQueue/internal/gzBuffer"
 	logstore "goTaskQueue/internal/logStore"
@@ -316,11 +317,7 @@ func (s *Task) RunPty(config *cfg.Config) error {
 	}
 	s.cmu.Lock()
 	s.Combined = output
-	s.ptyTerminal = xterm.New(
-		xterm.WithCols(PtyInitialCols),
-		xterm.WithRows(PtyInitialRows),
-		xterm.WithScrollback(PtySnapshotScrollback),
-	)
+	s.ptyTerminal = newPtyTerminal(PtyInitialCols, PtyInitialRows)
 	s.cmu.Unlock()
 
 	var wg sync.WaitGroup
@@ -696,6 +693,44 @@ func (s *Task) Send(data string) error {
 	return err
 }
 
+func newPtyTerminal(cols, rows int) *xterm.Terminal {
+	return xterm.New(
+		xterm.WithCols(cols),
+		xterm.WithRows(rows),
+		xterm.WithScrollback(PtySnapshotScrollback),
+	)
+}
+
+func resizePtyTerminal(terminal *xterm.Terminal, cols, rows int) (panicValue any) {
+	// xterm-go's smaller-width reflow can overrun its circular list when a
+	// logical line wraps into more rows than the resized buffer can hold.
+	// Keep that dependency panic from terminating the whole task runner.
+	defer func() {
+		panicValue = recover()
+	}()
+	terminal.Resize(cols, rows)
+	return nil
+}
+
+func restorePtyTerminal(snapshot []byte, cols, rows int) (terminal *xterm.Terminal, err error) {
+	defer func() {
+		if panicValue := recover(); panicValue != nil {
+			if terminal != nil {
+				terminal.Dispose()
+				terminal = nil
+			}
+			err = fmt.Errorf("restore terminal state: %v", panicValue)
+		}
+	}()
+
+	terminal = newPtyTerminal(cols, rows)
+	if _, err := terminal.Write(snapshot); err != nil {
+		terminal.Dispose()
+		return nil, err
+	}
+	return terminal, nil
+}
+
 func (s *Task) Resize(screenSize *PtyScreenSize) error {
 	if !s.IsPty {
 		return nil
@@ -707,18 +742,32 @@ func (s *Task) Resize(screenSize *PtyScreenSize) error {
 		X:    uint16(screenSize.X),
 		Y:    uint16(screenSize.Y),
 	}
+	var terminalResizeErr error
 	s.cmu.Lock()
-	if s.ptyTerminal != nil {
-		s.ptyTerminal.Resize(screenSize.Cols, screenSize.Rows)
+	if s.ptyTerminal != nil && (s.ptyTerminal.Cols() != screenSize.Cols || s.ptyTerminal.Rows() != screenSize.Rows) {
+		terminal := s.ptyTerminal
+		// Resize can leave the xterm buffer partially mutated before it panics.
+		// Capture a replayable state first so it can be replaced safely.
+		snapshot := s.ptySnapshotLocked()
+		if panicValue := resizePtyTerminal(terminal, screenSize.Cols, screenSize.Rows); panicValue != nil {
+			replacement, err := restorePtyTerminal(snapshot, screenSize.Cols, screenSize.Rows)
+			if err != nil {
+				replacement = newPtyTerminal(screenSize.Cols, screenSize.Rows)
+				terminalResizeErr = fmt.Errorf("terminal resize failed (%v) and state could not be restored: %w", panicValue, err)
+			}
+			s.ptyTerminal = replacement
+			terminal.Dispose()
+			log.Printf("Recovered task %s terminal after resize failure: %v", s.Id, panicValue)
+		}
 	}
 	s.cmu.Unlock()
 	s.mu.RLock()
 	stdin := s.stdin
 	s.mu.RUnlock()
 	if f, ok := stdin.(*os.File); ok {
-		return pty.Setsize(f, &ws)
+		return errors.Join(terminalResizeErr, pty.Setsize(f, &ws))
 	}
-	return nil
+	return terminalResizeErr
 }
 
 func (s *Task) Wait() int {
