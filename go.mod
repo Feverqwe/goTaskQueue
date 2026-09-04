@@ -1,13 +1,13 @@
 module goTaskQueue
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/caseymrm/go-caffeinate v1.0.0
 	github.com/gabyx/githooks/githooks v1.1.1
 	github.com/getlantern/systray v1.2.3-0.20231110083711-22c167e80905
-	github.com/gitpod-io/xterm-go v0.0.0-20260814130527-da33d8e27c30
+	github.com/gitpod-io/xterm-go v0.0.0-20260828130427-e62e9648055e
 	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
 	github.com/natefinch/atomic v1.0.1
 	github.com/ncruces/zenity v0.10.15
@@ -23,7 +23,7 @@ require (
 	github.com/segmentio/encoding v0.5.4 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel/metric v1.45.0 // indirect
+	go.opentelemetry.io/otel/metric v1.46.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
@@ -66,11 +66,11 @@ require (
 	github.com/sbinet/pstree v0.5.1
 	github.com/schollz/progressbar/v3 v3.19.1 // indirect
 	github.com/xo/terminfo v1.0.0 // indirect
-	go.opentelemetry.io/otel v1.45.0 // indirect
-	go.opentelemetry.io/otel/trace v1.45.0 // indirect
+	go.opentelemetry.io/otel v1.46.0 // indirect
+	go.opentelemetry.io/otel/trace v1.46.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
+	golang.org/x/crypto v0.56.0 // indirect
 	golang.org/x/image v0.45.0 // indirect
 	golang.org/x/net v0.58.0
 	golang.org/x/term v0.45.0 // indirect
