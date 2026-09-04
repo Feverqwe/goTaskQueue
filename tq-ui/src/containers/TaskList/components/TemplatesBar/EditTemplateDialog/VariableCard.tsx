@@ -17,7 +17,7 @@ interface VariableCardProps {
 
 const VariableCard: FC<VariableCardProps> = ({duplicateKey, index, onRemove, variable}) => {
   const options = parseOptions(variable.optionsText);
-  const key = variable.value.trim();
+  const key = variable.value?.trim() ?? '';
   const placeholder = `{{ vars.${key} }}`;
   const environmentName = `TASK_VAR_${key.toUpperCase()}`;
   const canCopy = !duplicateKey && !variableKey(variable.value);

@@ -11,14 +11,16 @@ const TEMPLATE_VARIABLE_PATTERN = /\{\{\s*vars\.([^{}\s]+)\s*\}\}/g;
 type TemplateReferenceErrors = Partial<Record<'command' | 'group' | 'label', string>>;
 
 const getVariableKeys = (variables: EditorVariable[]) =>
-  new Set(variables.map(({value}) => value.trim()).filter(Boolean));
+  new Set(
+    variables.map(({value}) => value?.trim()).filter((value): value is string => Boolean(value)),
+  );
 
-const getTemplateReferences = (value: string) =>
-  [...value.matchAll(TEMPLATE_VARIABLE_PATTERN)].map((match) => match[1]);
+const getTemplateReferences = (value: string | undefined) =>
+  [...(value ?? '').matchAll(TEMPLATE_VARIABLE_PATTERN)].map((match) => match[1]);
 
 const unique = (values: string[]) => [...new Set(values)];
 
-const validateTextReferences = (value: string, variableKeys: Set<string>) => {
+const validateTextReferences = (value: string | undefined, variableKeys: Set<string>) => {
   const references = getTemplateReferences(value);
   const invalidKey = references.find((key) => !VARIABLE_KEY_PATTERN.test(key));
   if (invalidKey) {
@@ -30,14 +32,14 @@ const validateTextReferences = (value: string, variableKeys: Set<string>) => {
     return `Create variable ${missingKeys.length === 1 ? 'key' : 'keys'}: ${missingKeys.join(', ')}`;
   }
 
-  if (/\{\{\s*vars\./.test(value.replace(TEMPLATE_VARIABLE_PATTERN, ''))) {
+  if (/\{\{\s*vars\./.test((value ?? '').replace(TEMPLATE_VARIABLE_PATTERN, ''))) {
     return 'Invalid variable placeholder. Use, for example: {{ vars.environment }}';
   }
 
   return undefined;
 };
 
-const validateCommandReferences = (command: string, variableKeys: Set<string>) => {
+const validateCommandReferences = (command: string | undefined, variableKeys: Set<string>) => {
   const templateReferences = getTemplateReferences(command);
   if (templateReferences.length > 0) {
     const key = templateReferences[0];
@@ -47,7 +49,7 @@ const validateCommandReferences = (command: string, variableKeys: Set<string>) =
     return `Commands use environment variables. Replace {{ vars.${key} }} with ${environmentName}`;
   }
 
-  const references = [...command.matchAll(COMMAND_VARIABLE_PATTERN)];
+  const references = [...(command ?? '').matchAll(COMMAND_VARIABLE_PATTERN)];
   const invalidCase = references.find((match) => match[0] !== match[0].toUpperCase());
   if (invalidCase) {
     return `Use uppercase environment variable names: ${invalidCase[0].toUpperCase()}`;
@@ -72,9 +74,9 @@ export const createVariable = (): EditorVariable => ({
   optionsText: '',
 });
 
-export const parseOptions = (optionsText: string): string[] => [
+export const parseOptions = (optionsText: string | undefined): string[] => [
   ...new Set(
-    optionsText
+    (optionsText ?? '')
       .split('\n')
       .map((option) => option.trim())
       .filter(Boolean),
@@ -129,8 +131,8 @@ export const getTemplateVariables = (variables: EditorVariable[]): TemplateVaria
     if (variable.type === 'select') {
       const options = parseOptions(variable.optionsText);
       return {
-        name: variable.name.trim(),
-        value: variable.value.trim(),
+        name: variable.name?.trim() ?? '',
+        value: variable.value?.trim() ?? '',
         defaultValue: options.includes(variable.defaultValue || '')
           ? variable.defaultValue
           : options[0] || '',
@@ -140,8 +142,8 @@ export const getTemplateVariables = (variables: EditorVariable[]): TemplateVaria
     }
 
     return {
-      name: variable.name.trim(),
-      value: variable.value.trim(),
+      name: variable.name?.trim() ?? '',
+      value: variable.value?.trim() ?? '',
       defaultValue: variable.defaultValue || '',
     };
   });
