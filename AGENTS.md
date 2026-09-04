@@ -51,6 +51,12 @@ Read these files before making a non-trivial change:
 - Use Node.js 24 for UI work. Run `nvm use` from the repository root to select
   the version pinned in `.nvmrc` before installing dependencies or running UI
   checks.
+- React Final Form normalizes a cleared text input from `""` to `undefined` by
+  default. Validators, render helpers, and submit transformations for clearable
+  fields must accept `undefined` and normalize it before calling string methods.
+  Do not override `parse` merely to preserve an empty string unless the domain
+  or wire contract intentionally distinguishes `""` from a missing value;
+  normalize values at that boundary instead.
 - Use Storybook as the default isolated environment for visual UI work. Add or
   update stories for reusable components whose rendered states change. Do not
   launch Storybook after every incremental edit; first complete a coherent UI
