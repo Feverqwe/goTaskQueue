@@ -25,12 +25,12 @@ func (s *QuickBuf) qWrite(b []byte) {
 	}
 }
 
-func (s *QuickBuf) qReadFromEnd(i int) (b []byte, ok bool) {
+func (s *QuickBuf) qReadFromEnd(i int64) (b []byte, ok bool) {
 	s.qBufM.RLock()
 	defer s.qBufM.RUnlock()
 
-	if len(s.qBuf) >= i {
-		off := len(s.qBuf) - i
+	if i >= 0 && i <= int64(len(s.qBuf)) {
+		off := int64(len(s.qBuf)) - i
 		b = s.qBuf[off:]
 		ok = true
 	}
@@ -56,8 +56,10 @@ func WrapQuickBuf(p *shared.DataStore, maxBufSize int) *shared.DataStore {
 			return p.Write(b)
 		},
 		ReadAt: func(i int64) (b []byte, err error) {
-			if b, ok := q.qReadFromEnd(int(p.Len() - i)); ok {
-				return b, err
+			if i >= 0 {
+				if b, ok := q.qReadFromEnd(p.Len() - i); ok {
+					return b, err
+				}
 			}
 
 			return p.ReadAt(i)

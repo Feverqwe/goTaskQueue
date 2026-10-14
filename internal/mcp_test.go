@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,8 +10,35 @@ import (
 	"time"
 
 	"goTaskQueue/internal/cfg"
+	gzbuffer "goTaskQueue/internal/gzBuffer"
 	"goTaskQueue/internal/taskQueue"
 )
+
+func TestMCPTaskOutputRejectsCursorBeyondLog(t *testing.T) {
+	queue := taskQueue.NewQueue()
+	config := &cfg.Config{}
+	task := queue.Add(config, taskQueue.TaskBase{})
+	task.Combined = taskQueue.WrapQuickBuf(gzbuffer.NewGzBuffer().GetDataStore(), taskQueue.MemBufSize)
+	t.Cleanup(func() {
+		if err := task.Combined.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	if _, err := task.Combined.Write([]byte(strings.Repeat("x", 105180))); err != nil {
+		t.Fatal(err)
+	}
+	router := NewRouter()
+	HandleMCP(router, NewTaskService(queue, config), "test-secret", "test")
+
+	request := fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"task_output","arguments":{"id":%q,"cursor":105589}}}`, task.Id)
+	response := callAuthorizedMCP(router, request)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"isError":true`) {
+		t.Fatalf("task_output status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), "read offset 105589 outside buffer size 105180") {
+		t.Fatalf("task_output did not report the invalid cursor: %s", response.Body.String())
+	}
+}
 
 func TestMCPRequiresBearerTokenAndListsTaskTools(t *testing.T) {
 	service := NewTaskService(taskQueue.NewQueue(), &cfg.Config{})
