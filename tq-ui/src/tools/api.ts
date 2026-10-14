@@ -35,6 +35,8 @@ function action<RequestParams = unknown, ResponseData = unknown>({
   };
 }
 
+// JSON request bodies are limited to 1 MiB and must contain one complete value.
+// Validation failures use the existing error envelope handled by handleApiResponse.
 export const api = {
   tasks: action<void, Task[]>({
     path: '/api/tasks',

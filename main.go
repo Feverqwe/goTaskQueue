@@ -15,6 +15,7 @@ import (
 	"goTaskQueue/internal/trayIcon"
 	"goTaskQueue/internal/utils"
 	"io"
+	"io/fs"
 	"log"
 	"net"
 	"net/http"
@@ -147,6 +148,7 @@ func handleWebsocket(router *internal.Router, service *internal.TaskService) {
 
 	ws := func(ws *websocket.Conn) {
 		defer ws.Close()
+		ws.MaxPayloadBytes = 64*1024 + 1 // Input limit plus the message type byte.
 		sendFrame := func(dataType string, data []byte) error {
 			payload := make([]byte, len(data)+1)
 			payload[0] = dataType[0]
@@ -304,6 +306,10 @@ func handleWww(router *internal.Router, queue *taskQueue.Queue, memStorage *mems
 
 		if assetPath == "/" || assetPath == "/task" {
 			assetPath = "/index.html"
+		}
+		if assetName := strings.TrimPrefix(assetPath, "/"); !fs.ValidPath(assetName) || strings.ContainsAny(assetName, "\\:\x00") {
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 
 		var err error

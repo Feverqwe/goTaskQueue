@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"strings"
 )
@@ -11,6 +12,13 @@ func ParseJson[T any](data io.Reader) (*T, error) {
 	var payload T
 	err := decoder.Decode(&payload)
 	if err != nil {
+		return nil, err
+	}
+	var extra any
+	if err := decoder.Decode(&extra); err != io.EOF {
+		if err == nil {
+			err = errors.New("expected a single JSON value")
+		}
 		return nil, err
 	}
 	return &payload, nil

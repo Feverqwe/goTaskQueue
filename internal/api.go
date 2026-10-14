@@ -23,6 +23,12 @@ type JsonSuccessResponse struct {
 
 func HandleApi(router *Router, service *TaskService, memStorage *memstorage.MemStorage, config *cfg.Config, callChan chan string) {
 	apiRouter := NewRouter()
+	apiRouter.Use(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		if next, ok := GetNext(r); ok {
+			next()
+		}
+	})
 	gzipHandler := gziphandler.GzipHandler(apiRouter)
 
 	handleAction(apiRouter, config, service, callChan)

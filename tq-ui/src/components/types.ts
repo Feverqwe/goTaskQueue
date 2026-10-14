@@ -2,13 +2,16 @@ export type TemplateVariableType = 'text' | 'select';
 
 export interface TemplateVariable {
   name: string;
+  /** Unique key matching [a-z][a-z0-9_]*. */
   value: string;
+  /** For select variables, must be one of the nonempty, unique options. */
   defaultValue?: string;
   type?: TemplateVariableType;
   options?: string[];
 }
 
 export interface RawTemplate {
+  /** Nonempty relative path with no dot segments or symbolic link directories. */
   place: string;
   command: string;
 
@@ -23,6 +26,7 @@ export interface RawTemplate {
   isWriteLogs?: boolean;
   isSingleInstance?: boolean;
   isStartOnBoot?: boolean;
+  /** Integer seconds from 0 to 9223372036; 0 disables cleanup. */
   ttl?: number;
 }
 
@@ -113,6 +117,7 @@ export interface TaskId {
 export interface AddTaskRequest {
   templatePlace?: string;
   templateId?: string;
+  /** Only declared keys and allowed select options are accepted. */
   variables?: Record<string, string>;
   command?: string;
   label?: string;
@@ -123,6 +128,7 @@ export interface AddTaskRequest {
   isSingleInstance?: boolean;
   isStartOnBoot?: boolean;
   isRun?: boolean;
+  /** Integer seconds from 0 to 9223372036; 0 disables cleanup. */
   ttl?: number;
 }
 

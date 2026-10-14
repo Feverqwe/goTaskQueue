@@ -1029,7 +1029,8 @@ func (s *Task) onFinishLocked() {
 	}
 
 	if s.TTL > 0 {
-		s.ExpiresAt = time.Now().Add(time.Duration(s.TTL) * time.Second)
+		// Old profiles may contain a TTL that predates input validation.
+		s.ExpiresAt = time.Now().Add(time.Duration(min(s.TTL, MaxTTLSeconds)) * time.Second)
 	}
 }
 

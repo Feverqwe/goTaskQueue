@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -37,6 +38,50 @@ func TestMCPTaskOutputRejectsCursorBeyondLog(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), "read offset 105589 outside buffer size 105180") {
 		t.Fatalf("task_output did not report the invalid cursor: %s", response.Body.String())
+	}
+}
+
+func TestMCPFollowHugeTimeoutWaitsForOutput(t *testing.T) {
+	queue := taskQueue.NewQueue()
+	config := &cfg.Config{Run: []string{"sh", "-c"}}
+	service := NewTaskService(queue, config)
+	command := `read -r line; printf '%s' "$line"`
+	task, err := service.AddTask(AddTaskInput{Command: &command, IsRun: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if task.IsRunning() {
+			_ = task.Kill()
+		}
+	})
+	router := NewRouter()
+	HandleMCP(router, service, "test-secret", "test")
+	// Use a value exactly representable by the SDK's JSON number handling.
+	huge := min(int64(math.MaxInt), int64(1<<54))
+	request := newMCPRequest(fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"task_follow","arguments":{"id":%q,"wait_seconds":%d,"settle_ms":%d}}}`, task.Id, huge, huge))
+	request.Header.Set("Authorization", "Bearer test-secret")
+	done := make(chan struct{})
+	response := httptest.NewRecorder()
+	go func() {
+		defer close(done)
+		router.ServeHTTP(response, request)
+	}()
+	select {
+	case <-done:
+		t.Fatalf("huge timeout returned immediately: %s", response.Body.String())
+	case <-time.After(30 * time.Millisecond):
+	}
+	if err := service.SendTaskInput(task.Id, "timeout-regression", "", true); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-done:
+		if !strings.Contains(response.Body.String(), "timeout-regression") || strings.Contains(response.Body.String(), `"isError":true`) {
+			t.Fatalf("task_follow did not return task output: %s", response.Body.String())
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("task_follow did not return after output and process exit")
 	}
 }
 

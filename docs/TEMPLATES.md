@@ -3,6 +3,15 @@
 A template consists of `template.json` and a `command.sh` file in its template
 directory. The editor manages both files through the application UI.
 
+Template places must be nonempty relative paths such as `deploy/worker`.
+Absolute paths, empty or dot segments, backslashes, colons, and symbolic link
+directories are rejected. A template name is required. These checks run before
+a create or update writes or moves files.
+
+TTL is an integer number of seconds in 0..9223372036. Zero disables automatic
+cleanup. Negative values and values that would overflow a Go duration are
+rejected for new tasks and template writes.
+
 ## Descriptions and discovery
 
 Use the optional `description` field to explain what a template does, when it
@@ -48,6 +57,13 @@ The variable types currently supported by the UI are:
 
 - `text`, which is also used when `type` is omitted;
 - `select`, whose `options` contains the allowed values.
+
+The server validates variable names, keys, types, and duplicate keys on template
+writes. Select options must be nonempty and unique, and `defaultValue` must be
+one of them. Task creation rejects unknown variable keys and select values
+outside the declared options, including invalid defaults in older templates.
+Existing templates remain readable, and a missing or null `variables` field is
+returned as an empty array for compatibility with the browser UI.
 
 ## Using variables in commands
 

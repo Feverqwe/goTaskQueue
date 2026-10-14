@@ -71,6 +71,14 @@ terminal input or `r` for a JSON-encoded PTY resize request. Active PTY
 connections wait briefly for the initial resize before creating their snapshot.
 Keep this protocol compatible when modifying either side.
 
+HTTP API and MCP JSON requests are limited to 1 MiB. HTTP JSON bodies must
+contain exactly one value; trailing whitespace is allowed. WebSocket messages
+are limited to 64 KiB of input plus the one-byte message type. Terminal rows and
+columns must be in 1..1000, and pixel dimensions in 0..65535. Signal numbers
+outside 0..64 are rejected before conversion; the OS checks which signals it
+supports. MCP output cursors must be -1 (history) or nonnegative. Follow waits
+and settle intervals are bounded before converting them to durations.
+
 ### Templates and embedded assets
 
 Built-in templates live in `assets/templates/`; profile templates are combined

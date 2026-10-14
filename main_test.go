@@ -11,6 +11,7 @@ import (
 
 	"goTaskQueue/internal"
 	"goTaskQueue/internal/cfg"
+	memstorage "goTaskQueue/internal/memStorage"
 	"goTaskQueue/internal/shared"
 	"goTaskQueue/internal/taskQueue"
 
@@ -151,5 +152,48 @@ func TestWebsocketHandlerReportsLogReadError(t *testing.T) {
 	}
 	if want := "eread failed"; string(message) != want {
 		t.Fatalf("message = %q, want %q", message, want)
+	}
+}
+
+func TestDevelopmentStaticFilesRejectTraversal(t *testing.T) {
+	previous := DEBUG_UI
+	DEBUG_UI = true
+	t.Cleanup(func() { DEBUG_UI = previous })
+	router := internal.NewRouter()
+	handleWww(router, taskQueue.NewQueue(), memstorage.GetMemStorage(), &cfg.Config{})
+	for _, url := range []string{"/../../go.mod", "/../dist/index.html", "/..%5C..%5Cgo.mod"} {
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, url, nil))
+		if response.Code != http.StatusNotFound {
+			t.Errorf("path %q returned %d", url, response.Code)
+		}
+	}
+}
+
+func TestWebsocketHandlerRejectsOversizedInputFrame(t *testing.T) {
+	queue := taskQueue.NewQueue()
+	config := &cfg.Config{}
+	task := queue.Add(config, taskQueue.TaskBase{})
+	router := internal.NewRouter()
+	handleWebsocket(router, internal.NewTaskService(queue, config))
+	done := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer close(done)
+		router.ServeHTTP(w, r)
+	}))
+	defer server.Close()
+	client, err := websocket.Dial("ws"+strings.TrimPrefix(server.URL, "http")+"/ws?id="+task.Id, "", server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+	if err := websocket.Message.Send(client, "i"+strings.Repeat("x", 64*1024+1)); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		server.CloseClientConnections()
+		t.Fatal("oversized input frame was not rejected")
 	}
 }

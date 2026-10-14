@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"goTaskQueue/assets"
 	"goTaskQueue/internal/cfg"
 	"goTaskQueue/internal/utils"
 	"io/fs"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -108,10 +108,16 @@ func readTemplate(place string, mayBeNull bool) (*Template, error) {
 
 	json.Command = string(command)
 	json.Place = relPlace
+	if json.Variables == nil {
+		json.Variables = []TemplateVariable{}
+	}
 	return json, nil
 }
 
 func WriteTemplate(template Template, isNew bool) error {
+	if err := ValidateTemplate(template); err != nil {
+		return err
+	}
 	relPlace := template.Place
 	command := template.Command
 
@@ -122,6 +128,9 @@ func WriteTemplate(template Template, isNew bool) error {
 
 	template.Place = ""
 	template.Command = ""
+	if template.Variables == nil {
+		template.Variables = []TemplateVariable{}
+	}
 
 	json, err := json.Marshal(template)
 	if err != nil {
@@ -405,6 +414,9 @@ func FlushTemplateCache() {
 }
 
 func GetTemplate(id string) (*Template, error) {
+	if id == "" {
+		return nil, errors.New("template id is required")
+	}
 	templates := GetTemplates()
 	for i := 0; i < len(templates); i++ {
 		template := templates[i]
@@ -431,11 +443,25 @@ func GetPlace(relPlace string) (string, error) {
 }
 
 func getPlace(relPlace string) (string, error) {
-	if filepath.Separator != '/' && strings.ContainsRune(relPlace, filepath.Separator) {
-		return "", errors.New("invalid character in file path")
+	if relPlace == "." || !fs.ValidPath(relPlace) || strings.ContainsAny(relPlace, "\\:\x00") {
+		return "", errors.New("template place must be a nonempty relative path without dot segments")
 	}
 	root := getTemplatesPath()
-	return filepath.Join(root, filepath.FromSlash(path.Clean("/"+relPlace))), nil
+	place := root
+	for _, part := range strings.Split(relPlace, "/") {
+		place = filepath.Join(place, part)
+		info, err := os.Lstat(place)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return "", err
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			return "", fmt.Errorf("template place contains a symbolic link: %q", relPlace)
+		}
+	}
+	return place, nil
 }
 
 func GetTemplatesPath() string {

@@ -115,6 +115,9 @@ func (s *TaskService) UpdateTemplate(currentPlace string, template taskQueue.Tem
 	if currentPlace == "" {
 		return nil, errors.New("current template place is required")
 	}
+	if err := taskQueue.ValidateTemplate(template); err != nil {
+		return nil, err
+	}
 	if currentPlace != template.Place {
 		if err := taskQueue.MoveTemplate(currentPlace, template.Place); err != nil {
 			return nil, err
@@ -156,6 +159,12 @@ func (s *TaskService) AddTask(input AddTaskInput) (*taskQueue.Task, error) {
 	taskBase.IsStartOnBoot = setValue(input.IsStartOnBoot, template.IsStartOnBoot)
 	taskBase.IsWriteLogs = setValue(input.IsWriteLogs, template.IsWriteLogs)
 	taskBase.TTL = setValue(input.TTL, template.TTL)
+	if err := taskQueue.ValidateTTL(taskBase.TTL); err != nil {
+		return nil, err
+	}
+	if err := taskQueue.ValidateTemplateValues(template.Variables, input.Variables); err != nil {
+		return nil, err
+	}
 	taskBase.Variables = taskQueue.ResolveTemplateVariables(template.Variables, input.Variables)
 	taskBase.Command = taskQueue.RenderLegacyCommand(taskBase.Command, taskBase.Variables)
 	taskBase.Label, err = taskQueue.RenderTemplateText(taskBase.Label, taskBase.Variables)
@@ -206,6 +215,9 @@ func (s *TaskService) StopTask(id string) error {
 }
 
 func (s *TaskService) SignalTask(id string, signal int) error {
+	if signal < 0 || signal > 64 {
+		return errors.New("signal must be between 0 and 64")
+	}
 	task, err := s.queue.Get(id)
 	if err != nil {
 		return err
@@ -274,6 +286,9 @@ func (s *TaskService) DeleteTaskAsset(id, path string) error {
 }
 
 func (s *TaskService) TaskOutput(ctx context.Context, id string, cursor int64, wait, settle time.Duration, maxBytes int) (TaskOutput, error) {
+	if cursor < -1 {
+		return TaskOutput{}, errors.New("cursor must be -1 or nonnegative")
+	}
 	task, err := s.queue.Get(id)
 	if err != nil {
 		return TaskOutput{}, err
@@ -498,6 +513,9 @@ func (s *TaskService) ResizeTask(id string, screenSize taskQueue.PtyScreenSize) 
 	}
 	if screenSize.Rows < 1 || screenSize.Rows > 1000 || screenSize.Cols < 1 || screenSize.Cols > 1000 {
 		return errors.New("terminal rows and cols must be between 1 and 1000")
+	}
+	if screenSize.X < 0 || screenSize.X > 65535 || screenSize.Y < 0 || screenSize.Y > 65535 {
+		return errors.New("terminal pixel dimensions must be between 0 and 65535")
 	}
 	return task.Resize(&screenSize)
 }

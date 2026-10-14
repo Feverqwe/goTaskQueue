@@ -32,7 +32,7 @@ type mcpTemplateVariable struct {
 }
 
 type mcpTemplate struct {
-	Place            string                `json:"place" jsonschema:"Slash-separated path relative to the profile templates directory, for example deploy/worker. The template is stored in this directory and its command runs with this directory as the working directory."`
+	Place            string                `json:"place" jsonschema:"Nonempty slash-separated path relative to the profile templates directory, for example deploy/worker. Absolute paths, dot segments, and symbolic link directories are rejected. The command runs in this directory."`
 	Command          string                `json:"command" jsonschema:"Command source passed to the configured runner. Read variables from TASK_VAR_<UPPERCASE_KEY> environment variables and quote shell expansions. Do not use {{ vars.key }} in commands."`
 	Name             string                `json:"name" jsonschema:"Required human-readable template name shown in the UI and template search."`
 	Description      string                `json:"description,omitempty" jsonschema:"Explain what the template does, when to use it, where results appear, and important side effects so agents can select it safely."`
@@ -45,7 +45,7 @@ type mcpTemplate struct {
 	IsSingleInstance bool                  `json:"isSingleInstance,omitempty" jsonschema:"Reject starting another active task from the same template place."`
 	IsStartOnBoot    bool                  `json:"isStartOnBoot,omitempty" jsonschema:"Clone and run one queued task for this template place when GoTaskQueue starts."`
 	IsWriteLogs      bool                  `json:"isWriteLogs,omitempty" jsonschema:"Persist task output to the configured log directory so it survives process restarts."`
-	TTL              int64                 `json:"ttl,omitempty" jsonschema:"Seconds to retain a successfully finished task before automatic cleanup. Zero disables TTL cleanup; errors and canceled tasks are not TTL-cleaned."`
+	TTL              int64                 `json:"ttl,omitempty" jsonschema:"Seconds to retain a successfully finished task before automatic cleanup, from 0 to 9223372036. Zero disables TTL cleanup; errors and canceled tasks are not TTL-cleaned."`
 }
 
 func (t mcpTemplate) taskQueueTemplate() taskQueue.Template {
@@ -180,7 +180,7 @@ Template variables have a human-readable name and a unique lowercase key in valu
 
 template_create stores a new template without running it. Before template_update, read the current template with template_get and send its complete replacement definition; current_place identifies the existing template, while template.place may relocate it. Document purpose, selection criteria, outputs, and side effects in description.
 
-task_start creates and immediately runs a task, while task_rerun clones the exact stored configuration of an existing task. Use task_tail for a compact read of the last lines, task_screen when only the current plain-text PTY viewport is needed, task_output for an immediate incremental read, or task_follow for bounded long polling. Continue incremental reads from next_cursor. PTY incremental output may include ANSI control sequences. Read the current task output or screen before sending input, send one command or response at a time with task_input, then read again. Use CTRL_C before task_stop when merely interrupting a foreground command.
+task_start creates and immediately runs a task, while task_rerun clones the exact stored configuration of an existing task. Unknown variable keys and select values outside options are rejected. Template paths must be nonempty relative paths without dot segments or symbolic link directories. TTL must be between 0 and 9223372036 seconds. Use task_tail for a compact read of the last lines, task_screen when only the current plain-text PTY viewport is needed, task_output for an immediate incremental read, or task_follow for bounded long polling. Continue incremental reads from next_cursor for the same task; -1 selects history, and other negative cursors are rejected. Follow wait and settle values are clamped to 0..30 seconds and 0..2000 milliseconds before conversion. PTY incremental output may include ANSI control sequences. Read the current task output or screen before sending input, send one command or response at a time with task_input, then read again. Use CTRL_C before task_stop when merely interrupting a foreground command.
 
 Do not create or update templates, retry failed tasks, stop running tasks, or send terminal input unless the user requested the corresponding action. template_delete irreversibly removes a template and its stored command. task_delete and tasks_cleanup irreversibly remove queued tasks and their persisted logs; obtain explicit confirmation immediately before calling any of these deletion tools. Templates and shell commands can change the host or external systems with the permissions of the GoTaskQueue process.`)},
 	)
@@ -283,7 +283,9 @@ Do not create or update templates, retry failed tasks, stop running tasks, or se
 			if input.SettleMs != nil {
 				settleMs = *input.SettleMs
 			}
-			output, err := service.TaskOutput(ctx, input.ID, mcpCursor(input.Cursor), time.Duration(waitSeconds)*time.Second, time.Duration(settleMs)*time.Millisecond, input.MaxBytes)
+			wait := time.Duration(min(max(waitSeconds, 0), int(maxTaskFollowWait/time.Second))) * time.Second
+			settle := time.Duration(min(max(settleMs, 0), int(maxTaskOutputSettle/time.Millisecond))) * time.Millisecond
+			output, err := service.TaskOutput(ctx, input.ID, mcpCursor(input.Cursor), wait, settle, input.MaxBytes)
 			return nil, output, err
 		})
 

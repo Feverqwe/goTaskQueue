@@ -146,3 +146,24 @@ func testDataStore(data string) *shared.DataStore {
 		},
 	}
 }
+
+func TestTaskAddRejectsMalformedAndOversizedBodies(t *testing.T) {
+	queue := taskQueue.NewQueue()
+	config := &cfg.Config{}
+	router := NewRouter()
+	HandleApi(router, NewTaskService(queue, config), memstorage.GetMemStorage(), config, make(chan string))
+	for _, body := range []string{
+		`{"command":"true"} {}`,
+		`{"command":"true"} garbage`,
+		`{"command":"true","label":"` + strings.Repeat("x", 1<<20) + `"}`,
+	} {
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/api/add", strings.NewReader(body)))
+		if response.Code == http.StatusOK {
+			t.Fatalf("invalid body accepted: %d bytes", len(body))
+		}
+		if len(queue.GetAll(config)) != 0 {
+			t.Fatal("invalid body added a task")
+		}
+	}
+}
